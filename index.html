@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>We Are Called to Care</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="We Are Called to Care mobilizes churches and individuals to care for children and families in the foster care system. Plano, IL.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Oswald:wght@500;600&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: editorial color-block bands (navy / teal / sky / pink) stacked full width, giant serif display type,
+   tracked mono labels, pill buttons, white cards on color. One committed light look; colors set explicitly.
+   Brand: C2C navy, teal blue, sky blue, pink. */
+:root{
+  --navy:#1D4766; --teal:#1E5F82; --sky:#B5CFDC; --sky-pale:#E6EFF4;
+  --pink:#E2197A; --pink-light:#F6C3DA; --pink-pale:#FCE6F0;
+  --ink:#13283A; --muted:#4A6176; --white:#FFFFFF; --line:#D5E2EA;
+  --serif:"Instrument Serif", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --sans:"Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --cond:"Oswald", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --mono:"DM Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --max:1180px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--white);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--navy)}
+a{color:inherit}
+h1,h2,h3{margin:0;font-weight:400;text-wrap:balance}
+p{margin:0;max-width:62ch}
+img{max-width:100%}
+:focus-visible{outline:3px solid var(--pink);outline-offset:3px;border-radius:4px}
+.wrap{max-width:var(--max);margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+
+/* type roles */
+.label{font-family:var(--mono);font-size:.78rem;letter-spacing:.22em;text-transform:uppercase;font-weight:500}
+.serif{font-family:var(--serif);line-height:1.02;letter-spacing:-.01em}
+.d1{font-family:var(--serif);font-size:clamp(3.2rem,9vw,7.5rem);line-height:.92;letter-spacing:-.02em}
+.d2{font-family:var(--serif);font-size:clamp(2.4rem,5.6vw,4.4rem);line-height:1}
+.d3{font-family:var(--serif);font-size:clamp(1.8rem,3.4vw,2.6rem);line-height:1.05}
+.cond{font-family:var(--cond);font-weight:600;text-transform:uppercase;letter-spacing:.02em;line-height:.95}
+.statement{font-family:var(--serif);font-size:clamp(1.9rem,4.4vw,3.4rem);line-height:1.15;text-align:center;max-width:22ch;margin:0 auto}
+.lede{font-size:1.15rem}
+em.it{font-style:italic}
+
+/* buttons */
+.pill{display:inline-flex;align-items:center;justify-content:center;gap:10px;font-family:var(--sans);font-weight:700;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;padding:16px 28px;border-radius:999px;text-decoration:none;border:2px solid transparent;cursor:pointer;transition:transform .18s ease, background .18s ease}
+.pill:hover{transform:translateY(-2px)}
+.pill::after{content:"→";letter-spacing:0;font-size:1rem}
+.pill.p-pink{background:var(--pink-light);color:var(--navy)}
+.pill.p-hot{background:var(--pink);color:var(--white)}
+.pill.p-white{background:var(--white);color:var(--navy)}
+.pill.p-navy{background:var(--navy);color:var(--white)}
+.pill.p-line{border-color:currentColor;background:transparent}
+.pills{display:flex;flex-wrap:wrap;gap:12px}
+.center .pills{justify-content:center}
+
+/* promo strip */
+.promo{background:var(--pink-light);color:var(--navy)}
+.promo .wrap{display:flex;align-items:center;justify-content:center;gap:10px 22px;flex-wrap:wrap;padding-block:10px;text-align:center}
+.promo b{font-family:var(--serif);font-weight:400;font-size:1.25rem}
+.promo a{font-family:var(--mono);font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;font-weight:500;text-underline-offset:4px}
+
+/* header */
+header.site{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--navy);color:var(--white)}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:18px;padding-block:12px}
+.logo img{height:44px;width:auto;display:block}
+nav.main{display:flex;align-items:center;gap:2px}
+nav.main a{text-decoration:none;font-weight:600;font-size:.86rem;padding:8px 12px;border-radius:999px;color:var(--white)}
+nav.main a:hover{background:rgba(255,255,255,.1)}
+nav.main a[aria-current="page"]{color:var(--pink-light)}
+nav.main a.give{background:var(--pink-light);color:var(--navy);margin-left:8px;padding-inline:18px}
+.diamond{display:grid;width:66px;height:40px;border:0;background:var(--pink-light);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);cursor:pointer;place-items:center;flex:none;transition:transform .2s}
+.diamond:hover{transform:scale(1.06)}
+.diamond span{display:block;width:22px;height:2px;background:var(--navy);box-shadow:0 6px 0 var(--navy),0 -6px 0 var(--navy)}
+.bar-right{display:flex;align-items:center;gap:14px}
+@media (max-width:1100px){nav.main{display:none}.logo img{height:36px}}
+
+/* slide-out menu */
+.drawer{position:fixed;inset:0;z-index:100;display:flex;justify-content:flex-end;visibility:hidden;transition:visibility 0s linear .5s}
+.drawer.open{visibility:visible;transition:none}
+.scrim{position:absolute;inset:0;background:rgba(10,24,36,.5);opacity:0;transition:opacity .4s ease;border:0;padding:0;cursor:pointer}
+.drawer.open .scrim{opacity:1}
+.panel{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 60px minmax(0,1.05fr);width:min(1180px,100%);height:100%;transform:translateX(100%);transition:transform .5s cubic-bezier(.22,.7,.18,1);box-shadow:-30px 0 60px -30px rgba(0,0,0,.4)}
+.drawer.open .panel{transform:none}
+.hello{background:var(--sky-pale);color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;text-align:center;padding:calc(40px + env(safe-area-inset-top,0px)) 48px calc(40px + env(safe-area-inset-bottom,0px));overflow-y:auto}
+.hello .photo{width:min(300px,100%);aspect-ratio:9/10;min-height:0;align-items:flex-start}
+.hello .photo span{background:none;font-size:.9rem;letter-spacing:.3em;line-height:1.5;text-align:left;margin:22px}
+.hello .name{font-family:var(--serif);font-size:clamp(3rem,5vw,4.4rem);line-height:.9;color:var(--teal)}
+.hello p{font-family:var(--serif);font-size:1.3rem;line-height:1.4;max-width:30ch}
+.socials{display:flex;gap:22px}
+.socials a{color:var(--pink);display:block}
+.socials svg{width:24px;height:24px;display:block}
+.strip{background:var(--pink-light);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.strip ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column-reverse;gap:46px}
+.strip li{writing-mode:vertical-rl;transform:rotate(180deg);font-family:var(--sans);font-weight:700;font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--navy);white-space:nowrap}
+.menu-side{position:relative;color:var(--white);display:flex;flex-direction:column;justify-content:center;padding:calc(80px + env(safe-area-inset-top,0px)) max(28px,5vw) calc(48px + env(safe-area-inset-bottom,0px)) max(36px,6vw);overflow-y:auto;
+  background:
+    linear-gradient(100deg,rgba(255,255,255,.06) 0 18%,transparent 18% 34%,rgba(255,255,255,.04) 34% 52%,transparent 52% 71%,rgba(255,255,255,.05) 71% 86%,transparent 86%),
+    radial-gradient(80% 50% at 80% 10%,rgba(181,207,220,.25),transparent 70%),
+    linear-gradient(180deg,#22698F,#1E5F82 55%,#1B5576)}
+.menu-side nav{display:flex;flex-direction:column;gap:2px}
+.menu-side nav a{font-family:var(--serif);font-size:clamp(2rem,3.6vw,3rem);line-height:1.2;text-decoration:none;color:var(--white);width:max-content;max-width:100%;transition:color .2s, transform .2s}
+.menu-side nav a:hover,.menu-side nav a[aria-current="page"]{color:var(--pink-light);transform:translateX(6px)}
+.menu-side .extras{display:flex;flex-direction:column;gap:14px;margin-top:36px}
+.menu-side .extras a{font-family:var(--mono);font-size:.82rem;letter-spacing:.24em;text-transform:uppercase;text-decoration:none;color:var(--navy);width:max-content}
+.menu-side .extras a.on-teal{color:var(--pink-light)}
+.menu-side .extras a:hover{text-decoration:underline;text-underline-offset:5px}
+.close{position:absolute;top:calc(24px + env(safe-area-inset-top,0px));right:calc(24px + env(safe-area-inset-right,0px));width:48px;height:48px;border:0;background:none;cursor:pointer;color:var(--white)}
+.close::before,.close::after{content:"";position:absolute;left:8px;right:8px;top:23px;height:2px;background:currentColor;transform:rotate(45deg)}
+.close::after{transform:rotate(-45deg)}
+body.locked{overflow:hidden}
+.m-socials{display:none}
+.close{z-index:3}
+@media (max-width:860px){
+  .panel{grid-template-columns:minmax(0,1fr) 66px}
+  .hello{display:none}
+  .menu-side{order:1;justify-content:flex-start;padding:calc(64px + env(safe-area-inset-top,0px)) 28px calc(40px + env(safe-area-inset-bottom,0px)) max(30px,env(safe-area-inset-left,0px));box-shadow:inset 0 22px 0 #3E86AB,inset 0 -22px 0 #3E86AB}
+  .menu-side nav a{font-size:clamp(2.1rem,9vw,2.7rem);line-height:1.25}
+  .menu-side .extras{margin-top:30px}
+  .menu-side .extras a{font-size:.8rem;letter-spacing:.22em}
+  .m-socials{display:flex;margin-top:auto;padding-top:34px;gap:30px}
+  .m-socials a{color:var(--white)}
+  .m-socials svg{width:28px;height:28px}
+  .strip{order:2;align-items:center;padding-top:80px}
+  .strip ul{gap:44px}
+  .strip li{font-size:.72rem}
+  .close{right:calc(9px + env(safe-area-inset-right,0px));top:calc(18px + env(safe-area-inset-top,0px));color:var(--navy)}
+}
+@media (prefers-reduced-motion:reduce){.panel,.scrim{transition:none}}
+
+/* bands */
+section{padding-block:96px}
+.b-navy{background:var(--navy);color:var(--white)}
+.b-teal{background:var(--teal);color:var(--white)}
+.b-sky{background:var(--sky);color:var(--navy)}
+.b-skypale{background:var(--sky-pale);color:var(--ink)}
+.b-pink{background:var(--pink-light);color:var(--navy)}
+.b-pinkpale{background:var(--pink-pale);color:var(--ink)}
+.b-white{background:var(--white)}
+.b-grad{background:linear-gradient(100deg,var(--sky-pale) 0%,var(--pink-pale) 100%)}
+.c-pink{color:var(--pink)} .c-pinkl{color:var(--pink-light)} .c-sky{color:var(--sky)} .c-white{color:var(--white)} .c-navy{color:var(--navy)}
+.center{text-align:center}
+.center p{margin-left:auto;margin-right:auto}
+.vstack{display:flex;flex-direction:column;gap:22px}
+.mt{margin-top:40px}
+
+/* hero */
+.hero{background:var(--navy);color:var(--white);padding-block:72px 0;overflow:hidden;position:relative}
+.hero .wrap{display:flex;flex-direction:column;align-items:center;text-align:center;gap:20px}
+.hero .bigmark{width:min(960px,100%);height:auto;display:block}
+.hero .verse{font-family:var(--mono);letter-spacing:.4em;font-size:.85rem;display:flex;align-items:center;gap:18px;color:var(--sky)}
+.hero .verse::before,.hero .verse::after{content:"";width:clamp(30px,10vw,120px);height:1px;background:currentColor}
+.hero-photo{width:min(520px,86%);aspect-ratio:4/3;margin:44px auto -120px;position:relative;z-index:2}
+.after-hero{padding-top:200px}
+
+/* photo placeholders */
+.photo{position:relative;border-radius:2px;overflow:hidden;background:
+  radial-gradient(120% 90% at 20% 15%,rgba(246,195,218,.9),transparent 55%),
+  radial-gradient(90% 90% at 85% 85%,rgba(181,207,220,.95),transparent 60%),
+  linear-gradient(135deg,#2C6F93,#1D4766);min-height:200px;display:flex;align-items:flex-end}
+.photo.round{border-radius:28px}
+.photo::before{content:"";position:absolute;inset:0;background:url("assets/therapy-heart.png") center/48% no-repeat;opacity:.13;filter:grayscale(1) brightness(2.2)}
+.photo.has-img::before{display:none}
+.photo > img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:var(--pos,center)}
+.photo span{position:relative;font-family:var(--mono);font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--white);background:rgba(19,40,58,.45);padding:6px 10px;margin:14px}
+
+/* rotating badge */
+.badge{width:132px;height:132px;position:absolute;z-index:3}
+.badge svg{width:100%;height:100%;animation:spin 22s linear infinite}
+.badge text{font-family:var(--mono);font-size:10.6px;letter-spacing:3.2px;text-transform:uppercase}
+.badge .core{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--serif);font-size:2rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* split blocks */
+.split{display:grid;grid-template-columns:1fr 1fr;min-height:520px}
+.split > *{min-width:0}
+.split .txt{display:flex;flex-direction:column;justify-content:center;gap:22px;padding:72px max(28px,6vw)}
+.split .photo{min-height:420px;border-radius:0}
+@media (max-width:860px){.split{grid-template-columns:1fr}.split .photo{min-height:300px}.split.rev .photo{order:-1}}
+
+/* checker tiles */
+.checker{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));max-width:1000px;margin:48px auto 0}
+.tile{aspect-ratio:1/1;background:var(--white);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:28px;text-decoration:none;color:var(--navy);transition:background .2s}
+.tile:hover{background:var(--sky-pale)}
+.tile .label{color:var(--pink);font-size:.7rem}
+.tile b{font-family:var(--serif);font-weight:400;font-size:clamp(1.8rem,3vw,2.4rem);line-height:1}
+.tile p{font-size:.95rem;color:var(--muted);max-width:24ch}
+.tile.photo{aspect-ratio:1/1;min-height:0;border-radius:0}
+@media (max-width:760px){.checker{grid-template-columns:repeat(2,minmax(0,1fr))}.tile{padding:18px}.tile p{font-size:.85rem}}
+@media (max-width:420px){.checker{grid-template-columns:1fr}.tile{aspect-ratio:auto;min-height:220px}.tile.photo{display:none}}
+
+/* lab cards (white card with color cap) */
+.labs{display:grid;gap:28px}
+.lab{background:var(--white);color:var(--ink);border-top:22px solid var(--teal);padding:44px clamp(24px,4vw,56px);display:flex;flex-direction:column;gap:16px;box-shadow:0 30px 60px -40px rgba(19,40,58,.45)}
+.lab.cap-pink{border-top-color:var(--pink-light)} .lab.cap-sky{border-top-color:var(--sky)} .lab.cap-navy{border-top-color:var(--navy)} .lab.cap-hot{border-top-color:var(--pink)}
+.lab .label{color:var(--teal)}
+.lab h3{font-family:var(--serif);font-size:clamp(2rem,3.6vw,2.8rem);line-height:1.02;color:var(--navy)}
+.lab p{color:var(--muted)}
+.lab .pill{align-self:flex-start;margin-top:6px}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+@media (max-width:900px){.g2,.g3{grid-template-columns:1fr}}
+
+/* list rows (blog-style) */
+.rows{display:grid}
+.row{display:grid;grid-template-columns:110px 1fr auto;gap:24px;align-items:center;padding-block:22px;border-bottom:1px solid rgba(255,255,255,.25);text-decoration:none}
+.row .dot{width:110px;height:110px;border-radius:50%;display:grid;place-items:center;background:var(--white);color:var(--navy);text-align:center;line-height:1}
+.row .dot small{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.2em;text-transform:uppercase}
+.row .dot b{font-family:var(--serif);font-weight:400;font-size:2.6rem}
+.row h3{font-family:var(--serif);font-size:clamp(1.5rem,2.6vw,2rem);line-height:1.1}
+.row .label{color:var(--pink-light);font-size:.7rem}
+.row .meta{font-size:.95rem;opacity:.85}
+@media (max-width:640px){.row{grid-template-columns:80px 1fr}.row .dot{width:80px;height:80px}.row .dot b{font-size:1.9rem}.row .pill{grid-column:1/-1;justify-self:start}}
+
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;counter-reset:s}
+.step{background:var(--white);padding:36px 30px;display:flex;flex-direction:column;gap:14px;color:var(--ink)}
+.step::before{counter-increment:s;content:counter(s);font-family:var(--serif);font-size:4rem;line-height:.8;color:var(--pink)}
+.step h3{font-family:var(--serif);font-size:1.9rem;line-height:1.05;color:var(--navy)}
+.step p{color:var(--muted)}
+.step .pill{align-self:flex-start;margin-top:auto}
+@media (max-width:900px){.steps{grid-template-columns:1fr}}
+
+/* page heads */
+.ph{padding-block:88px 80px;position:relative;overflow:hidden}
+.ph .label{display:block;margin-bottom:18px}
+.ph .lede{margin-top:22px;max-width:56ch}
+.subnav{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}
+.subnav a{font-family:var(--mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;text-decoration:none;padding:8px 14px;border-radius:999px;border:1px solid currentColor}
+.subnav a:hover{background:rgba(255,255,255,.15)}
+
+/* people */
+.person{display:grid;grid-template-columns:200px 1fr;gap:40px;align-items:start;background:var(--white);padding:40px;color:var(--ink)}
+.person .photo{aspect-ratio:4/5;min-height:0}
+.person .label{color:var(--pink)}
+.person h3{font-family:var(--serif);font-size:2.4rem;line-height:1;color:var(--navy);margin-top:6px}
+.person p{color:var(--muted)}
+.creds{display:flex;flex-wrap:wrap;gap:8px}
+.creds span{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:6px 10px;background:var(--sky-pale);color:var(--navy)}
+@media (max-width:700px){.person{grid-template-columns:1fr;padding:28px}.person .photo{max-width:220px}}
+
+/* faq */
+details{border-bottom:1px solid rgba(29,71,102,.25);padding-block:22px}
+summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:20px;font-family:var(--serif);font-size:1.6rem;line-height:1.15;color:var(--navy)}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-family:var(--sans);font-weight:300;font-size:1.8rem;line-height:1;color:var(--pink)}
+details[open] summary::after{content:"−"}
+details p{margin-top:12px;color:var(--muted)}
+details a{color:var(--teal);font-weight:600}
+
+/* forms */
+form{display:grid;gap:14px}
+label.f{font-family:var(--mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;display:grid;gap:8px}
+input,textarea,select{font:inherit;font-size:1rem;letter-spacing:0;text-transform:none;padding:14px 18px;border-radius:999px;border:1.5px solid var(--navy);background:var(--white);color:var(--ink);width:100%}
+textarea{border-radius:22px;min-height:140px;resize:vertical}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:560px){.r2{grid-template-columns:1fr}}
+.ok{background:var(--white);color:var(--navy);padding:16px 22px;border-radius:999px;font-weight:600;text-align:center}
+
+/* letter */
+.letter{background:var(--white);color:var(--ink);padding:clamp(28px,5vw,64px);display:flex;flex-direction:column;gap:18px;max-width:760px;margin:0 auto}
+.sign{font-family:var(--serif);font-style:italic;font-size:2.6rem;color:var(--teal);line-height:1}
+
+/* download list */
+.dl{display:grid;gap:0;background:var(--white)}
+.dl a{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px 26px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--navy)}
+.dl a:last-child{border-bottom:0}
+.dl a b{font-family:var(--serif);font-weight:400;font-size:1.5rem;line-height:1.1;display:block}
+.dl a small{color:var(--muted);font-size:.9rem}
+.dl a::after{content:"→";color:var(--pink);font-size:1.3rem}
+.dl a:hover{background:var(--pink-pale)}
+
+.counties{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.counties span{font-family:var(--mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;padding:8px 14px;border-radius:999px;background:var(--white);color:var(--navy)}
+.heartdisc{width:min(340px,80%);aspect-ratio:1/1;border-radius:50%;background:var(--white);display:grid;place-items:center;padding:12%;margin:0 auto}
+.heartdisc img{width:100%;height:auto}
+blockquote{margin:0}
+.fine{font-size:.88rem;opacity:.8}
+
+/* footer */
+footer{background:var(--navy);color:var(--white);padding-block:80px 34px;position:relative;overflow:hidden}
+.fgrid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:40px}
+footer h4{margin:0 0 14px;font-family:var(--mono);font-weight:500;font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--pink-light)}
+footer ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+footer a{text-decoration:none;font-size:.95rem}
+footer a:hover{text-decoration:underline}
+footer p{color:var(--sky);font-size:.95rem}
+.handle{font-family:var(--cond);font-size:clamp(2.4rem,7vw,5.5rem);text-transform:uppercase;letter-spacing:.01em;line-height:1;color:var(--teal);margin-top:56px;word-break:break-word}
+.legal{margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,.15);display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font-size:.82rem;color:var(--sky)}
+@media (max-width:900px){.fgrid{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.fgrid{grid-template-columns:1fr}}
+@media (max-width:760px){footer .badge{display:none}}
+
+/* application forms */
+.apply{background:var(--white);color:var(--ink);max-width:880px;margin:0 auto;box-shadow:0 40px 80px -50px rgba(19,40,58,.5)}
+.apply .fs{border:0;margin:0;padding:36px clamp(20px,5vw,56px) 40px;display:grid;gap:22px;min-width:0}
+.apply .fs + .fs{border-top:1px solid var(--line)}
+.apply legend{float:left;width:100%;padding:0;margin-bottom:6px;display:flex;align-items:baseline;gap:14px}
+.apply legend .n{font-family:var(--serif);font-size:2.4rem;line-height:1;color:var(--pink)}
+.apply legend .t{font-family:var(--serif);font-size:clamp(1.7rem,3vw,2.2rem);line-height:1.05;color:var(--navy)}
+.apply .q{display:grid;gap:8px;min-width:0}
+.apply .q > .lbl,.apply label.q{font-weight:600;font-size:1rem;color:var(--ink)}
+.apply .req{color:var(--pink);margin-left:2px}
+.apply .nw{white-space:nowrap}
+.apply label.q > .lbl{display:block}
+.apply .hint{font-size:.85rem;color:var(--muted);font-weight:400}
+.apply input:not([type=checkbox]):not([type=radio]),.apply select,.apply textarea{border-radius:12px;border:1.5px solid var(--line);padding:13px 15px;background:var(--white);font-size:1rem}
+.apply input:focus,.apply select:focus,.apply textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(30,95,130,.15)}
+.apply textarea{min-height:120px}
+.apply .c3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.apply .c2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.apply .sub{display:grid;gap:4px}
+.apply .sub small{font-size:.78rem;color:var(--muted)}
+@media (max-width:640px){.apply .c3,.apply .c2{grid-template-columns:1fr}}
+.apply .choices{display:grid;gap:10px}
+.apply .choices.inline{grid-auto-flow:column;justify-content:start;gap:28px}
+.apply .choice{display:flex;gap:12px;align-items:flex-start;font-weight:400;cursor:pointer;line-height:1.4}
+.apply .choice input{width:20px;height:20px;margin:1px 0 0;padding:0;accent-color:var(--teal);flex:none}
+.apply .err{color:#B3134F;font-size:.85rem;font-weight:600}
+.apply .q.invalid input:not([type=checkbox]):not([type=radio]),.apply .q.invalid textarea{border-color:#B3134F}
+.apply .money{position:relative}
+.apply .money span{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.apply .money input{padding-left:30px!important}
+.sigpad{border:1.5px solid var(--line);border-radius:12px;background:var(--white);position:relative;height:170px;touch-action:none}
+.sigpad canvas{width:100%;height:100%;display:block;border-radius:12px;cursor:crosshair}
+.sigpad .line{position:absolute;left:20px;right:20px;bottom:40px;border-top:1px solid var(--line);pointer-events:none}
+.sigpad .ph{position:absolute;left:22px;bottom:14px;font-size:.8rem;color:var(--muted);pointer-events:none}
+.sigpad button{position:absolute;right:12px;bottom:8px;border:0;background:none;color:var(--teal);font-weight:600;cursor:pointer;padding:6px}
+.apply .submit-row{padding:30px clamp(20px,5vw,56px) 44px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:16px;align-items:center}
+.done-card{background:var(--white);max-width:720px;margin:0 auto;padding:clamp(28px,5vw,56px);text-align:center;display:grid;gap:16px;justify-items:center}
+
+/* sponsor tiers + checkout */
+.tiers{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:24px}
+.tiers.t3{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:900px){.tiers.t3{grid-template-columns:1fr}}
+.tier{gap:14px;padding:32px 28px}
+.tier-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.price{font-family:var(--serif);font-size:2.4rem;line-height:1;color:var(--navy);font-variant-numeric:tabular-nums}
+.perks{list-style:none;margin:0;padding:0;display:grid;gap:8px;color:var(--muted);font-size:.95rem}
+.perks li{padding-left:20px;position:relative}
+.perks li::before{content:"";position:absolute;left:0;top:.62em;width:8px;height:8px;border-radius:50%;background:var(--pink-light)}
+.tier .pick{margin-top:auto}
+.co{position:fixed;inset:0;z-index:110;display:flex;justify-content:flex-end}
+.co .scrim{opacity:1}
+.co-panel{position:relative;background:var(--white);width:min(560px,100%);height:100%;overflow-y:auto;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);animation:slidein .35s cubic-bezier(.22,.7,.18,1)}
+@keyframes slidein{from{transform:translateX(100%)}}
+.co-x{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:16px;border:0;background:none;font-size:2rem;line-height:1;color:var(--navy);cursor:pointer;z-index:2;padding:6px 10px}
+.co-line,.co-total{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:16px 0;border-bottom:1px solid var(--line)}
+.co-line .price{font-size:1.6rem}
+.co-total{border-bottom:0;border-top:2px solid var(--navy);font-weight:700}
+.co-pay{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.paypal{border:0;border-radius:999px;background:#FFC439;padding:13px 34px;cursor:pointer;font:italic 800 1.25rem/1 var(--sans);transition:transform .18s}
+.paypal:hover{transform:translateY(-2px)}
+.paypal b{color:#003087}.paypal i{color:#009CDE}
+
+.dinner-band{height:clamp(260px,42vw,520px);border-radius:0}
+/* homepage opener */
+.hero2{position:relative;z-index:3;min-height:clamp(560px,86vh,860px);display:flex;align-items:center;color:var(--white);background:var(--navy)}
+.hero-media{position:absolute;inset:0;overflow:hidden}
+.hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:68% 40%;animation:heroZoom 18s ease-out both}
+@keyframes heroZoom{from{transform:scale(1.08)}to{transform:scale(1)}}
+.hero-shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(29,71,102,.96) 0%,rgba(29,71,102,.82) 34%,rgba(29,71,102,.25) 62%,rgba(29,71,102,0) 80%),linear-gradient(0deg,rgba(29,71,102,.55),transparent 35%)}
+.hero-in{position:relative;z-index:2;width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:26px;padding-block:96px 120px}
+.hero-mark{width:min(640px,100%);height:auto;display:block;animation:rise .9s .1s cubic-bezier(.2,.7,.2,1) both}
+.hero-line{font-family:var(--serif);font-size:clamp(1.9rem,3.6vw,3rem);line-height:1.12;max-width:16ch;animation:rise .9s .3s cubic-bezier(.2,.7,.2,1) both}
+.hero-in .pills{animation:rise .9s .5s cubic-bezier(.2,.7,.2,1) both}
+@keyframes rise{from{opacity:.001;transform:translateY(18px)}}
+.hero-badge{right:max(24px,7vw);bottom:-66px;width:140px;height:140px}
+.hero-badge .core{font-size:2.2rem}
+.hero-top,.hero-bottom{display:contents}
+@media (max-width:760px){
+  .hero2{align-items:stretch;min-height:clamp(600px,calc(100svh - 110px),760px)}
+  .promo .wrap{padding-block:8px;gap:2px 12px}
+  .promo .label{display:none}
+  .promo b{font-size:1.05rem}
+  .promo a{font-size:.66rem}
+  .hero-bg{object-position:70% 42%}
+  .hero-shade{background:linear-gradient(180deg,rgba(29,71,102,.92) 0%,rgba(29,71,102,.55) 26%,rgba(29,71,102,.05) 46%,rgba(29,71,102,.15) 60%,rgba(29,71,102,.92) 84%,rgba(29,71,102,.98) 100%)}
+  .hero-in{justify-content:space-between;align-items:center;text-align:center;padding-block:28px 96px;gap:18px}
+  .hero-top{display:flex;flex-direction:column;align-items:center;gap:16px;width:100%}
+  .hero-bottom{display:flex;flex-direction:column;align-items:center;gap:20px}
+  .hero-in .label{font-size:.6rem;letter-spacing:.16em}
+  .hero-mark{width:100%}
+  .hero-line{font-size:clamp(1.6rem,7vw,2.1rem);max-width:none}
+  .hero-in .pills{justify-content:center}
+  .hero-in .pills{flex-wrap:nowrap;gap:10px}
+  .hero-in .pill{padding:13px 16px;font-size:.7rem;letter-spacing:.08em;white-space:nowrap}
+  .hero-badge{width:128px;height:128px;bottom:-64px;left:50%;right:auto;margin-left:-64px}
+  .hero-badge .core{font-size:1.9rem}
+  section.b-teal:first-of-type{padding-top:110px}
+}
+
+/* Lemonade stand switch: add class lemonade-on to <html> to bring it back */
+html:not(.lemonade-on) .lemon{display:none!important}
+.g-fit{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+/* christmas form */
+.kid{border:1.5px solid var(--line);border-radius:16px;padding:22px clamp(16px,3vw,26px);display:grid;gap:16px;background:var(--white);position:relative}
+.kid-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.kid-head b{font-family:var(--serif);font-weight:400;font-size:1.7rem;color:var(--navy);line-height:1}
+.kid-head button{border:0;background:none;color:var(--pink);font-weight:600;cursor:pointer;padding:6px}
+.xmas-head{background:radial-gradient(60% 80% at 90% 10%,rgba(246,195,218,.18),transparent 60%),radial-gradient(50% 70% at 5% 100%,rgba(181,207,220,.16),transparent 60%),var(--navy)}
+/* Dinner ticket switch: add class tickets-on to <html> to open ticket sales */
+html:not(.tickets-on) .tix-on{display:none!important}
+html.tickets-on .tix-off{display:none!important}
+.pill.soon{cursor:default;align-self:flex-start;margin-top:auto}
+.pill.soon::after{content:none}
+.page[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+<style>[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+
+<div class="promo"><div class="wrap">
+  <span class="label" style="font-size:.7rem">Foster &amp; adoptive moms</span>
+  <b>Support Night · <span data-sn="short">Thu, Nov 5</span> · 6:30 PM</b>
+  <a href="https://form.jotform.com/262945432903157" target="_blank" rel="noopener">Yes! Save me a seat →</a>
+</div></div>
+
+<header class="site">
+  <div class="wrap bar">
+    <a class="logo" href="#home"><img src="assets/logo-white.png" alt="We Are Called to Care" width="778" height="189"></a>
+    <div class="bar-right">
+    <nav class="main" id="mainNav" aria-label="Main">
+      <a href="#home">Home</a>
+      <a href="#foster-parents">Foster Parents</a>
+      <a href="#therapy">Therapy</a>
+      <a href="#get-involved">Get Involved</a>
+      <a href="#events">Events</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+      <a href="#donate" class="give">Donate</a>
+    </nav>
+    <button class="diamond" id="menuBtn" aria-expanded="false" aria-controls="drawer" aria-label="Open menu"><span></span></button>
+    </div>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" aria-hidden="true">
+  <button class="scrim" id="scrim" tabindex="-1" aria-label="Close menu"></button>
+  <div class="panel" role="dialog" aria-modal="true" aria-label="Site menu">
+    <div class="hello">
+      <div class="photo round"><span>Hey<br>there!</span></div>
+      <div class="name">Called<br>to Care</div>
+      <p>Foster parents, volunteers, churches, and neighbors caring for kids and families in foster care. We're glad you're here.</p>
+      <div class="socials">
+        <a href="https://www.facebook.com/calledtocare.IL" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 8.5V6.8c0-.8.5-1 .9-1h2.4V2.1L14 2c-3.6 0-4.4 2.7-4.4 4.4v2.1H7.5v3.9h2.1V22H14v-9.6h3l.4-3.9H14Z"/></svg></a>
+        <a href="https://www.instagram.com/weare.calledtocare/" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></a>
+      </div>
+    </div>
+    <div class="strip" aria-hidden="true"><ul><li>Families</li><li>Volunteers</li><li>Churches</li><li>Donors</li><li>Therapists</li><li>Friends</li></ul></div>
+    <button class="close" id="closeBtn" aria-label="Close menu"></button>
+    <div class="menu-side">
+      <nav aria-label="All pages">
+        <a href="#home">Home</a>
+        <a href="#foster-parents">Foster Parents</a>
+        <a href="#therapy">Therapy</a>
+        <a href="#get-involved">Get Involved</a>
+        <a href="#events">Events</a>
+        <a href="#charity-dinner">Charity Dinner</a>
+        <a href="#lemonade" class="lemon">Lemonade Stand</a>
+        <a href="#camp">Camp Scholarships</a>
+        <a href="#about">About Us</a>
+        <a href="#careers">Careers</a>
+      </nav>
+      <div class="extras">
+        <a class="on-teal" href="#donate">Give today</a>
+        <a class="on-teal" href="#contact">Get in touch</a>
+        <a class="on-teal" href="https://form.jotform.com/220196204357048" target="_blank" rel="noopener">Request a care package</a>
+      </div>
+      <div class="socials m-socials">
+        <a href="https://www.instagram.com/weare.calledtocare/" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></a>
+        <a href="https://www.facebook.com/calledtocare.IL" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 8.5V6.8c0-.8.5-1 .9-1h2.4V2.1L14 2c-3.6 0-4.4 2.7-4.4 4.4v2.1H7.5v3.9h2.1V22H14v-9.6h3l.4-3.9H14Z"/></svg></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main>
+
+<!-- ======================= HOME ======================= -->
+<div class="page" data-page="home">
+  <div class="hero2">
+    <div class="hero-media"><img class="hero-bg" src="assets/kids-outdoors.jpg" alt="A brother and sister smiling outdoors" width="1800" height="1200" fetchpriority="high"><div class="hero-shade" aria-hidden="true"></div></div>
+    <div class="wrap hero-in">
+      <div class="hero-top">
+        <span class="label c-pinkl">A foster care ministry · Plano, Illinois</span>
+        <img class="hero-mark" src="assets/logo-white.png" alt="We Are Called to Care · 1 John 3:16, 18" width="778" height="189">
+      </div>
+      <div class="hero-bottom">
+        <p class="hero-line">Not everyone is called to foster.<br><em class="it c-pinkl">Everyone</em> is called to care.</p>
+        <div class="pills"><a class="pill p-pink" href="#get-involved">Find your place</a><a class="pill p-line c-white" href="#donate">Give today</a></div>
+      </div>
+    </div>
+    <div class="badge hero-badge" aria-hidden="true">
+      <svg viewBox="0 0 132 132"><circle cx="66" cy="66" r="66" fill="#E2197A"/><defs><path id="bp" d="M66,66 m-50,0 a50,50 0 1,1 100,0 a50,50 0 1,1 -100,0"/></defs><text fill="#FFFFFF" textLength="312" lengthAdjust="spacing"><textPath href="#bp">Until all kids have a family •</textPath></text></svg>
+      <div class="core c-white">C2C</div>
+    </div>
+  </div>
+
+  <section class="b-teal">
+    <div class="wrap vstack center" style="gap:34px">
+      <h1 class="statement">We mobilize <span class="c-pinkl">churches</span> and <span class="c-sky">individuals</span> to actively care for <span class="c-pinkl">children</span> and <span class="c-sky">families</span> in foster care.</h1>
+      <p class="lede" style="color:var(--sky)">Care packages on placement day, a monthly support night, trauma-informed therapy, and friends who keep showing up.</p>
+      <div class="pills"><a class="pill p-pink" href="#about">How we help</a></div>
+    </div>
+  </section>
+
+  <div class="split b-pink">
+    <div class="photo has-img" style="--pos:60% center"><img src="assets/kids-laughing.jpg" alt="Two kids lying on a blanket laughing together" loading="lazy" width="1800" height="1200"></div>
+    <div class="txt">
+      <span class="label c-navy">New placement</span>
+      <h2 class="d2 c-navy">Just welcomed a child into your home?</h2>
+      <p>If you live in DeKalb, DuPage, Grundy, Kane, Kendall, LaSalle, or Will County, tell us within the first week and we'll bring a care package and a hot meal to your door.</p>
+      <div class="pills"><a class="pill p-navy" href="https://form.jotform.com/220196204357048" target="_blank" rel="noopener">Request a care package</a></div>
+    </div>
+  </div>
+
+  <section class="b-skypale">
+    <div class="wrap center vstack" style="gap:14px">
+      <span class="label c-teal" style="color:var(--teal)">Five ways to care this month</span>
+      <h2 class="d2 c-navy">Pick the one that fits your season.</h2>
+    </div>
+    <div class="wrap">
+      <div class="checker">
+        <a class="tile" href="https://www.amazon.com/hz/wishlist/ls/38RK52RW3Q2M9" target="_blank" rel="noopener"><span class="label">Amazon wish list</span><b>Supply</b><p>Send new clothes for kids arriving with very little.</p></a>
+        <div class="tile photo has-img" style="--pos:30% 50%"><img src="assets/care-closet.jpg" alt="Care Closet shelves with labeled bins of children's clothing by size" loading="lazy" width="1600" height="1200"></div>
+        <a class="tile" href="#donate"><span class="label">Financial gift</span><b>Give</b><p>Stock the supply room and fund placement-night meals.</p></a>
+        <div class="tile photo has-img" style="--pos:center 35%"><img src="assets/kids-huddle.jpg" alt="Three smiling kids huddled together under a blue sky" loading="lazy" width="1800" height="1200"></div>
+        <a class="tile" href="#get-involved" data-anchor="carecloset"><span class="label">Care Closet</span><b>Deliver</b><p>Bring a care bag to a family's door.</p></a>
+        <a class="tile" href="#get-involved" data-anchor="volunteer"><span class="label">Volunteer team</span><b>Serve</b><p>Join the team at our Plano office.</p></a>
+      </div>
+      <p class="center" style="margin:28px auto 0">…and <strong>gather</strong> with us: <a href="#events" style="color:var(--teal);font-weight:700">see upcoming events →</a></p>
+    </div>
+  </section>
+
+  <section class="b-grad">
+    <div class="wrap g2" style="align-items:center">
+      <div class="vstack">
+        <span class="label" style="color:var(--teal)">Monthly · first Thursday · 6:30 PM</span>
+        <h2 class="d2 c-navy">Foster &amp; Adoptive Moms' Support&nbsp;Night</h2>
+      </div>
+      <div class="vstack">
+        <p class="lede">Snacks, honest conversation, and real training for moms of foster and adoptive kids. Childcare is on site so you can be fully present.</p>
+        <p style="font-family:var(--serif);font-size:2rem;line-height:1.1;color:var(--pink)" data-sn="full">Thursday, November 5, 2026</p>
+        <div class="pills"><a class="pill p-hot" href="https://form.jotform.com/262945432903157" target="_blank" rel="noopener">Register (required)</a><a class="pill p-line c-navy" href="#foster-parents" data-anchor="supportnight">Details</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="b-navy">
+    <div class="wrap g2" style="align-items:center;gap:56px">
+      <div class="heartdisc"><img src="assets/therapy-heart.png" alt="Called to Care Hope &amp; Healing logo" width="640" height="534"></div>
+      <div class="vstack">
+        <h2 class="cond" style="font-size:clamp(2.8rem,6vw,4.8rem)"><span class="c-pinkl">Hope</span> &amp; <span class="c-sky">healing</span></h2>
+        <p class="lede" style="color:var(--sky)">Counseling for any child, teen, or adult touched by foster care or adoption, with licensed clinical social workers who know this road firsthand.</p>
+        <div class="pills"><a class="pill p-pink" href="#therapy">Meet our therapists</a><a class="pill p-line c-white" href="https://form.jotform.com/232004583450043" target="_blank" rel="noopener">Request an appointment</a></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="split rev b-white">
+    <div class="txt">
+      <span class="label" style="color:var(--pink)">Save the date · 6th annual</span>
+      <h2 class="d1 c-navy" style="font-size:clamp(2.8rem,6vw,5rem)">Charity Dinner <em class="it c-pink">&amp;</em> Auction</h2>
+      <p style="font-family:var(--serif);font-size:2rem;color:var(--teal);line-height:1.1">Saturday, March 13, 2027</p>
+      <p class="label" style="color:var(--navy)">Whitetail Ridge Golf Club · Yorkville</p>
+      <div class="pills"><a class="pill p-navy" href="#charity-dinner">Become a sponsor</a></div>
+    </div>
+    <div class="photo has-img" style="--pos:45% 50%"><img src="assets/charity-dinner.jpg" alt="Guests at round tables raising bid paddles during the Called to Care charity auction" loading="lazy" width="2200" height="1467"></div>
+  </div>
+
+  <section class="b-pink lemon">
+    <div class="wrap center vstack" style="gap:26px">
+      <span class="label">Kids can help too</span>
+      <h2 class="cond c-navy" style="font-size:clamp(3rem,8vw,6.5rem)">Stand <span class="serif" style="font-family:var(--serif);text-transform:none;font-weight:400;font-style:italic;color:var(--pink)">with</span> kids</h2>
+      <p class="lede">Host a lemonade stand, raise money for foster kids and families, and deposit it online. We'll send everything you need.</p>
+      <div class="pills"><a class="pill p-navy" href="#lemonade">Get the lemonade kit</a></div>
+    </div>
+  </section>
+
+  <section class="b-white">
+    <div class="wrap center vstack" style="gap:22px">
+      <blockquote class="statement c-navy" style="max-width:26ch">“Our job isn't to be their savior; it's simply to love these kids as our Savior has loved us.”</blockquote>
+      <span class="label" style="color:var(--pink)">Jason Johnson</span>
+    </div>
+  </section>
+
+  <section class="b-teal">
+    <div class="wrap g2" style="align-items:center">
+      <div class="vstack"><span class="label c-pinkl">Stay in the loop</span><h2 class="d2">Bringing hope to your inbox.</h2></div>
+      <form class="js-form" data-done="You're on the list. Thank you!">
+        <div class="r2">
+          <label class="f" for="h-name">Name<input id="h-name" name="name" autocomplete="name" required></label>
+          <label class="f" for="h-email">Email<input id="h-email" name="email" type="email" autocomplete="email" required></label>
+        </div>
+        <button class="pill p-pink" type="submit" style="justify-self:start">I'm in. Sign me up</button>
+      </form>
+    </div>
+  </section>
+</div>
+
+<!-- ======================= FOSTER PARENTS ======================= -->
+<div class="page" data-page="foster-parents" hidden>
+  <div class="ph b-navy"><div class="wrap">
+    <span class="label c-pinkl">Foster parents</span>
+    <h1 class="d1">You said yes.<br><em class="it c-sky">We're here for what's next.</em></h1>
+    <p class="lede" style="color:var(--sky)">Care packages, monthly support, trauma-informed therapy, and camp scholarships for the families of foster care and adoption.</p>
+    <nav class="subnav c-pinkl" aria-label="On this page"><a href="#foster-parents" data-anchor="newplacement">New placement</a><a href="#foster-parents" data-anchor="supportnight">Support night</a><a href="#therapy">Therapy</a><a href="#camp">Camp scholarships</a></nav>
+  </div></div>
+
+  <section class="b-skypale" id="newplacement">
+    <div class="wrap center vstack" style="gap:18px;margin-bottom:48px">
+      <span class="label" style="color:var(--teal)">I just accepted a new placement</span>
+      <h2 class="d2 c-navy">Your first week, in three steps</h2>
+      <div class="counties" aria-label="Counties served"><span>DeKalb</span><span>DuPage</span><span>Grundy</span><span>Kane</span><span>Kendall</span><span>LaSalle</span><span>Will</span></div>
+    </div>
+    <div class="wrap steps">
+      <div class="step"><h3>Request a care package</h3><p>For placements in the last week or less. Tell us about your new arrival and we'll take it from there.</p><a class="pill p-hot" href="https://form.jotform.com/220196204357048" target="_blank" rel="noopener">Request</a></div>
+      <div class="step"><h3>Join the foster parent email</h3><p>Trainings, events, and resources sent just to foster and adoptive families.</p><a class="pill p-navy" href="https://view.flodesk.com/pages/6104c8d91ab913927d9160b0" target="_blank" rel="noopener">Join</a></div>
+      <div class="step"><h3>Come to support night</h3><p>Meet moms who understand, the first Thursday of every month, with childcare on site.</p><a class="pill p-pink" href="#foster-parents" data-anchor="supportnight">Details</a></div>
+    </div>
+  </section>
+
+  <div class="split b-teal" id="supportnight">
+    <div class="txt">
+      <span class="label c-pinkl">Monthly support night</span>
+      <h2 class="d2">Foster &amp; Adoptive Moms' Support Night</h2>
+      <p style="color:var(--sky)">A safe, supportive space where moms of foster and adoptive children connect, share experiences, and gain insight. We enjoy snacks together, talk openly, share updates, and work through hard questions. Many nights include training with practical tools for the unique challenges of fostering.</p>
+      <p style="color:var(--sky)">On-site childcare is provided. Registration is required for adults and children, so please register early.</p>
+      <p style="font-family:var(--serif);font-size:1.9rem;line-height:1.1" data-sn="full">Thursday, November 5, 2026</p>
+      <p class="label c-pinkl" style="font-size:.7rem">6:30 PM · 1111 W South St, Plano, IL 60545</p>
+      <div class="pills"><a class="pill p-pink" href="https://form.jotform.com/262945432903157" target="_blank" rel="noopener">Register now</a><a class="pill p-line c-white" href="https://www.google.com/maps/place/Called+to+Care/@41.6562866,-88.5558264,17z" target="_blank" rel="noopener">Directions</a></div>
+    </div>
+    <div class="photo has-img" style="--pos:center"><img src="assets/kids-curls.jpg" alt="Two smiling kids with curly hair resting their chins in their hands" loading="lazy" width="1800" height="1200"></div>
+  </div>
+
+  <section class="b-pinkpale">
+    <div class="wrap g2">
+      <div class="lab cap-sky"><span class="label">Counseling</span><h3>Therapy for your family</h3><p>Licensed clinical social workers who specialize in foster care and adoption. We accept insurance.</p><a class="pill p-navy" href="#therapy">Explore therapy</a></div>
+      <div class="lab cap-hot"><span class="label">Ages 5–18</span><h3>Camp scholarships</h3><p>Help with the cost of camps that offer spiritual, emotional, social, and personal growth.</p><a class="pill p-navy" href="#camp">Apply</a></div>
+    </div>
+  </section>
+</div>
+
+<!-- ======================= THERAPY ======================= -->
+<div class="page" data-page="therapy" hidden>
+  <div class="ph b-navy"><div class="wrap g2" style="align-items:center;gap:48px">
+    <div>
+      <span class="label c-pinkl">Called to Care · Hope &amp; Healing</span>
+      <h1 class="d1" style="font-size:clamp(3rem,7vw,5.6rem)">Counseling for families shaped by <em class="it c-pinkl">foster care</em> &amp; <em class="it c-sky">adoption</em></h1>
+      <p class="lede" style="color:var(--sky)">Our licensed clinical social workers serve any child, teen, or adult who has been touched by foster care or adoption in any way.</p>
+      <div class="pills mt"><a class="pill p-pink" href="https://form.jotform.com/232004583450043" target="_blank" rel="noopener">Request an appointment</a><a class="pill p-line c-white" href="https://form.jotform.com/232005722191142" target="_blank" rel="noopener">Ask a question</a></div>
+    </div>
+    <div class="heartdisc"><img src="assets/therapy-heart.png" alt="Called to Care Hope &amp; Healing logo" width="640" height="534"></div>
+  </div></div>
+
+  <section class="b-pink" style="padding-block:64px">
+    <div class="wrap g3 center">
+      <div class="vstack" style="gap:8px;align-items:center"><span class="d1 c-pink" style="font-size:4.5rem">1</span><h3 class="d3 c-navy">You request</h3><p>Fill out the therapy request and insurance verification form.</p></div>
+      <div class="vstack" style="gap:8px;align-items:center"><span class="d1 c-pink" style="font-size:4.5rem">2</span><h3 class="d3 c-navy">We verify</h3><p>Our team checks your benefits and matches you with a therapist.</p></div>
+      <div class="vstack" style="gap:8px;align-items:center"><span class="d1 c-pink" style="font-size:4.5rem">3</span><h3 class="d3 c-navy">We call you</h3><p>Our scheduling team reaches out to book your first session.</p></div>
+    </div>
+  </section>
+
+  <section class="b-skypale" id="therapists">
+    <div class="wrap center vstack" style="gap:14px;margin-bottom:48px"><span class="label" style="color:var(--teal)">Meet the therapists</span><h2 class="d2 c-navy">Experienced, local, and at home in foster care</h2></div>
+    <div class="wrap" style="display:grid;gap:28px">
+      <div class="person"><div class="photo"><span>Photo</span></div><div class="vstack" style="gap:14px">
+        <span class="label">Clinical Director</span><h3>Megan Gunier, MSW, LCSW</h3>
+        <p>Megan is a Licensed Clinical Social Worker with close to 20 years of experience as a school social worker, specializing in supporting youth in care. She has dedicated her career to helping vulnerable children secure essential resources and understand their rights, and she is passionate about advocating for those in need and creating opportunities for growth and stability.</p>
+        <p>Outside of work, Megan enjoys time with her family and cheering on her children at their sporting events. She serves as Assistant Sunday School Director at her church.</p>
+        <div class="creds"><span>MSW · University of Illinois Chicago</span><span>CPI Certified</span></div>
+      </div></div>
+      <div class="person"><div class="photo"><span>Photo</span></div><div class="vstack" style="gap:14px">
+        <span class="label">Therapist</span><h3>Kari Frantzen, MSW, LCSW</h3>
+        <p>Kari brings over 20 years of experience as a school social worker in public education. She is passionate about helping children and families discover new perspectives and build practical skills to overcome life's challenges. Much of her career has focused on suicide education and grief support, and her compassionate approach creates a safe space for clients to work through obstacles and heal.</p>
+        <div class="creds"><span>MSW · Aurora University</span><span>LCSW</span><span>ASIST Trainer</span></div>
+      </div></div>
+      <div class="person"><div class="photo"><span>Photo</span></div><div class="vstack" style="gap:14px">
+        <span class="label">Therapist</span><h3>Shari Chapman, MSW, LCSW</h3>
+        <p>Shari enjoys walking alongside people on the challenging roads of life. She specializes in helping individuals gain the skills and insight to experience joy amid pain and struggle. Her own experience as a biological, foster, and adoptive parent gives her a unique approach with people affected by foster care and adoption.</p>
+        <div class="creds"><span>MSW · Lewis University</span><span>TBRI® Practitioner</span><span>CWEL, CANS, CERAP</span></div>
+      </div></div>
+    </div>
+  </section>
+
+  <section class="b-white" id="faq">
+    <div class="wrap g2" style="gap:56px">
+      <div class="vstack"><span class="label" style="color:var(--pink)">FAQ</span><h2 class="d2 c-navy">Questions families ask</h2><p>Still wondering? <a href="https://form.jotform.com/232005722191142" target="_blank" rel="noopener" style="color:var(--teal);font-weight:700">Send the therapy team a question →</a></p></div>
+      <div>
+        <details open><summary>Do you only see children in foster care?</summary><p>No. Our services are open to any child, teen, or adult who has been impacted by foster care or adoption in any way.</p></details>
+        <details><summary>Do you accept insurance?</summary><p>Yes. <a href="https://form.jotform.com/232004583450043" target="_blank" rel="noopener">Use the request form</a> and we'll verify your benefits.</p></details>
+        <details><summary>How do I schedule an appointment?</summary><p><a href="https://form.jotform.com/232004583450043" target="_blank" rel="noopener">Start the request here</a>, and our scheduling team will contact you.</p></details>
+        <details><summary>Where is your office?</summary><p>At our Called to Care location, 1111 W South St, Plano, IL 60545.</p></details>
+        <details><summary>Do you offer telehealth?</summary><p>Telehealth is an option for clients over age 18.</p></details>
+        <details><summary>Is there a waiting area during my child's session?</summary><p>We don't have a waiting area. Several restaurants are nearby, and Walmart is about a mile away.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="b-navy" style="padding-block:64px"><div class="wrap center vstack" style="gap:16px">
+    <p class="statement" style="font-size:clamp(1.5rem,3vw,2.3rem);max-width:34ch">“For I know the plans I have for you… plans to give you <em class="it c-pinkl">hope</em> and a <em class="it c-sky">future</em>.”</p>
+    <span class="label c-pinkl">Jeremiah 29:11</span>
+  </div></section>
+</div>
+
+<!-- ======================= GET INVOLVED ======================= -->
+<div class="page" data-page="get-involved" hidden>
+  <div class="ph b-pink"><div class="wrap">
+    <span class="label">Get involved</span>
+    <h1 class="d1 c-navy">There's a place for <em class="it c-pink">you</em> in this work.</h1>
+    <p class="lede">Volunteers carry most of what we do, from packing care bags to running the supply room. We add to the team all year long.</p>
+    <nav class="subnav c-navy" aria-label="On this page"><a href="#get-involved" data-anchor="volunteer">Volunteer</a><a href="#get-involved" data-anchor="carecloset">Care Closet</a><a href="#lemonade" class="lemon">Lemonade stand</a><a href="#careers">Careers</a></nav>
+  </div></div>
+
+  <div class="split b-teal" id="volunteer">
+    <div class="photo has-img" style="--pos:center"><img src="assets/kids-living-room.jpg" alt="Four kids hugging and smiling at the camera in a living room" loading="lazy" width="1800" height="1200"></div>
+    <div class="txt">
+      <span class="label c-pinkl">Volunteer</span>
+      <h2 class="d2">Apply to join the volunteer team</h2>
+      <p style="color:var(--sky)">We serve the counties around our home office in Plano, and we'd be glad to have you. Once you apply, a team member will reach out to walk you through the next steps.</p>
+      <div class="pills"><a class="pill p-pink" href="#volunteer-apply">Apply to volunteer</a></div>
+    </div>
+  </div>
+
+  <div class="split rev b-skypale" id="carecloset">
+    <div class="txt">
+      <span class="label" style="color:var(--teal)">Care Closet</span>
+      <h2 class="d2 c-navy">Stock the closet. Deliver the bags.</h2>
+      <p>When a child arrives in a new home, often with very little, a Called to Care bag shows up at the door with clothes, essentials, and a hot meal. Care Closet volunteers sort donations, pack bags, and deliver them to families.</p>
+      <div class="pills"><a class="pill p-navy" href="#volunteer-apply" data-preset="Care Closet">Volunteer in the Care Closet</a><a class="pill p-line c-navy" href="https://www.amazon.com/hz/wishlist/ls/38RK52RW3Q2M9" target="_blank" rel="noopener">Shop the wish list</a></div>
+    </div>
+    <div class="photo has-img" style="--pos:25% 55%"><img src="assets/care-closet.jpg" alt="Care Closet shelves with labeled bins of children's clothing by size" loading="lazy" width="1600" height="1200"></div>
+  </div>
+
+  <section class="b-pinkpale">
+    <div class="wrap g3 g-fit">
+      <div class="lab cap-pink lemon"><span class="label">Kids can help</span><h3>Lemonade stand</h3><p>Everything your family needs to raise money for foster kids.</p><a class="pill p-navy" href="#lemonade">Get the kit</a></div>
+      <div class="lab cap-sky"><span class="label">Show up</span><h3>Events</h3><p>Support nights, volunteer events, and our annual dinner.</p><a class="pill p-navy" href="#events">See events</a></div>
+      <div class="lab cap-navy"><span class="label">Work with us</span><h3>Careers</h3><p>Therapist and Selah Home residential monitor positions.</p><a class="pill p-navy" href="#careers">View openings</a></div>
+    </div>
+  </section>
+</div>
+
+<!-- ======================= EVENTS ======================= -->
+<div class="page" data-page="events" hidden>
+  <div class="ph b-sky"><div class="wrap">
+    <span class="label c-navy">Events</span>
+    <h1 class="d1 c-navy">Here's what's <em class="it c-pink">coming up.</em></h1>
+    <p class="lede">Most events take place at our office, 1111 W South St, Plano, IL.</p>
+  </div></div>
+  <section class="b-navy">
+    <div class="wrap rows">
+      <div class="row" id="supportnightevent">
+        <div class="dot"><span><small data-sn="m">Nov</small><b data-sn="d">5</b></span></div>
+        <div class="vstack" style="gap:6px"><span class="label">Monthly · first Thursday</span><h3>Foster &amp; Adoptive Moms' Support Night</h3><span class="meta">6:30 PM · Plano office · Childcare provided · Registration required</span></div>
+        <a class="pill p-pink" href="https://form.jotform.com/262945432903157" target="_blank" rel="noopener">Register</a>
+      </div>
+      <div class="row">
+        <div class="dot"><span><small>Mar</small><b>13</b></span></div>
+        <div class="vstack" style="gap:6px"><span class="label">2027 · 6th annual</span><h3>Charity Dinner &amp; Auction</h3><span class="meta">Saturday, March 13, 2027 · Whitetail Ridge Golf Club, Yorkville · Sponsorships open now</span></div>
+        <a class="pill p-pink" href="#charity-dinner">Sponsor</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ======================= CHARITY DINNER ======================= -->
+<div class="page" data-page="charity-dinner" hidden>
+  <div class="ph b-navy center"><div class="wrap vstack" style="align-items:center;gap:18px">
+    <span class="label c-pinkl">Save the date · 6th annual</span>
+    <h1 class="d1">Charity Dinner <em class="it c-pinkl">&amp;</em> Auction</h1>
+    <p style="font-family:var(--serif);font-size:clamp(1.8rem,4vw,2.8rem);color:var(--sky)">Saturday, March 13, 2027</p>
+    <p class="label c-pinkl"><a href="https://www.google.com/maps/search/?api=1&query=Whitetail+Ridge+Golf+Club+7671+Clubhouse+Drive+Yorkville+IL" target="_blank" rel="noopener" style="color:inherit;text-underline-offset:5px">Whitetail Ridge Golf Club · 7671 Clubhouse Drive, Yorkville</a></p>
+    <p class="lede" style="color:var(--sky)">An evening of dinner, an auction, and stories from the families you help us serve.</p>
+    <nav class="subnav c-pinkl" style="justify-content:center" aria-label="On this page"><a href="#charity-dinner" data-anchor="tickets">Tickets</a><a href="#charity-dinner" data-anchor="sponsors">Sponsorships</a><a href="#charity-dinner" data-anchor="underwriting">Underwriting</a><a href="#charity-dinner" data-anchor="monthly">Monthly Partners</a></nav>
+  </div></div>
+
+  <div class="dinner-band photo has-img" style="--pos:50% 45%"><img src="assets/charity-dinner.jpg" alt="Guests at round tables raising bid paddles during the Called to Care charity auction" width="2200" height="1467"></div>
+
+  <section class="b-pink" id="tickets" style="padding-block:72px">
+    <div class="wrap g2" style="align-items:center;gap:40px">
+      <div class="vstack" style="gap:14px"><span class="label">Tickets</span><h2 class="d2 c-navy">Join us for dinner.</h2><p>Come for the night, or fill a table with your friends, small group, or coworkers.</p><p class="tix-off"><b>Tickets go on sale soon.</b> Monthly partners get early access. <a href="#charity-dinner" data-anchor="monthly" style="color:var(--teal);font-weight:700">Learn how →</a></p></div>
+      <div class="g2" style="gap:20px">
+        <div class="lab cap-hot tier"><div class="tier-top"><span class="label">Single Ticket</span><span class="price">$100</span></div><ul class="perks"><li>Dinner, auction, and program for one guest</li></ul><span class="pill p-line tix-off soon" style="color:var(--navy)">On Sale Soon</span><button type="button" class="pill p-hot pick tix-on" data-item="ticket" data-name="Dinner Ticket" data-price="100" data-qty="1">Buy Tickets</button></div>
+        <div class="lab cap-navy tier"><div class="tier-top"><span class="label">Table of 10</span><span class="price">$1,000</span></div><ul class="perks"><li>Reserved table for 10 guests</li></ul><span class="pill p-line tix-off soon" style="color:var(--navy)">On Sale Soon</span><button type="button" class="pill p-navy pick tix-on" data-item="table" data-name="Table of 10" data-price="1000">Reserve a Table</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="b-skypale" id="sponsors">
+    <div class="wrap center vstack" style="gap:14px;margin-bottom:44px"><span class="label" style="color:var(--teal)">2027 sponsor menu</span><h2 class="d2 c-navy">Be part of our sixth year.</h2><p>Every sponsor, at every level, is listed by name in the program book.</p></div>
+    <div class="wrap tiers">
+      <div class="lab cap-hot tier" data-tier="legacy">
+        <div class="tier-top"><span class="label">Legacy</span><span class="price">$15,000</span></div>
+        <ul class="perks"><li>Company or individual featured on all printed materials</li><li>Premier table seating for 10 guests</li><li>Recognition as a Legacy sponsor on large signage at the event</li><li>Full-page color ad in the program book</li><li>Two complimentary Golden Tickets</li></ul>
+        <button type="button" class="pill p-navy pick" data-item="legacy" data-name="Legacy Sponsor" data-price="15000">Choose Legacy</button>
+      </div>
+      <div class="lab cap-pink tier" data-tier="gold">
+        <div class="tier-top"><span class="label">Gold</span><span class="price">$10,000</span></div>
+        <ul class="perks"><li>Company or individual featured on all printed materials</li><li>Premier table seating for 10 guests</li><li>Recognition as a Gold sponsor on large signage at the event</li><li>Full-page color ad in the program book</li><li>One complimentary Golden Ticket</li></ul>
+        <button type="button" class="pill p-navy pick" data-item="gold" data-name="Gold Sponsor" data-price="10000">Choose Gold</button>
+      </div>
+      <div class="lab cap-sky tier" data-tier="platinum">
+        <div class="tier-top"><span class="label">Platinum</span><span class="price">$5,000</span></div>
+        <ul class="perks"><li>Company or individual featured on all printed materials</li><li>Premier table seating for 4 guests</li><li>Recognition as a Platinum sponsor on signage at the event</li><li>Half-page color ad in the program book</li></ul>
+        <button type="button" class="pill p-navy pick" data-item="platinum" data-name="Platinum Sponsor" data-price="5000">Choose Platinum</button>
+      </div>
+      <div class="lab cap-navy tier" data-tier="diamond">
+        <div class="tier-top"><span class="label">Diamond</span><span class="price">$2,500</span></div>
+        <ul class="perks"><li>Company or individual featured on all printed materials</li><li>Two tickets to the dinner</li><li>Recognition as a Diamond sponsor on signage at the event</li><li>Quarter-page color ad in the program book</li></ul>
+        <button type="button" class="pill p-navy pick" data-item="diamond" data-name="Diamond Sponsor" data-price="2500">Choose Diamond</button>
+      </div>
+      <div class="lab cap-sky tier" data-tier="sapphire">
+        <div class="tier-top"><span class="label">Sapphire</span><span class="price">$1,500</span></div>
+        <ul class="perks"><li>Company or individual featured on all printed materials</li><li>Recognition as a Sapphire sponsor on signage at the event</li><li>Recognition in the program book</li><li>Shout-out at the Charity Dinner</li></ul>
+        <button type="button" class="pill p-navy pick" data-item="sapphire" data-name="Sapphire Sponsor" data-price="1500">Choose Sapphire</button>
+      </div>
+      <div class="lab cap-pink tier" data-tier="ruby">
+        <div class="tier-top"><span class="label">Ruby</span><span class="price">$750</span></div>
+        <ul class="perks"><li>Recognition in the program book</li><li>Shout-out at the Charity Dinner</li></ul>
+        <button type="button" class="pill p-navy pick" data-item="ruby" data-name="Ruby Sponsor" data-price="750">Choose Ruby</button>
+      </div>
+      <div class="lab cap-navy tier" data-tier="friend">
+        <div class="tier-top"><span class="label">Friend</span><span class="price">$250</span></div>
+        <ul class="perks"><li>Your name in the program book</li></ul>
+        <button type="button" class="pill p-navy pick" data-item="friend" data-name="Friend Sponsor" data-price="250">Choose Friend</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="b-white" id="underwriting">
+    <div class="wrap center vstack" style="gap:14px;margin-bottom:44px"><span class="label" style="color:var(--pink)">Underwrite a piece of the night</span><h2 class="d2 c-navy">Appetizers, desserts &amp; flowers</h2></div>
+    <div class="wrap tiers t3">
+      <div class="lab cap-sky tier" data-tier="appetizer">
+        <div class="tier-top"><span class="label">Appetizer Table</span><span class="price">$1,000</span></div>
+        <ul class="perks"><li>Recognized at the appetizer table</li></ul>
+        <span class="hint">1 available</span>
+        <button type="button" class="pill p-navy pick" data-item="appetizer" data-name="Appetizer Table Sponsor" data-price="1000">Choose Appetizer Table</button>
+      </div>
+      <div class="lab cap-sky tier" data-tier="dessert">
+        <div class="tier-top"><span class="label">Dessert Table</span><span class="price">$1,000</span></div>
+        <ul class="perks"><li>Recognized at the dessert table</li></ul>
+        <span class="hint">2 available</span>
+        <button type="button" class="pill p-navy pick" data-item="dessert" data-name="Dessert Table Sponsor" data-price="1000">Choose Dessert Table</button>
+      </div>
+      <div class="lab cap-sky tier" data-tier="flowers">
+        <div class="tier-top"><span class="label">Flowers</span><span class="price">$1,000</span></div>
+        <ul class="perks"><li>Recognized on signage at the event</li></ul>
+        <span class="hint">2 available</span>
+        <button type="button" class="pill p-navy pick" data-item="flowers" data-name="Flowers Sponsor" data-price="1000">Choose Flowers</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="split b-teal" id="monthly">
+    <div class="photo has-img" style="--pos:center"><img src="assets/kids-living-room.jpg" alt="Four kids hugging and smiling at the camera in a living room" loading="lazy" width="1800" height="1200"></div>
+    <div class="txt">
+      <span class="label c-pinkl">Monthly partners · $50 / month</span>
+      <h2 class="d2">Give monthly, get first dibs.</h2>
+      <p style="color:var(--sky)">Give $50 or more a month for 6 months or longer and get early access to buy Charity Dinner tickets before they go on sale to everyone.</p>
+      <div class="pills"><a class="pill p-pink" href="#donate" data-anchor="give">Start monthly giving</a></div>
+    </div>
+  </div>
+
+  <section class="b-pinkpale" style="padding-block:64px">
+    <div class="wrap g2" style="gap:40px">
+      <div class="vstack" style="gap:10px"><span class="label">Prefer to mail a check?</span><p class="d3 c-navy">We Are Called to Care<br>201 E Veterans Parkway, Suite 13<br>Yorkville, IL 60560</p><p class="hint">Make checks payable to We Are Called to Care, NFP.</p></div>
+      <div class="vstack" style="gap:10px"><span class="label">Questions about sponsoring?</span><p>Contact our Executive Director, Shari Chapman, at <span style="user-select:all;font-weight:700">shari@wearecalledtocare.com</span>.</p><a class="pill p-line" style="color:var(--navy);align-self:flex-start" href="assets/sponsor-packet-2027.pdf" target="_blank" rel="noopener">Download Sponsor Packet</a></div>
+    </div>
+  </section>
+
+  <!-- checkout drawer -->
+  <div class="co" id="checkout" hidden>
+    <button class="scrim" type="button" data-close aria-label="Close checkout"></button>
+    <div class="co-panel" role="dialog" aria-modal="true" aria-labelledby="coTitle">
+      <button class="co-x" type="button" data-close aria-label="Close checkout">×</button>
+      <form id="coForm" class="apply" novalidate style="box-shadow:none;max-width:none">
+        <div class="fs">
+          <span class="label" style="color:var(--pink)">Charity Dinner &amp; Auction · March 13, 2027</span>
+          <h2 class="d3 c-navy" id="coTitle">Sponsor</h2>
+          <div class="co-line"><span id="coItem">Item</span><span id="coPrice" class="price">$0</span></div>
+          <label class="q" for="co-qty" id="coQtyWrap" hidden><span class="lbl">Number of <span class="nw">Tickets<span class="req">*</span></span></span><input id="co-qty" name="qty" type="number" min="1" max="20" value="1" inputmode="numeric"></label>
+          <label class="q" for="co-display" id="coDisplayWrap"><span class="lbl">Name as It Should Appear on <span class="nw">Signage<span class="req">*</span></span></span><input id="co-display" name="display_name" placeholder="Company, family, or individual"></label>
+          <div class="c2">
+            <label class="q" for="co-first"><span class="lbl">First <span class="nw">Name<span class="req">*</span></span></span><input id="co-first" name="first_name" autocomplete="given-name" required></label>
+            <label class="q" for="co-last"><span class="lbl">Last <span class="nw">Name<span class="req">*</span></span></span><input id="co-last" name="last_name" autocomplete="family-name" required></label>
+            <label class="q" for="co-email"><span class="lbl"><span class="nw">Email<span class="req">*</span></span></span><input id="co-email" name="email" type="email" autocomplete="email" required></label>
+            <label class="q" for="co-phone"><span class="lbl"><span class="nw">Phone<span class="req">*</span></span></span><input id="co-phone" name="phone" type="tel" autocomplete="tel" placeholder="(000) 000-0000" required></label>
+          </div>
+          <label class="q" for="co-guests" id="coGuestsWrap" hidden><span class="lbl">Guest Names</span><span class="hint">Optional. You can send these later.</span><textarea id="co-guests" name="guest_names" style="min-height:90px"></textarea></label>
+          <div class="co-total"><span>Total</span><span id="coTotal" class="price">$0</span></div>
+          <div class="co-pay">
+            <button class="pill p-hot" type="submit" data-method="card">Pay with Card</button>
+            <button class="paypal" type="submit" data-method="paypal" aria-label="Pay with PayPal"><b>Pay</b><i>Pal</i></button>
+          </div>
+          <p class="hint">Card payments include Apple Pay and Google Pay. Your payment is processed securely by Stripe or PayPal.</p>
+          <p class="err" id="coErr" role="alert"></p>
+        </div>
+      </form>
+      <div class="done-card" id="coDone" hidden style="box-shadow:none">
+        <span class="label" style="color:var(--pink)">Thank you</span>
+        <h2 class="d2 c-navy">You're in!</h2>
+        <p id="coDoneMsg"></p>
+        <p class="hint">(Preview: no payment was taken. Once Stripe and PayPal are connected, this opens secure checkout.)</p>
+        <button class="pill p-navy" type="button" data-close>Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= DONATE ======================= -->
+<div class="page" data-page="donate" hidden>
+  <div class="ph b-teal"><div class="wrap">
+    <span class="label c-pinkl">Donate</span>
+    <h1 class="d1">Thank you for your <em class="it c-pinkl">generosity.</em></h1>
+    <p class="lede" style="color:var(--sky)">Called to Care runs on volunteers and gifts. Our work is impossible without your partnership.</p>
+    <nav class="subnav c-pinkl" aria-label="On this page"><a href="#donate" data-anchor="give">Give</a><a href="#donate" data-anchor="corporate">Corporate</a><a href="#donate" data-anchor="other">Other ways</a></nav>
+  </div></div>
+
+  <section class="b-skypale" id="give">
+    <div class="wrap g2">
+      <div class="lab cap-hot"><span class="label">General donation</span><h3>Support children and families in foster care</h3><p>Practical support, wrap-around care, and lasting relationships help families stabilize, heal, and flourish. Your gift stocks the supply room, funds placement-night meals, and lets us celebrate birthdays, graduations, and holidays with the kids we serve.</p><a class="pill p-hot" href="https://donorbox.org/called-to-care-2021" target="_blank" rel="noopener">Donate now</a></div>
+      <div class="lab cap-sky"><span class="label">Selah Home</span><h3>Help launch a sanctuary for children in emergency care</h3><p>The Selah Home will give children who need emergency foster care a safe, nurturing place to land.</p><a class="pill p-navy" href="https://www.paypal.com/donate/?hosted_button_id=TYWTRM9KQS66J" target="_blank" rel="noopener">Give to Selah Home</a></div>
+    </div>
+  </section>
+
+  <div class="split b-navy" id="corporate">
+    <div class="photo has-img" style="--pos:48% 55%"><img src="assets/charity-dinner.jpg" alt="Guests at round tables raising bid paddles during the Called to Care charity auction" loading="lazy" width="2200" height="1467"></div>
+    <div class="txt">
+      <span class="label c-pinkl">Corporate &amp; church partners</span>
+      <h2 class="d2">Partner with Called to Care</h2>
+      <p style="color:var(--sky)">Businesses and churches make our year-round programs possible. Sponsor the charity dinner or give as a partner organization.</p>
+      <div class="pills"><a class="pill p-pink" href="https://donorbox.org/church-donations-23" target="_blank" rel="noopener">Partner now</a><a class="pill p-line c-white" href="#charity-dinner">Dinner sponsorships</a></div>
+    </div>
+  </div>
+
+  <section class="b-pinkpale" id="other">
+    <div class="wrap g3 g-fit">
+      <div class="lab cap-navy"><span class="label">Venmo</span><h3>@WeareCalledtocare</h3><p>Quick gifts from your phone.</p><a class="pill p-navy" href="https://venmo.com/code?user_id=3829017048254091350" target="_blank" rel="noopener">Open Venmo</a></div>
+      <div class="lab cap-pink"><span class="label">New clothes</span><h3>Amazon wish list</h3><p>Ship new clothing straight to our Care Closet.</p><a class="pill p-navy" href="https://www.amazon.com/hz/wishlist/ls/38RK52RW3Q2M9" target="_blank" rel="noopener">Shop the list</a></div>
+      <div class="lab cap-sky lemon"><span class="label">Kids giving</span><h3>Lemonade stand</h3><p>Raise money with a stand and deposit it online.</p><a class="pill p-navy" href="#lemonade">Learn how</a></div>
+    </div>
+    <p class="wrap fine" style="margin-top:36px"><b>Prefer to give by check?</b> Mail it to We Are Called to Care, 201 E Veterans Parkway, Suite 13, Yorkville, IL 60560, payable to We Are Called to Care, NFP.<br>We Are Called to Care, NFP is a 501(c)(3) nonprofit. EIN 86-2900453. Gifts are tax-deductible as allowed by law.</p>
+  </section>
+</div>
+
+<!-- ======================= LEMONADE ======================= -->
+<div class="page" data-page="lemonade" hidden>
+  <div class="ph b-pink center"><div class="wrap vstack" style="align-items:center;gap:20px">
+    <span class="label">Lemonade stand</span>
+    <h1 class="cond c-navy" style="font-size:clamp(3.4rem,10vw,8rem)">Stand <span style="font-family:var(--serif);text-transform:none;font-weight:400;font-style:italic;color:var(--pink)">with</span> kids</h1>
+    <p class="lede">Organize a lemonade stand and help Called to Care raise money for foster kids and families. When you're done, deposit what you collected online.</p>
+    <div class="pills"><a class="pill p-navy" href="https://www.paypal.com/donate/?hosted_button_id=SPJYUEPFL28FS" target="_blank" rel="noopener">Deposit your money</a><a class="pill p-white" href="https://static.showit.co/file/_ntcR_3jTjOa6gz_n_2A_Q/141511/caring_is_cool_flyer.pdf" target="_blank" rel="noopener">Order a Stand Kit</a></div>
+  </div></div>
+  <section class="b-skypale">
+    <div class="wrap" style="max-width:820px">
+      <div class="center vstack" style="gap:12px;margin-bottom:36px"><span class="label" style="color:var(--teal)">Free downloads</span><h2 class="d2 c-navy">Everything for a great stand</h2></div>
+      <div class="dl">
+        <a href="https://static.showit.com/file/TTEetY0UPCVD9UyPTaZ1EQ/141511/details.pdf" target="_blank" rel="noopener"><span><b>Lemonade stand details</b><small>All you need to run a successful stand</small></span></a>
+        <a href="https://static.showit.com/file/azHCLlHZ9RW03nR9SOqPSg/141511/stand_with_kids.pdf" target="_blank" rel="noopener"><span><b>Stand with Kids overview</b><small>How the program works</small></span></a>
+        <a href="https://static.showit.com/file/xuzKCTrAFYIPMHKaPkbT5A/141511/called_to_care_cheat_sheet.pdf" target="_blank" rel="noopener"><span><b>Called to Care cheat sheet</b><small>What to tell your customers</small></span></a>
+        <a href="https://static.showit.com/file/UoFOgfS8Xut3bny_6mQumQ/141511/lemonade_stand_template.pdf" target="_blank" rel="noopener"><span><b>Sign &amp; ad template</b><small>Making your own signs?</small></span></a>
+        <a href="https://static.showit.com/file/10sgMHw9RNO8S90x3FmM6w/141511/lemonade_logo_-_lemon_only.png" target="_blank" rel="noopener"><span><b>Lemon logo</b><small>PNG for your signs</small></span></a>
+        <a href="https://static.showit.co/file/K2SAwyVqVeU1JOfebTOZyQ/141511/501_c_3_-_we_are_called_to_care.pdf" target="_blank" rel="noopener"><span><b>501(c)(3) letter</b><small>For donors who ask</small></span></a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ======================= CAMP ======================= -->
+<div class="page" data-page="camp" hidden>
+  <div class="ph b-sky"><div class="wrap">
+    <span class="label c-navy">Camp scholarships · Ages 5–18</span>
+    <h1 class="d1 c-navy">Every child deserves a summer of <em class="it c-pink">joy.</em></h1>
+    <p class="lede">We help offset the cost of camps that offer spiritual, emotional, social, and personal growth for youth connected to foster care, adoption, or guardianship.</p>
+    <div class="pills mt"><a class="pill p-hot" href="#camp-apply">Start your application</a></div>
+  </div></div>
+  <section class="b-skypale">
+    <div class="wrap g3">
+      <div class="lab cap-pink"><span class="label">Who can apply</span><p style="color:var(--ink)">Youth ages 5–18 connected to foster care, adoption, or guardianship who are also involved in some part of Called to Care's support or services.</p></div>
+      <div class="lab cap-sky"><span class="label">How it's reviewed</span><p style="color:var(--ink)">Funds are limited, so a scholarship committee considers impact, need, and available funding. Applications are reviewed on a rolling basis.</p></div>
+      <div class="lab cap-navy"><span class="label">What happens next</span><p style="color:var(--ink)">Most families hear back within 14 business days. If approved, we pay the camp directly or reimburse you, depending on the arrangement.</p></div>
+    </div>
+  </section>
+</div>
+
+<!-- ======================= CAMP APPLICATION ======================= -->
+<div class="page" data-page="camp-apply" hidden>
+  <div class="ph b-sky"><div class="wrap">
+    <span class="label c-navy">Camp scholarship application</span>
+    <h1 class="d1 c-navy" style="font-size:clamp(2.8rem,7vw,5.4rem)">Let's get them to <em class="it c-pink">camp.</em></h1>
+    <p class="lede">Tell us about the youth, your family's connection to our programs, and the camp you're interested in. It takes about 15 minutes. Most families hear back within 14 business days.</p>
+  </div></div>
+  <section class="b-skypale" style="padding-block:64px 96px">
+    <div class="wrap">
+    <form class="apply" id="campForm" novalidate>
+      <fieldset class="fs">
+        <legend><span class="n">1</span><span class="t">Youth Information</span></legend>
+        <div class="q" data-req><span class="lbl">Youth Full <span class="nw">Name<span class="req">*</span></span></span>
+          <div class="c3">
+            <label class="sub" for="y-first"><input id="y-first" name="youth_first" autocomplete="off" required><small>First</small></label>
+            <label class="sub" for="y-middle"><input id="y-middle" name="youth_middle" autocomplete="off"><small>Middle</small></label>
+            <label class="sub" for="y-last"><input id="y-last" name="youth_last" autocomplete="off" required><small>Last</small></label>
+          </div>
+        </div>
+        <div class="c3">
+          <label class="q" for="y-dob"><span class="lbl">Date of <span class="nw">Birth<span class="req">*</span></span></span><input id="y-dob" name="youth_dob" type="date" required></label>
+          <label class="q" for="y-age"><span class="lbl"><span class="nw">Age<span class="req">*</span></span></span><input id="y-age" name="youth_age" type="number" min="5" max="18" inputmode="numeric" required></label>
+          <label class="q" for="y-grade"><span class="lbl"><span class="nw">Grade<span class="req">*</span></span></span><input id="y-grade" name="youth_grade" placeholder="e.g. 4th" required></label>
+        </div>
+        <div class="c2">
+          <label class="q" for="y-school"><span class="lbl">School</span><input id="y-school" name="youth_school"></label>
+          <label class="q" for="y-pref"><span class="lbl">Preferred Name</span><input id="y-pref" name="youth_preferred_name"></label>
+        </div>
+        <div class="q" data-group="youth_status"><span class="lbl">Current <span class="nw">Status<span class="req">*</span></span> <span class="hint">Check all that apply.</span></span>
+          <div class="choices">
+            <label class="choice" for="st-1"><input type="checkbox" id="st-1" name="youth_status" value="Currently in Foster Care"> Currently in Foster Care</label>
+            <label class="choice" for="st-2"><input type="checkbox" id="st-2" name="youth_status" value="Formerly in Foster Care"> Formerly in Foster Care</label>
+            <label class="choice" for="st-3"><input type="checkbox" id="st-3" name="youth_status" value="Adopted"> Adopted</label>
+            <label class="choice" for="st-4"><input type="checkbox" id="st-4" name="youth_status" value="Under Guardianship"> Under Guardianship</label>
+          </div>
+        </div>
+        <label class="q" for="y-info"><span class="lbl">Additional Youth Information</span><textarea id="y-info" name="youth_additional_info"></textarea></label>
+      </fieldset>
+
+      <fieldset class="fs">
+        <legend><span class="n">2</span><span class="t">Parent / Guardian Information</span></legend>
+        <div class="q"><span class="lbl">Name of Adult Completing This <span class="nw">Application<span class="req">*</span></span></span>
+          <div class="c3">
+            <label class="sub" for="a-first"><input id="a-first" name="adult_first" autocomplete="given-name" required><small>First</small></label>
+            <label class="sub" for="a-middle"><input id="a-middle" name="adult_middle" autocomplete="additional-name"><small>Middle</small></label>
+            <label class="sub" for="a-last"><input id="a-last" name="adult_last" autocomplete="family-name" required><small>Last</small></label>
+          </div>
+        </div>
+        <div class="c3">
+          <label class="q" for="a-rel"><span class="lbl">Relationship to <span class="nw">Youth<span class="req">*</span></span></span><input id="a-rel" name="relationship" placeholder="e.g. Foster mom" required></label>
+          <label class="q" for="a-phone"><span class="lbl"><span class="nw">Phone<span class="req">*</span></span></span><input id="a-phone" name="phone" type="tel" autocomplete="tel" placeholder="(000) 000-0000" required></label>
+          <label class="q" for="a-email"><span class="lbl"><span class="nw">Email<span class="req">*</span></span></span><input id="a-email" name="email" type="email" autocomplete="email" required></label>
+        </div>
+        <div class="q"><span class="lbl">Home <span class="nw">Address<span class="req">*</span></span></span>
+          <label class="sub" for="ad-1"><input id="ad-1" name="address_street" autocomplete="address-line1" required><small>Street Address</small></label>
+          <label class="sub" for="ad-2"><input id="ad-2" name="address_line2" autocomplete="address-line2"><small>Street Address Line 2</small></label>
+          <div class="c3">
+            <label class="sub" for="ad-city"><input id="ad-city" name="address_city" autocomplete="address-level2" required><small>City</small></label>
+            <label class="sub" for="ad-state"><input id="ad-state" name="address_state" autocomplete="address-level1" value="IL" required><small>State</small></label>
+            <label class="sub" for="ad-zip"><input id="ad-zip" name="address_zip" autocomplete="postal-code" inputmode="numeric" required><small>ZIP Code</small></label>
+          </div>
+        </div>
+        <div class="c2">
+          <label class="q" for="h-kids"><span class="lbl">Number of Children Living in <span class="nw">Household<span class="req">*</span></span></span><input id="h-kids" name="household_children" type="number" min="1" inputmode="numeric" required></label>
+          <label class="q" for="h-fkids"><span class="lbl">Number of Foster, Adopted, or Guardianship Children in <span class="nw">Household<span class="req">*</span></span></span><input id="h-fkids" name="household_fag_children" type="number" min="0" inputmode="numeric" required></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="fs">
+        <legend><span class="n">3</span><span class="t">Foster, Adoption &amp; Guardianship</span></legend>
+        <p class="hint" style="margin-top:-8px">Based on the status you checked above. Fill in what applies.</p>
+        <div class="c2">
+          <label class="q" for="f-agency"><span class="lbl">Agency Name</span><input id="f-agency" name="agency_name"></label>
+          <label class="q" for="f-cw"><span class="lbl">Caseworker Name</span><input id="f-cw" name="caseworker_name"></label>
+          <label class="q" for="f-cwp"><span class="lbl">Caseworker Phone</span><input id="f-cwp" name="caseworker_phone" type="tel" placeholder="(000) 000-0000"></label>
+          <label class="q" for="f-cwe"><span class="lbl">Caseworker Email</span><input id="f-cwe" name="caseworker_email" type="email"></label>
+          <label class="q" for="f-adopt" data-show-if="Adopted" hidden><span class="lbl">Date Adoption Was Finalized</span><input id="f-adopt" name="adoption_date" type="date"></label>
+          <label class="q" for="f-guard" data-show-if="Under Guardianship" hidden><span class="lbl">Date Guardianship Was Granted</span><input id="f-guard" name="guardianship_date" type="date"></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="fs">
+        <legend><span class="n">4</span><span class="t">Camp Information</span></legend>
+        <div class="c2">
+          <label class="q" for="c-name"><span class="lbl">Name of <span class="nw">Camp<span class="req">*</span></span></span><input id="c-name" name="camp_name" required></label>
+          <label class="q" for="c-loc"><span class="lbl">Camp <span class="nw">Location<span class="req">*</span></span></span><input id="c-loc" name="camp_location" placeholder="City, State" required></label>
+          <label class="q" for="c-web"><span class="lbl">Camp Website</span><input id="c-web" name="camp_website" type="url" placeholder="https://"></label>
+          <label class="q" for="c-dates"><span class="lbl">Camp <span class="nw">Dates<span class="req">*</span></span></span><input id="c-dates" name="camp_dates" placeholder="e.g. June 14–19, 2027" required></label>
+          <label class="q" for="c-cost"><span class="lbl">Total Cost of <span class="nw">Camp<span class="req">*</span></span></span><span class="money"><span>$</span><input id="c-cost" name="camp_cost" type="number" min="0" step="0.01" inputmode="decimal" required></span></label>
+        </div>
+        <div class="q" data-group="attended_before"><span class="lbl">Has the youth attended this camp <span class="nw">before?<span class="req">*</span></span></span>
+          <div class="choices inline"><label class="choice" for="ab-y"><input type="radio" id="ab-y" name="attended_before" value="Yes"> Yes</label><label class="choice" for="ab-n"><input type="radio" id="ab-n" name="attended_before" value="No"> No</label></div>
+        </div>
+      </fieldset>
+
+      <fieldset class="fs">
+        <legend><span class="n">5</span><span class="t">Scholarship Need &amp; Impact</span></legend>
+        <label class="q" for="n-why"><span class="lbl">Why are you seeking scholarship assistance for this <span class="nw">camp?<span class="req">*</span></span></span><textarea id="n-why" name="need_reason" required></textarea></label>
+        <label class="q" for="n-benefit"><span class="lbl">How would attending this camp benefit the youth spiritually, emotionally, socially, or <span class="nw">developmentally?<span class="req">*</span></span></span><textarea id="n-benefit" name="need_benefit" required></textarea></label>
+        <label class="q" for="n-else"><span class="lbl">Is there anything else you'd like the scholarship committee to consider?</span><textarea id="n-else" name="need_other"></textarea></label>
+      </fieldset>
+
+      <fieldset class="fs">
+        <legend><span class="n">6</span><span class="t">Follow-Up Commitment</span></legend>
+        <div class="q" data-group="followup_photo"><span class="lbl">Are you willing to submit a photo of the youth enjoying camp <span class="nw">afterward?<span class="req">*</span></span></span>
+          <div class="choices inline"><label class="choice" for="fp-y"><input type="radio" id="fp-y" name="followup_photo" value="Yes"> Yes</label><label class="choice" for="fp-n"><input type="radio" id="fp-n" name="followup_photo" value="No"> No</label></div></div>
+        <div class="q" data-group="followup_narrative"><span class="lbl">Are you willing to submit a short narrative about how camp impacted the <span class="nw">youth?<span class="req">*</span></span></span>
+          <div class="choices inline"><label class="choice" for="fn-y"><input type="radio" id="fn-y" name="followup_narrative" value="Yes"> Yes</label><label class="choice" for="fn-n"><input type="radio" id="fn-n" name="followup_narrative" value="No"> No</label></div></div>
+        <div class="q" data-group="media_permission"><span class="lbl">If you submit photos or narratives, may We Are Called to Care use them in newsletters, social media, fundraising materials, or ministry communications? We would not include the youth's <span class="nw">name.<span class="req">*</span></span></span>
+          <div class="choices inline"><label class="choice" for="mp-y"><input type="radio" id="mp-y" name="media_permission" value="Yes"> Yes</label><label class="choice" for="mp-n"><input type="radio" id="mp-n" name="media_permission" value="No"> No</label></div></div>
+      </fieldset>
+
+      <fieldset class="fs">
+        <legend><span class="n">7</span><span class="t">Acknowledgment &amp; Signature</span></legend>
+        <div class="q" data-group="ack" data-all="3"><span class="lbl">Please Confirm Each <span class="nw">Statement<span class="req">*</span></span></span>
+          <div class="choices">
+            <label class="choice" for="ack-1"><input type="checkbox" id="ack-1" name="ack" value="accurate"> I certify that the information provided is accurate to the best of my knowledge.</label>
+            <label class="choice" for="ack-2"><input type="checkbox" id="ack-2" name="ack" value="limited_funds"> I understand that scholarship funds are limited and submitting this application does not guarantee approval.</label>
+            <label class="choice" for="ack-3"><input type="checkbox" id="ack-3" name="ack" value="more_info"> I understand that additional information may be requested if needed.</label>
+          </div>
+        </div>
+        <div class="q" id="sigQ"><span class="lbl">Applicant <span class="nw">Signature<span class="req">*</span></span> <span class="hint">Sign with your mouse or finger.</span></span>
+          <div class="sigpad"><canvas id="sig" aria-label="Signature pad"></canvas><span class="line"></span><span class="ph">Sign above the line</span><button type="button" id="sigClear">Clear</button></div>
+        </div>
+        <div class="c2">
+          <label class="q" for="s-name"><span class="lbl">Printed <span class="nw">Name<span class="req">*</span></span></span><input id="s-name" name="printed_name" required></label>
+          <label class="q" for="s-date"><span class="lbl">Date <span class="nw">Signed<span class="req">*</span></span></span><input id="s-date" name="date_signed" type="date" required></label>
+        </div>
+        <label class="q" for="s-comments"><span class="lbl">Additional Comments</span><textarea id="s-comments" name="comments"></textarea></label>
+      </fieldset>
+
+      <div class="submit-row">
+        <button class="pill p-hot" type="submit">Submit Application</button>
+        <span class="hint" id="campErr" role="alert"></span>
+      </div>
+    </form>
+    <div class="done-card" id="campDone" hidden>
+      <span class="label" style="color:var(--pink)">Application received</span>
+      <h2 class="d2 c-navy">Thank you!</h2>
+      <p>Your camp scholarship application is in. Our scholarship committee reviews applications on a rolling basis, and most families hear back within 14 business days.</p>
+      <p class="hint">(Preview: nothing was sent. On the live site this saves to the admin dashboard.)</p>
+      <a class="pill p-navy" href="#home">Back to home</a>
+    </div>
+    </div>
+  </section>
+</div>
+
+<!-- ======================= VOLUNTEER APPLICATION ======================= -->
+<div class="page" data-page="volunteer-apply" hidden>
+  <div class="ph b-teal"><div class="wrap">
+    <span class="label c-pinkl">Volunteer application</span>
+    <h1 class="d1" style="font-size:clamp(2.8rem,7vw,5.4rem)">Thanks for taking time <em class="it c-pinkl">to care.</em></h1>
+    <p class="lede" style="color:var(--sky)">Tell us a little about yourself and where you'd like to serve. A team member will reach out to walk you through the next steps.</p>
+  </div></div>
+  <section class="b-skypale" style="padding-block:64px 96px">
+    <div class="wrap">
+    <form class="apply" id="volForm" novalidate style="max-width:760px">
+      <fieldset class="fs">
+        <legend><span class="n">1</span><span class="t">About You</span></legend>
+        <div class="c2">
+          <label class="q" for="v-first"><span class="lbl">First <span class="nw">Name<span class="req">*</span></span></span><input id="v-first" name="first_name" autocomplete="given-name" required></label>
+          <label class="q" for="v-last"><span class="lbl">Last <span class="nw">Name<span class="req">*</span></span></span><input id="v-last" name="last_name" autocomplete="family-name" required></label>
+          <label class="q" for="v-email"><span class="lbl"><span class="nw">Email<span class="req">*</span></span></span><input id="v-email" name="email" type="email" autocomplete="email" required></label>
+          <label class="q" for="v-phone"><span class="lbl">Cell Phone</span><input id="v-phone" name="phone" type="tel" autocomplete="tel" placeholder="(000) 000-0000"></label>
+        </div>
+      </fieldset>
+      <fieldset class="fs">
+        <legend><span class="n">2</span><span class="t">Where You'd Like to Serve</span></legend>
+        <div class="q" data-group="interests"><span class="lbl">Choose One or <span class="nw">More<span class="req">*</span></span></span>
+          <div class="choices"><label class="choice" for="vi-0"><input type="checkbox" id="vi-0" name="interests" value="Care Closet"> <span><b>Care Closet</b><br><span class="hint">Sort donations, pack care bags, and deliver them to families</span></span></label><label class="choice" for="vi-1"><input type="checkbox" id="vi-1" name="interests" value="Selah Home"> <span><b>Selah Home</b><br><span class="hint">Help at our home for children in emergency foster care</span></span></label><label class="choice" for="vi-2"><input type="checkbox" id="vi-2" name="interests" value="Childcare Volunteer"> <span><b>Childcare Volunteer</b><br><span class="hint">Watch kids during Support Night so moms can be present</span></span></label><label class="choice" for="vi-3"><input type="checkbox" id="vi-3" name="interests" value="Event Committee"> <span><b>Event Committee</b><br><span class="hint">Plan and run the Charity Dinner and other events</span></span></label><label class="choice" for="vi-4"><input type="checkbox" id="vi-4" name="interests" value="Summer Backyard Party"> <span><b>Summer Backyard Party</b><br><span class="hint">Serve at our summer party for foster and adoptive families</span></span></label><label class="choice" for="vi-5"><input type="checkbox" id="vi-5" name="interests" value="Helmar Palooza"> <span><b>Helmar Palooza</b><br><span class="hint">Help at Helmar Palooza</span></span></label></div>
+        </div>
+        <label class="q" for="v-notes"><span class="lbl">Anything Else We Should Know?</span><span class="hint">Availability, skills, or a group you'd like to serve with.</span><textarea id="v-notes" name="notes"></textarea></label>
+      </fieldset>
+      <div class="submit-row">
+        <button class="pill p-hot" type="submit">Submit Application</button>
+        <span class="hint" id="volErr" role="alert"></span>
+      </div>
+    </form>
+    <div class="done-card" id="volDone" hidden>
+      <span class="label" style="color:var(--pink)">Application received</span>
+      <h2 class="d2 c-navy">Thank you!</h2>
+      <p id="volDoneMsg">A team member will reach out soon to walk you through the next steps.</p>
+      <p class="hint">(Preview: nothing was sent. On the live site this saves to the admin Volunteers list and adds you to the Volunteers email list.)</p>
+      <a class="pill p-navy" href="#get-involved">Back to Get Involved</a>
+    </div>
+    </div>
+  </section>
+</div>
+
+<!-- ======================= CHRISTMAS GIFTS ======================= -->
+<div class="page" data-page="christmas" hidden>
+  <div class="ph b-navy xmas-head"><div class="wrap">
+    <span class="label c-pinkl">Christmas Gifts 2026</span>
+    <h1 class="d1" style="font-size:clamp(2.8rem,7vw,5.4rem)">Let's make Christmas <em class="it c-pinkl">merry</em> for every kid.</h1>
+    <p class="lede" style="color:var(--sky)">Please take a moment to share details for all of your children (including biological children), so we can tailor Santa's gifts just for them!</p>
+    <p class="label" style="color:var(--sky);margin-top:18px">Warm regards, We Are Called to Care</p>
+  </div></div>
+  <section class="b-skypale" style="padding-block:64px 96px">
+    <div class="wrap">
+    <form class="apply" id="xmasForm" novalidate style="max-width:820px">
+      <fieldset class="fs">
+        <legend><span class="n">1</span><span class="t">About You</span></legend>
+        <div class="c2">
+          <label class="q" for="x-name"><span class="lbl">Parent's <span class="nw">Name<span class="req">*</span></span></span><input id="x-name" name="parent_name" autocomplete="name" required></label>
+          <label class="q" for="x-email"><span class="lbl"><span class="nw">Email<span class="req">*</span></span></span><input id="x-email" name="email" type="email" autocomplete="email" required></label>
+        </div>
+      </fieldset>
+      <fieldset class="fs">
+        <legend><span class="n">2</span><span class="t">Your Children</span></legend>
+        <p class="hint" style="margin-top:-8px">Add every child in your home, up to 10.</p>
+        <div id="xKids" style="display:grid;gap:18px"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center"><button type="button" class="pill p-navy" id="xAdd">Add Another Child</button><span class="hint" id="xCount"></span></div>
+      </fieldset>
+      <fieldset class="fs">
+        <legend><span class="n">3</span><span class="t">Cell Phone</span></legend>
+        <label class="q" for="x-phone"><span class="lbl">What is your cell phone, in case we need to follow up with <span class="nw">you?<span class="req">*</span></span></span><input id="x-phone" name="phone" type="tel" autocomplete="tel" placeholder="(000) 000-0000" required></label>
+      </fieldset>
+      <div class="submit-row">
+        <button class="pill p-hot" type="submit">Submit</button>
+        <span class="hint" id="xErr" role="alert"></span>
+      </div>
+    </form>
+    <div class="done-card" id="xDone" hidden>
+      <span class="label" style="color:var(--pink)">Merry Christmas</span>
+      <h2 class="d2 c-navy">Thank you!</h2>
+      <p id="xDoneMsg"></p>
+      <p class="hint">(Preview: nothing was sent. On the live site this saves to the admin Christmas Gifts list.)</p>
+      <a class="pill p-navy" href="#home">Back to home</a>
+    </div>
+    </div>
+  </section>
+</div>
+
+<!-- ======================= CAREERS ======================= -->
+<div class="page" data-page="careers" hidden>
+  <div class="ph b-navy"><div class="wrap">
+    <span class="label c-pinkl">Careers</span>
+    <h1 class="d1">Work for <em class="it c-sky">Called to Care.</em></h1>
+    <p class="lede" style="color:var(--sky)">Explore deeper engagement in the Kingdom work of caring for vulnerable children and the families who support them.</p>
+  </div></div>
+  <section class="b-skypale">
+    <div class="wrap g2">
+      <div class="lab cap-hot"><span class="label">Called to Care Therapy</span><h3>Therapist</h3><p>Join a professional, collaborative, and supportive team of therapists in a growing practice. We offer a modern, furnished office, monthly staff consultation, and responsive management. We accept private insurance and are contracted with Medicare and Medicaid, and we handle administration and billing so you can focus on your clients.</p><div class="pills"><a class="pill p-navy" href="https://form.jotform.com/242077297577066" target="_blank" rel="noopener">Apply</a><a class="pill p-line" style="color:var(--navy)" href="https://static.showit.co/file/jore7gCp5H4lHxljzl0MUw/141511/therapist_job_posting.pdf" target="_blank" rel="noopener">Job description</a></div></div>
+      <div class="lab cap-sky"><span class="label">Selah Home</span><h3>Residential Monitor</h3><p>Help provide a safe, nurturing home for children who need emergency foster care. Applications are handled through the Selah Home website.</p><a class="pill p-navy" href="https://selahhome.org/careers" target="_blank" rel="noopener">Apply at Selah Home</a></div>
+    </div>
+  </section>
+</div>
+
+<!-- ======================= ABOUT ======================= -->
+<div class="page" data-page="about" hidden>
+  <div class="ph b-navy center"><div class="wrap vstack" style="align-items:center;gap:18px">
+    <span class="label c-pinkl">About us</span>
+    <img src="assets/logo-white.png" alt="We Are Called to Care" width="778" height="189" style="width:min(720px,100%);height:auto">
+    <p class="statement" style="font-size:clamp(1.5rem,3.2vw,2.4rem);max-width:30ch;color:var(--sky)">Our mission is to mobilize churches and individuals to actively care for <span class="c-pinkl">children and families</span> in the foster care system.</p>
+    <nav class="subnav c-pinkl" style="justify-content:center" aria-label="On this page"><a href="#about" data-anchor="founder">From our founder</a><a href="#about" data-anchor="staff">Staff</a><a href="#about" data-anchor="whatwedo">What we do</a></nav>
+  </div></div>
+
+  <section class="b-pink" id="founder">
+    <div class="wrap center vstack" style="gap:14px;margin-bottom:44px">
+      <span class="label">A message from our founder</span>
+      <h2 class="d2 c-navy">Hey there, <em class="it c-pink">I'm Shari.</em></h2>
+    </div>
+    <div class="wrap"><div class="letter">
+      <p>I'm a small-town gal who grew up in Millbrook, IL, and still call Kendall County home today. I haven't always been involved in foster care and knew very little about child welfare until several years ago, when we accepted our first placement, a 5th-grade student of my husband's. <strong>My eyes were opened to a whole new world.</strong> I had honestly never given much thought to foster care. That “yes” we gave to bring Jose into our home changed the trajectory of our lives in the best way possible.</p>
+      <p>I'm a “mom” to <em>eleven</em> humans through biology, international adoption, and foster care. My favorite title is Mimi, and a date night with Phil will always be my favorite. He's always been my biggest fan and my absolute favorite person on the planet.</p>
+      <p>Starting a nonprofit was never on my list of life goals, but here we are. Even in my wildest dreams, I couldn't have imagined this. I'm so proud of how we have made kids and families feel seen. I'm humbled by the caliber and servanthood of the volunteers who have embraced our mission and given themselves tirelessly, and grateful for our donors who champion our mission by sharing their treasure so the ministry can happen.</p>
+      <p>I've learned so much and have so much to learn. Even though I feel ill-equipped at times to do what the Lord has called me to do, there is a peace that comes with following Him, even when it's scary and uncomfortable. This quote from John Piper resonates deep within my soul: “<strong>Few things make me tremble more than the possibility of taking this one and only life and wasting it.</strong>”</p>
+      <p>Thanks for stopping by our little corner of the internet.</p>
+      <p class="label" style="color:var(--teal);margin-top:10px">Until all kids have a family,</p>
+      <span class="sign">Shari Chapman</span>
+    </div></div>
+  </section>
+
+  <section class="b-skypale" id="staff">
+    <div class="wrap center vstack" style="gap:14px;margin-bottom:44px"><span class="label" style="color:var(--teal)">Staff</span><h2 class="d2 c-navy">The people you'll meet</h2></div>
+    <div class="wrap">
+      <div class="person"><div class="photo"><span>Photo</span></div><div class="vstack" style="gap:14px">
+        <span class="label">Caregiver Support Coordinator</span><h3>Jen Hall</h3>
+        <p>As a foster mom, Jen attended the very first support group Called to Care ever held and has been an integral part of it ever since. Her degree in Human Services and Psychology, her 20 years as a mental health professional at Linden Oaks Hospital, and her experience as a foster and adoptive parent make her uniquely qualified to walk alongside families through hard seasons.</p>
+        <p>Jen is a CASA Kendall County advocate and is active at Harvest New Beginnings in Oswego, where Awana and Vacation Bible School have meant a lot to her family. Her favorite roles are wife and mom to five children, and you can catch her walking her dog most mornings, rain or shine.</p>
+      </div></div>
+      <p class="center" style="margin:28px auto 0">Our therapists are on the <a href="#therapy" data-anchor="therapists" style="color:var(--teal);font-weight:700">therapy page →</a></p>
+    </div>
+  </section>
+
+  <section class="b-teal" id="whatwedo">
+    <div class="wrap center vstack" style="gap:24px">
+      <span class="label c-pinkl">What we do</span>
+      <h2 class="statement">From the first night of a placement to the <em class="it c-pinkl">birthdays</em> and <em class="it c-sky">graduations</em> years later, we come alongside foster and adoptive families.</h2>
+      <div class="pills"><a class="pill p-pink" href="https://static.showit.co/file/jUCdrRZgJxUuMvq3F4uTyg/141511/2024_-_about_we_are_called_to_care.pdf" target="_blank" rel="noopener">Download our info packet</a></div>
+    </div>
+  </section>
+</div>
+
+<!-- ======================= CONTACT ======================= -->
+<div class="page" data-page="contact" hidden>
+  <div class="ph b-sky"><div class="wrap">
+    <span class="label c-navy">Contact</span>
+    <h1 class="d1 c-navy">Let's <em class="it c-pink">connect.</em></h1>
+    <p class="lede">We'd love to hear from you. Use the form so your message reaches the right person.</p>
+  </div></div>
+  <section class="b-skypale">
+    <div class="wrap g2" style="gap:56px">
+      <div class="vstack" style="gap:28px">
+        <div><span class="label" style="color:var(--pink)">Office</span><p class="d3 c-navy" style="margin-top:6px">1111 W South St<br>Plano, IL 60545</p><a href="https://www.google.com/maps/place/Called+to+Care/@41.6562866,-88.5558264,17z" target="_blank" rel="noopener" style="color:var(--teal);font-weight:700">Get directions →</a></div>
+        <div><span class="label" style="color:var(--pink)">Phone</span><p class="d3 c-navy" style="margin-top:6px;user-select:all">815-200-9086</p></div>
+        <div><span class="label" style="color:var(--pink)">Therapy questions</span><p style="margin-top:6px"><a href="https://form.jotform.com/232005722191142" target="_blank" rel="noopener" style="color:var(--teal);font-weight:700">Contact the therapy team →</a></p></div>
+        <div><span class="label" style="color:var(--pink)">Follow along</span><p style="margin-top:6px"><a href="https://www.facebook.com/calledtocare.IL" target="_blank" rel="noopener" style="color:var(--teal);font-weight:700">Facebook</a> · <a href="https://www.instagram.com/weare.calledtocare/" target="_blank" rel="noopener" style="color:var(--teal);font-weight:700">Instagram</a></p></div>
+      </div>
+      <div class="lab cap-hot">
+        <h3>Send us a message</h3>
+        <form class="js-form" name="contact" data-done="Thanks! We'll follow up with you soon.">
+          <div class="r2">
+            <label class="f" for="c-name">Name<input id="c-name" name="name" autocomplete="name" required></label>
+            <label class="f" for="c-email">Email<input id="c-email" name="email" type="email" autocomplete="email" required></label>
+          </div>
+          <label class="f" for="c-topic">I'm reaching out about
+            <select id="c-topic" name="topic"><option>General question</option><option>Volunteering</option><option>A new placement</option><option>Donations or sponsorship</option><option>Events</option></select>
+          </label>
+          <label class="f" for="c-msg">Message<textarea id="c-msg" name="message" required></textarea></label>
+          <label for="c-list" style="display:flex;gap:10px;align-items:center;font-size:.95rem"><input id="c-list" name="emaillist" type="checkbox" style="width:auto"> Add me to the email list</label>
+          <button class="pill p-hot" type="submit" style="justify-self:start">Send message</button>
+        </form>
+      </div>
+    </div>
+  </section>
+</div>
+
+</main>
+
+<footer>
+  <div class="badge" style="top:60px;right:max(20px,6vw)" aria-hidden="true">
+    <svg viewBox="0 0 132 132"><circle cx="66" cy="66" r="66" fill="#1E5F82"/><defs><path id="bp2" d="M66,66 m-50,0 a50,50 0 1,1 100,0 a50,50 0 1,1 -100,0"/></defs><text fill="#B5CFDC" textLength="312" lengthAdjust="spacing"><textPath href="#bp2">Everyone is called to care •</textPath></text></svg>
+    <div class="core c-pinkl">♡</div>
+  </div>
+  <div class="wrap">
+    <div class="fgrid">
+      <div class="vstack" style="gap:16px">
+        <a class="logo" href="#home"><img src="assets/logo-white.png" alt="We Are Called to Care" width="778" height="189" style="height:54px"></a>
+        <p>1111 W South St, Plano, IL 60545<br><span style="user-select:all">815-200-9086</span></p>
+      </div>
+      <div><h4>Families</h4><ul><li><a href="#foster-parents" data-anchor="newplacement">New placement</a></li><li><a href="#foster-parents" data-anchor="supportnight">Support night</a></li><li><a href="#therapy">Therapy</a></li><li><a href="#camp">Camp scholarships</a></li></ul></div>
+      <div><h4>Get around</h4><ul><li><a href="#get-involved">Get involved</a></li><li class="lemon"><a href="#lemonade">Lemonade stand</a></li><li><a href="#events">Events</a></li><li><a href="#charity-dinner">Charity dinner</a></li><li><a href="#donate">Donate</a></li></ul></div>
+      <div><h4>About</h4><ul><li><a href="#about">Our story</a></li><li><a href="#careers">Careers</a></li><li><a href="#contact">Contact</a></li><li><a href="https://www.facebook.com/calledtocare.IL" target="_blank" rel="noopener">Facebook</a></li><li><a href="https://www.instagram.com/weare.calledtocare/" target="_blank" rel="noopener">Instagram</a></li></ul></div>
+    </div>
+    <a class="handle" href="https://www.instagram.com/weare.calledtocare/" target="_blank" rel="noopener" style="display:block;text-decoration:none">@weare.calledtocare</a>
+    <div class="legal"><span>© <span id="yr">2026</span> We Are Called to Care, NFP · 501(c)(3) · EIN 86-2900453</span><span>Until all kids have a family.</span></div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  const pages=[...document.querySelectorAll('.page')];
+  const names=pages.map(p=>p.dataset.page);
+  const navLinks=[...document.querySelectorAll('nav.main a')];
+  const btn=document.getElementById('menuBtn'), drawer=document.getElementById('drawer');
+  const drawerLinks=[...drawer.querySelectorAll('nav a')];
+  function openMenu(){drawer.classList.add('open');drawer.setAttribute('aria-hidden','false');btn.setAttribute('aria-expanded','true');document.body.classList.add('locked');setTimeout(()=>document.getElementById('closeBtn').focus(),50);}
+  function closeMenu(focusBtn){if(!drawer.classList.contains('open'))return;drawer.classList.remove('open');drawer.setAttribute('aria-hidden','true');btn.setAttribute('aria-expanded','false');document.body.classList.remove('locked');if(focusBtn)btn.focus();}
+  btn.addEventListener('click',openMenu);
+  document.getElementById('closeBtn').addEventListener('click',()=>closeMenu(true));
+  document.getElementById('scrim').addEventListener('click',()=>closeMenu(true));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu(true)});
+  drawer.addEventListener('click',e=>{if(e.target.closest('a'))closeMenu(false)});
+  const parentOf={'charity-dinner':'events','lemonade':'get-involved','careers':'get-involved','camp':'foster-parents','camp-apply':'foster-parents','volunteer-apply':'get-involved','christmas':'events'};
+  const titles={home:'We Are Called to Care','foster-parents':'Foster Parents','therapy':'Therapy','get-involved':'Get Involved','events':'Events','donate':'Donate','about':'About Us','contact':'Contact','careers':'Careers','lemonade':'Lemonade Stand','camp':'Camp Scholarships','camp-apply':'Camp Scholarship Application','volunteer-apply':'Volunteer Application','christmas':'Christmas Gifts 2026','charity-dinner':'Charity Dinner & Auction'};
+  let pendingAnchor=null;
+  function show(){
+    let h=(location.hash||'#home').slice(1);
+    if(!names.includes(h)) h='home';
+    if(h==='lemonade'&&!document.documentElement.classList.contains('lemonade-on')) h='home';
+    pages.forEach(p=>p.hidden=p.dataset.page!==h);
+    const active=parentOf[h]||h;
+    navLinks.forEach(a=>a.getAttribute('href')==='#'+active?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
+    drawerLinks.forEach(a=>a.getAttribute('href')==='#'+h?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
+    closeMenu(false);
+    document.title=h==='home'?titles.home:titles[h]+' · We Are Called to Care';
+    const t=pendingAnchor&&document.getElementById(pendingAnchor); pendingAnchor=null;
+    if(t) requestAnimationFrame(()=>t.scrollIntoView({block:'start'})); else window.scrollTo(0,0);
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a[data-anchor]'); if(!a) return;
+    pendingAnchor=a.dataset.anchor;
+    if(a.getAttribute('href')===(location.hash||'#home')){e.preventDefault();show();}
+  });
+  window.addEventListener('hashchange',show);
+
+  // Next support night = first Thursday of the month at 6:30 PM
+  function firstThu(y,m){const d=new Date(y,m,1);return new Date(y,m,1+((4-d.getDay()+7)%7),18,30);}
+  const now=new Date();
+  let next=firstThu(now.getFullYear(),now.getMonth());
+  if(now>new Date(next.getTime()+2*3600e3)) next=firstThu(now.getFullYear(),now.getMonth()+1);
+  const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const full=next.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  const short='Thu, '+M[next.getMonth()]+' '+next.getDate();
+  document.querySelectorAll('[data-sn]').forEach(el=>{const k=el.dataset.sn;el.textContent=k==='m'?M[next.getMonth()]:k==='d'?next.getDate():k==='short'?short:full;});
+  document.getElementById('yr').textContent=now.getFullYear();
+
+  // Forms confirm locally in this preview; on the live site they post to the form service.
+  document.querySelectorAll('.js-form').forEach(f=>f.addEventListener('submit',e=>{
+    e.preventDefault(); const m=document.createElement('p'); m.className='ok'; m.textContent=f.dataset.done+' (Preview: nothing was sent.)'; f.replaceWith(m);
+  }));
+
+  // ---- Camp scholarship application ----
+  (function(){
+    const f=document.getElementById('campForm'); if(!f) return;
+    const dob=f.youth_dob, age=f.youth_age;
+    const today=new Date(); const iso=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
+    f.date_signed.value=iso(today);
+    dob.addEventListener('change',()=>{ if(!dob.value) return; const b=new Date(dob.value+'T00:00'); let a=today.getFullYear()-b.getFullYear(); const m=today.getMonth()-b.getMonth(); if(m<0||(m===0&&today.getDate()<b.getDate())) a--; if(a>=0&&a<30) age.value=a; });
+    // conditional dates
+    const statusBoxes=[...f.querySelectorAll('input[name=youth_status]')];
+    function syncStatus(){const on=statusBoxes.filter(b=>b.checked).map(b=>b.value);f.querySelectorAll('[data-show-if]').forEach(el=>{el.hidden=!on.includes(el.dataset.showIf)});}
+    statusBoxes.forEach(b=>b.addEventListener('change',syncStatus));
+    // phone formatting
+    f.querySelectorAll('input[type=tel]').forEach(i=>i.addEventListener('input',()=>{const d=i.value.replace(/\D/g,'').slice(0,10);i.value=d.length>6?`(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`:d.length>3?`(${d.slice(0,3)}) ${d.slice(3)}`:d;}));
+    // signature pad
+    const cv=document.getElementById('sig'), ctx=cv.getContext('2d'); let drawing=false, signed=false, last=null;
+    function size(){const r=cv.getBoundingClientRect(); if(!r.width) return; const data=signed?cv.toDataURL():null; cv.width=r.width*devicePixelRatio; cv.height=r.height*devicePixelRatio; ctx.scale(devicePixelRatio,devicePixelRatio); ctx.lineWidth=2.2; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#1D4766'; if(data){const im=new Image(); im.onload=()=>ctx.drawImage(im,0,0,r.width,r.height); im.src=data;}}
+    const pos=e=>{const r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top}};
+    cv.addEventListener('pointerdown',e=>{if(!cv.width) size(); drawing=true; last=pos(e); cv.setPointerCapture(e.pointerId);});
+    cv.addEventListener('pointermove',e=>{if(!drawing) return; const p=pos(e); ctx.beginPath(); ctx.moveTo(last.x,last.y); ctx.lineTo(p.x,p.y); ctx.stroke(); last=p; signed=true; document.getElementById('sigQ').classList.remove('invalid');});
+    ['pointerup','pointercancel'].forEach(t=>cv.addEventListener(t,()=>drawing=false));
+    document.getElementById('sigClear').addEventListener('click',()=>{ctx.clearRect(0,0,cv.width,cv.height); signed=false;});
+    window.addEventListener('resize',size); window.addEventListener('hashchange',()=>setTimeout(size,30)); setTimeout(size,50);
+    // validation + submit
+    function mark(q,msg){q.classList.add('invalid'); let e=q.querySelector('.err'); if(!e){e=document.createElement('span');e.className='err';q.appendChild(e);} e.textContent=msg;}
+    function clear(q){q.classList.remove('invalid'); const e=q.querySelector('.err'); if(e) e.remove();}
+    f.addEventListener('input',e=>{const q=e.target.closest('.q'); if(q) clear(q);});
+    f.addEventListener('change',e=>{const q=e.target.closest('.q'); if(q) clear(q);});
+    f.addEventListener('submit',e=>{
+      e.preventDefault(); let first=null;
+      f.querySelectorAll('input[required],textarea[required]').forEach(i=>{const q=i.closest('.sub')?i.closest('.q'):i.closest('.q'); if(!i.checkValidity()){ mark(q, i.validity.valueMissing?'This field is required.':i.type==='email'?'Enter a valid email address.':'Check this answer.'); first=first||i; }});
+      f.querySelectorAll('[data-group]').forEach(q=>{const boxes=q.querySelectorAll('input'); const n=[...boxes].filter(b=>b.checked).length; const need=+(q.dataset.all||1); if(n<need){mark(q,need>1?'Please check all three statements.':'Please choose an answer.'); first=first||boxes[0];}});
+      f.querySelectorAll('input[type=tel][required]').forEach(i=>{if(i.value&&i.value.replace(/\D/g,'').length!==10){mark(i.closest('.q'),'Enter a 10-digit phone number.'); first=first||i;}});
+      if(!signed){mark(document.getElementById('sigQ'),'Please sign the application.'); first=first||cv;}
+      const msg=document.getElementById('campErr');
+      if(first){msg.textContent='Some answers need attention. They are marked in pink.'; first.scrollIntoView({block:'center'}); if(first.focus) first.focus({preventScroll:true}); return;}
+      msg.textContent='';
+      const data=Object.fromEntries([...new FormData(f).keys()].map(k=>[k,new FormData(f).getAll(k).length>1?new FormData(f).getAll(k):new FormData(f).get(k)]));
+      data.signature_png=cv.toDataURL('image/png'); data.submitted_at=new Date().toISOString();
+      window.__lastCampApplication=data; // on the live site: POST to /.netlify/functions/submit?form=camp
+      f.hidden=true; document.getElementById('campDone').hidden=false; document.getElementById('campDone').scrollIntoView({block:'center'});
+    });
+  })();
+
+  // ---- Charity dinner checkout ----
+  (function(){
+    const co=document.getElementById('checkout'); if(!co) return;
+    const f=document.getElementById('coForm'); let cur=null;
+    const $=id=>document.getElementById(id); const fmt=n=>'$'+n.toLocaleString('en-US');
+    function total(){return cur.price*(cur.qty?Math.max(1,+$('co-qty').value||1):1)}
+    function upd(){$('coTotal').textContent=fmt(total());}
+    document.querySelectorAll('.pick').forEach(b=>b.addEventListener('click',()=>{
+      cur={item:b.dataset.item,name:b.dataset.name,price:+b.dataset.price,qty:!!b.dataset.qty};
+      const isTicket=cur.item==='ticket', isTable=cur.item==='table';
+      $('coTitle').textContent=isTicket?'Buy Tickets':isTable?'Reserve a Table':'Become a Sponsor';
+      $('coItem').textContent=cur.name+(isTicket?' · $100 each':''); $('coPrice').textContent=fmt(cur.price);
+      $('coQtyWrap').hidden=!isTicket; $('coDisplayWrap').hidden=isTicket||isTable; $('co-display').required=!(isTicket||isTable);
+      $('coGuestsWrap').hidden=!(isTicket||isTable||['legacy','gold','platinum','diamond'].includes(cur.item));
+      f.hidden=false; $('coDone').hidden=true; $('coErr').textContent=''; upd();
+      co.hidden=false; document.body.classList.add('locked'); setTimeout(()=>$('co-first').focus(),60);
+    }));
+    $('co-qty').addEventListener('input',upd);
+    co.addEventListener('click',e=>{if(e.target.closest('[data-close]')){co.hidden=true;document.body.classList.remove('locked');}});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!co.hidden){co.hidden=true;document.body.classList.remove('locked');}});
+    $('co-phone').addEventListener('input',e=>{const i=e.target,d=i.value.replace(/\D/g,'').slice(0,10);i.value=d.length>6?`(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`:d.length>3?`(${d.slice(0,3)}) ${d.slice(3)}`:d;});
+    f.addEventListener('submit',e=>{
+      e.preventDefault();
+      const bad=[...f.querySelectorAll('input[required]')].filter(i=>!i.closest('[hidden]')&&!i.checkValidity());
+      f.querySelectorAll('.q').forEach(q=>q.classList.remove('invalid')); bad.forEach(i=>i.closest('.q').classList.add('invalid'));
+      if(bad.length){$('coErr').textContent='Please fill in the fields marked in pink.'; bad[0].focus(); return;}
+      const method=e.submitter&&e.submitter.dataset.method||'card';
+      window.__lastCheckout={...cur,qty:cur.qty?+$('co-qty').value:1,total:total(),method,...Object.fromEntries(new FormData(f))}; // live site: POST to /.netlify/functions/checkout
+      $('coDoneMsg').textContent=`Thank you, ${f.first_name.value}! Your ${cur.name.toLowerCase()} (${fmt(total())}) is reserved. A receipt will be emailed to ${f.email.value}.`;
+      f.hidden=true; $('coDone').hidden=false;
+    });
+  })();
+
+  // ---- Volunteer application ----
+  (function(){
+    const f=document.getElementById('volForm'); if(!f) return;
+    document.addEventListener('click',e=>{const a=e.target.closest('a[href="#volunteer-apply"]'); if(!a) return;
+      f.hidden=false; document.getElementById('volDone').hidden=true;
+      const p=a.dataset.preset; f.querySelectorAll('input[name=interests]').forEach(b=>{b.checked=!!p&&b.value===p});});
+    f.phone.addEventListener('input',()=>{const i=f.phone,d=i.value.replace(/\D/g,'').slice(0,10);i.value=d.length>6?`(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`:d.length>3?`(${d.slice(0,3)}) ${d.slice(3)}`:d;});
+    const mark=(q,msg)=>{q.classList.add('invalid');let e=q.querySelector('.err');if(!e){e=document.createElement('span');e.className='err';q.appendChild(e)}e.textContent=msg};
+    const clear=q=>{q.classList.remove('invalid');const e=q.querySelector('.err');if(e)e.remove()};
+    ['input','change'].forEach(t=>f.addEventListener(t,e=>{const q=e.target.closest('.q');if(q)clear(q)}));
+    f.addEventListener('submit',e=>{e.preventDefault();let first=null;
+      f.querySelectorAll('input[required]').forEach(i=>{if(!i.checkValidity()){mark(i.closest('.q'),i.validity.valueMissing?'This field is required.':'Enter a valid email address.');first=first||i}});
+      if(f.phone.value&&f.phone.value.replace(/\D/g,'').length!==10){mark(f.phone.closest('.q'),'Enter a 10-digit phone number.');first=first||f.phone}
+      const g=f.querySelector('[data-group=interests]');if(![...g.querySelectorAll('input')].some(b=>b.checked)){mark(g,'Choose at least one area.');first=first||g.querySelector('input')}
+      const msg=document.getElementById('volErr');
+      if(first){msg.textContent='Some answers need attention. They are marked in pink.';first.scrollIntoView({block:'center'});first.focus({preventScroll:true});return}
+      msg.textContent='';
+      const fd=new FormData(f);window.__lastVolunteer={first_name:fd.get('first_name'),last_name:fd.get('last_name'),email:fd.get('email'),phone:fd.get('phone'),interests:fd.getAll('interests'),notes:fd.get('notes'),submitted_at:new Date().toISOString()}; // live site: POST to /.netlify/functions/submit?form=volunteer
+      document.getElementById('volDoneMsg').textContent=`Thanks, ${fd.get('first_name')}! A team member will reach out at ${fd.get('email')} soon to walk you through the next steps.`;
+      f.reset();f.hidden=true;const d=document.getElementById('volDone');d.hidden=false;d.scrollIntoView({block:'center'});
+    });
+  })();
+
+  // ---- Christmas gifts form ----
+  (function(){
+    const f=document.getElementById('xmasForm'); if(!f) return;
+    const box=document.getElementById('xKids'), add=document.getElementById('xAdd'), MAX=10;
+    const fld=(n,key,label,ph,extra='')=>`<label class="q" for="k${n}-${key}"><span class="lbl">${label.split(' ').slice(0,-1).join(' ')} <span class="nw">${label.split(' ').slice(-1)}<span class="req">*</span></span></span><input id="k${n}-${key}" name="${key}" placeholder="${ph}" required ${extra}></label>`;
+    let uid=0;
+    function kidHTML(n){return `<div class="kid" data-kid="${n}"><div class="kid-head"><b>Child #<span class="kn"></span></b><button type="button" data-remove aria-label="Remove this child">Remove</button></div>
+      <div class="c2">${fld(n,'first_name','First Name','')}
+      <div class="q" data-group="gender-${n}"><span class="lbl"><span class="nw">Gender<span class="req">*</span></span></span><div class="choices inline"><label class="choice" for="k${n}-g1"><input type="radio" id="k${n}-g1" name="gender-${n}" value="Boy"> Boy</label><label class="choice" for="k${n}-g2"><input type="radio" id="k${n}-g2" name="gender-${n}" value="Girl"> Girl</label></div></div>
+      ${fld(n,'age','Age','e.g. 18 months, 7')}
+      ${fld(n,'shirt','Shirt Size','e.g. 4T, Youth M, Adult S')}
+      ${fld(n,'pants','Pant Size','e.g. 5T, 10/12, Adult 30x30')}</div>
+      <label class="q" for="k${n}-interests"><span class="lbl"><span class="nw">Interests<span class="req">*</span></span></span><span class="hint">Favorite things, characters, hobbies, or a gift idea.</span><input id="k${n}-interests" name="interests" placeholder="e.g. LEGO, Bluey, art supplies, basketball" required></label></div>`}
+    function renum(){const kids=[...box.querySelectorAll('.kid')];kids.forEach((k,i)=>{k.querySelector('.kn').textContent=i+1;k.querySelector('[data-remove]').hidden=kids.length===1});add.hidden=kids.length>=MAX;document.getElementById('xCount').textContent=kids.length>=MAX?'That\'s the most this form holds. Contact us if you have more children.':''}
+    function addKid(focus){box.insertAdjacentHTML('beforeend',kidHTML(++uid));renum();if(focus){const k=box.lastElementChild;k.scrollIntoView({block:'center'});k.querySelector('input').focus({preventScroll:true})}}
+    addKid(false);
+    add.addEventListener('click',()=>addKid(true));
+    box.addEventListener('click',e=>{const r=e.target.closest('[data-remove]');if(r){r.closest('.kid').remove();renum()}});
+    f.phone.addEventListener('input',()=>{const i=f.phone,d=i.value.replace(/\D/g,'').slice(0,10);i.value=d.length>6?`(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`:d.length>3?`(${d.slice(0,3)}) ${d.slice(3)}`:d;});
+    const mark=(q,msg)=>{q.classList.add('invalid');let e=q.querySelector('.err');if(!e){e=document.createElement('span');e.className='err';q.appendChild(e)}e.textContent=msg};
+    const clear=q=>{q.classList.remove('invalid');const e=q.querySelector('.err');if(e)e.remove()};
+    ['input','change'].forEach(t=>f.addEventListener(t,e=>{const q=e.target.closest('.q');if(q)clear(q)}));
+    f.addEventListener('submit',e=>{e.preventDefault();let first=null;
+      f.querySelectorAll('input[required]').forEach(i=>{if(!i.checkValidity()){mark(i.closest('.q'),i.validity.valueMissing?'This field is required.':'Enter a valid email address.');first=first||i}});
+      f.querySelectorAll('[data-group^=gender]').forEach(g=>{if(![...g.querySelectorAll('input')].some(b=>b.checked)){mark(g,'Please choose one.');first=first||g.querySelector('input')}});
+      if(f.phone.value&&f.phone.value.replace(/\D/g,'').length!==10){mark(f.phone.closest('.q'),'Enter a 10-digit phone number.');first=first||f.phone}
+      const msg=document.getElementById('xErr');
+      if(first){msg.textContent='Some answers need attention. They are marked in pink.';first.scrollIntoView({block:'center'});first.focus({preventScroll:true});return}
+      msg.textContent='';
+      const kids=[...box.querySelectorAll('.kid')].map(k=>({first_name:k.querySelector('[name=first_name]').value,gender:(k.querySelector('input[type=radio]:checked')||{}).value,age:k.querySelector('[name=age]').value,shirt:k.querySelector('[name=shirt]').value,pants:k.querySelector('[name=pants]').value,interests:k.querySelector('[name=interests]').value}));
+      window.__lastChristmas={parent_name:f.parent_name.value,email:f.email.value,phone:f.phone.value,kids,submitted_at:new Date().toISOString()}; // live site: POST to /.netlify/functions/submit?form=christmas
+      document.getElementById('xDoneMsg').textContent=`Thank you, ${f.parent_name.value}! We received gift details for ${kids.length} ${kids.length===1?'child':'children'}. If we have questions, we'll reach out at ${f.phone.value}.`;
+      f.hidden=true;const d=document.getElementById('xDone');d.hidden=false;d.scrollIntoView({block:'center'});
+    });
+  })();
+  show();
+})();
+</script>
+
+</body>
+</html>
