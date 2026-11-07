@@ -3,6 +3,8 @@
 // Events: payment_intent.succeeded, payment_intent.payment_failed, invoice.paid,
 //         customer.subscription.updated, customer.subscription.deleted, charge.refunded
 // Only payments started by this website are recorded; Donorbox and others are ignored.
+// Works with any webhook API version: where field names changed between Stripe versions,
+// we re-read the object through our own pinned API version instead of trusting the event shape.
 import crypto from 'node:crypto';
 import { db, env, finalizePayment, json } from './_lib.mjs';
 import { stripe } from './checkout.mjs';
@@ -19,6 +21,7 @@ export function verify(raw, header, secret, toleranceSec = 300) {
 
 async function methodLabel(pi) {
   try {
+    if (!pi.latest_charge && pi.id) pi = await stripe(`payment_intents/${pi.id}`, null, 'GET');
     if (!pi.latest_charge) return 'Card';
     const ch = typeof pi.latest_charge === 'object' ? pi.latest_charge : await stripe(`charges/${pi.latest_charge}`, null, 'GET');
     const d = ch.payment_method_details || {};
@@ -52,13 +55,17 @@ export default async (req) => {
       }
       case 'invoice.paid': {
         // Monthly gifts after the first month: add a new payment and send a receipt.
-        if (o.billing_reason !== 'subscription_cycle' || !o.payment_intent) break;
-        const [sub] = await db(`subscriptions?provider_id=eq.${encodeURIComponent(o.subscription)}&select=*`);
-        if (!sub || await byProviderId(o.payment_intent)) break;
+        if (o.billing_reason !== 'subscription_cycle') break;
+        const inv = await stripe(`invoices/${o.id}`, null, 'GET');   // stable field names
+        if (!inv.payment_intent || !inv.subscription) break;
+        const piId = typeof inv.payment_intent === 'object' ? inv.payment_intent.id : inv.payment_intent;
+        const subId = typeof inv.subscription === 'object' ? inv.subscription.id : inv.subscription;
+        const [sub] = await db(`subscriptions?provider_id=eq.${encodeURIComponent(subId)}&select=*`);
+        if (!sub || await byProviderId(piId)) break;
         const [pay] = await db('payments', { method: 'POST', prefer: 'return=representation', body: {
-          provider: 'stripe', provider_id: o.payment_intent, contact_id: sub.contact_id, purpose: 'donation', recurring: true,
-          description: `Monthly gift: ${sub.designation || 'Where needed most'}`, designation: sub.designation, amount: o.amount_paid / 100, status: 'pending', meta: { subscription: sub.provider_id } } });
-        const pi = await stripe(`payment_intents/${o.payment_intent}`, null, 'GET');
+          provider: 'stripe', provider_id: piId, contact_id: sub.contact_id, purpose: 'donation', recurring: true,
+          description: `Monthly gift: ${sub.designation || 'Where needed most'}`, designation: sub.designation, amount: inv.amount_paid / 100, status: 'pending', meta: { subscription: sub.provider_id } } });
+        const pi = await stripe(`payment_intents/${piId}`, null, 'GET');
         await finalizePayment(pay, { method: await methodLabel(pi) });
         break;
       }

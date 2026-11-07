@@ -55,6 +55,7 @@ globalThis.fetch = async (url, init = {}) => {
     if (p === 'products') return ok({ id: 'prod_1' });
     if (p === 'subscriptions') return ok({ id: 'sub_1', latest_invoice: { payment_intent: { id: 'pi_sub1', client_secret: 'cs_sub' } } });
     if (p.startsWith('payment_intents/')) return ok({ id: p.split('/')[1], latest_charge: 'ch_1' });
+    if (p === 'invoices/in_2') return ok({ id: 'in_2', billing_reason: 'subscription_cycle', payment_intent: 'pi_month2', subscription: 'sub_1', amount_paid: 5000 });
     if (p.startsWith('charges/')) return ok({ payment_method_details: { type: 'card', card: { brand: 'visa', last4: '4242', wallet: { type: 'apple_pay' } } } });
   }
   if (url.includes('paypal.com/v1/oauth2/token')) return ok({ access_token: 't' });
@@ -89,7 +90,7 @@ r = await post(checkout, { kind: 'donation', amount: 2, provider: 'stripe', cont
 
 console.log('stripe webhook');
 const pay = T.payments.find((p) => p.purpose === 'sponsorship');
-const evt = JSON.stringify({ type: 'payment_intent.succeeded', data: { object: { id: pay.provider_id, metadata: { c2c_payment_id: pay.id }, latest_charge: 'ch_1' } } });
+const evt = JSON.stringify({ type: 'payment_intent.succeeded', data: { object: { id: pay.provider_id, metadata: { c2c_payment_id: pay.id } } } });
 const sig = (b, t = Math.floor(Date.now() / 1000)) => `t=${t},v1=${crypto.createHmac('sha256', 'whsec_test').update(`${t}.${b}`).digest('hex')}`;
 r = await webhook(new Request('https://x/', { method: 'POST', body: evt, headers: { 'stripe-signature': 't=1,v1=00' } })); ok(r.status === 400, 'forged webhook refused');
 r = await webhook(new Request('https://x/', { method: 'POST', body: evt, headers: { 'stripe-signature': sig(evt) } }));
@@ -105,9 +106,9 @@ r = await webhook(new Request('https://x/', { method: 'POST', body: other, heade
 console.log('monthly gift');
 r = await (await post(checkout, { kind: 'donation', amount: 50, recurring: true, provider: 'stripe', contact: { first: 'Cy', last: 'Ro', email: 'cy@x.com' } })).json();
 ok(r.ok && T.subscriptions.length === 1 && T.contacts.find((c) => c.email === 'cy@x.com').tags.includes('Monthly Partner'), 'monthly gift creates subscription + Monthly Partner tag');
-const inv = JSON.stringify({ type: 'invoice.paid', data: { object: { billing_reason: 'subscription_cycle', payment_intent: 'pi_month2', subscription: 'sub_1', amount_paid: 5000 } } });
+const inv = JSON.stringify({ type: 'invoice.paid', data: { object: { id: 'in_2', billing_reason: 'subscription_cycle', parent: { subscription_details: { subscription: 'sub_1' } }, amount_paid: 5000 } } });
 await webhook(new Request('https://x/', { method: 'POST', body: inv, headers: { 'stripe-signature': sig(inv) } }));
-ok(T.payments.some((p) => p.provider_id === 'pi_month2' && p.status === 'succeeded' && p.amount === 50), 'second month recorded and receipted');
+ok(T.payments.some((p) => p.provider_id === 'pi_month2' && p.status === 'succeeded' && p.amount === 50), 'second month recorded and receipted (new Stripe event format)');
 
 console.log('paypal');
 r = await (await post(checkout, { kind: 'sponsorship', item: 'sapphire', provider: 'paypal', contact: { first: 'Di', last: 'Ko', email: 'di@x.com' } })).json();
