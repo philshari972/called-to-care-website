@@ -198,7 +198,7 @@ section{padding-block:96px}
 /* lab cards (white card with color cap) */
 .labs{display:grid;gap:28px}
 .lab{background:var(--white);color:var(--ink);border-top:22px solid var(--teal);padding:44px clamp(24px,4vw,56px);display:flex;flex-direction:column;gap:16px;box-shadow:0 30px 60px -40px rgba(19,40,58,.45)}
-.lab.cap-pink{border-top-color:var(--pink-light)} .lab.cap-sky{border-top-color:var(--sky)} .lab.cap-navy{border-top-color:var(--navy)} .lab.cap-hot{border-top-color:var(--pink)}
+.lab.cap-pink{border-top-color:var(--pink-light)} .lab.cap-sky{border-top-color:var(--sky)} .lab.cap-navy{border-top-color:var(--navy)} .lab.cap-hot{border-top-color:var(--pink)} .lab.cap-teal{border-top-color:var(--teal)}
 .lab .label{color:var(--teal)}
 .lab h3{font-family:var(--serif);font-size:clamp(2rem,3.6vw,2.8rem);line-height:1.02;color:var(--navy)}
 .lab p{color:var(--muted)}
@@ -412,6 +412,7 @@ html:not(.lemonade-on) .lemon{display:none!important}
 /* Dinner ticket switch: add class tickets-on to <html> to open ticket sales */
 html:not(.tickets-on) .tix-on{display:none!important}
 html.tickets-on .tix-off{display:none!important}
+#tickets .early{grid-column:1/-1;display:grid;gap:12px}
 .pill.soon{cursor:default;align-self:flex-start;margin-top:auto}
 .pill.soon::after{content:none}
 .page[hidden]{display:none!important}
@@ -805,10 +806,11 @@ html.tickets-on .tix-off{display:none!important}
 
   <section class="b-pink" id="tickets" style="padding-block:72px">
     <div class="wrap g2" style="align-items:center;gap:40px">
-      <div class="vstack" style="gap:14px"><span class="label">Tickets</span><h2 class="d2 c-navy">Join us for dinner.</h2><p>Come for the night, or fill a table with your friends, small group, or coworkers.</p><p class="tix-off"><b>Tickets go on sale soon.</b> Monthly partners get early access. <a href="#charity-dinner" data-anchor="monthly" style="color:var(--teal);font-weight:700">Learn how →</a></p></div>
+      <div class="vstack" style="gap:14px"><span class="label">Tickets</span><h2 class="d2 c-navy">Join us for dinner.</h2><p>Come for the night, or fill a table with your friends, small group, or coworkers.</p><p class="tix-off"><b>Regular tickets go on sale December 15, 2026.</b></p></div>
       <div class="g2" style="gap:20px">
         <div class="lab cap-hot tier"><div class="tier-top"><span class="label">Single Ticket</span><span class="price">$100</span></div><ul class="perks"><li>Dinner, auction, and program for one guest</li></ul><span class="pill p-line tix-off soon" style="color:var(--navy)">On Sale Soon</span><button type="button" class="pill p-hot pick tix-on" data-item="ticket" data-name="Dinner Ticket" data-price="100" data-qty="1">Buy Tickets</button></div>
         <div class="lab cap-navy tier"><div class="tier-top"><span class="label">Table of 10</span><span class="price">$1,000</span></div><ul class="perks"><li>Reserved table for 10 guests</li></ul><span class="pill p-line tix-off soon" style="color:var(--navy)">On Sale Soon</span><button type="button" class="pill p-navy pick tix-on" data-item="table" data-name="Table of 10" data-price="1000">Reserve a Table</button></div>
+        <div class="lab cap-teal tier tix-off early"><span class="label" style="color:var(--teal)">Early access</span><h3 class="d3 c-navy" style="margin:0">Buy tickets early by becoming a monthly partner.</h3><p style="margin:0">Regular tickets to the Charity Dinner go on sale <b>December 15, 2026</b>. Monthly partners get first access.</p><a class="pill p-hot" href="#charity-dinner" data-anchor="monthly" style="justify-self:start">Become a Monthly Partner</a></div>
       </div>
     </div>
   </section>
@@ -1372,7 +1374,6 @@ html.tickets-on .tix-off{display:none!important}
     <div class="wrap center vstack" style="gap:24px">
       <span class="label c-pinkl">What we do</span>
       <h2 class="statement">From the first night of a placement to the <em class="it c-pinkl">birthdays</em> and <em class="it c-sky">graduations</em> years later, we come alongside foster and adoptive families.</h2>
-      <div class="pills"><a class="pill p-pink" href="https://static.showit.co/file/jUCdrRZgJxUuMvq3F4uTyg/141511/2024_-_about_we_are_called_to_care.pdf" target="_blank" rel="noopener">Download our info packet</a></div>
     </div>
   </section>
 </div>

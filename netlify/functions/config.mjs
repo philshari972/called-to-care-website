@@ -12,5 +12,7 @@ export default async () => {
     paypalClientId: env('PAYPAL_CLIENT_ID'),
     paypalEnv: env('PAYPAL_ENV', 'sandbox'),
     ticketsOn, supportNights,
+    supabaseUrl: env('SUPABASE_URL'),
+    supabaseKey: env('SUPABASE_PUBLISHABLE_KEY'),   // public by design; row rules protect the data
   }), { headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=60' } });
 };
