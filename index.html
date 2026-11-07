@@ -320,7 +320,7 @@ footer p{color:var(--sky);font-size:.95rem}
 .apply .sub small{font-size:.78rem;color:var(--muted)}
 @media (max-width:640px){.apply .c3,.apply .c2{grid-template-columns:1fr}}
 .apply .choices{display:grid;gap:10px}
-.apply .choices.inline{grid-auto-flow:column;justify-content:start;gap:28px}
+.apply .choices.inline{display:flex;flex-wrap:wrap;column-gap:28px;row-gap:12px}
 .apply .choice{display:flex;gap:12px;align-items:flex-start;font-weight:400;cursor:pointer;line-height:1.4}
 .apply .choice input{width:20px;height:20px;margin:1px 0 0;padding:0;accent-color:var(--teal);flex:none}
 .apply .err{color:#B3134F;font-size:.85rem;font-weight:600}
