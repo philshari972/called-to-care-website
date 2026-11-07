@@ -822,7 +822,7 @@ html.tickets-on .tix-off{display:none!important}
       <div class="g2" style="gap:20px">
         <div class="lab cap-hot tier"><div class="tier-top"><span class="label">Single Ticket</span><span class="price">$100</span></div><ul class="perks"><li>Dinner, auction, and program for one guest</li></ul><span class="pill p-line tix-off soon" style="color:var(--navy)">On Sale Soon</span><button type="button" class="pill p-hot pick tix-on" data-item="ticket" data-name="Dinner Ticket" data-price="100" data-qty="1">Buy Tickets</button></div>
         <div class="lab cap-navy tier"><div class="tier-top"><span class="label">Table of 10</span><span class="price">$1,000</span></div><ul class="perks"><li>Reserved table for 10 guests</li></ul><span class="pill p-line tix-off soon" style="color:var(--navy)">On Sale Soon</span><button type="button" class="pill p-navy pick tix-on" data-item="table" data-name="Table of 10" data-price="1000">Reserve a Table</button></div>
-        <div class="lab cap-teal tier tix-off early"><span class="label" style="color:var(--teal)">Early access</span><h3 class="d3 c-navy" style="margin:0">Buy tickets early by becoming a monthly partner.</h3><p style="margin:0">Regular tickets to the Charity Dinner go on sale <b>December 15, 2026</b>. Monthly partners get first access.</p><a class="pill p-hot" href="#charity-dinner" data-anchor="monthly" style="justify-self:start">Become a Monthly Partner</a></div>
+        <div class="lab cap-teal tier tix-off early"><span class="label" style="color:var(--teal)">Early access</span><h3 class="d3 c-navy" style="margin:0">Buy tickets early by becoming a monthly partner.</h3><p style="margin:0">Regular tickets to the Charity Dinner go on sale <b>December 15, 2026</b>. Monthly partners get first access.</p><a class="pill p-hot" href="#donate" data-anchor="give" data-monthly="50" style="justify-self:start">Become a Monthly Partner</a></div>
       </div>
     </div>
   </section>
@@ -898,7 +898,7 @@ html.tickets-on .tix-off{display:none!important}
       <span class="label c-pinkl">Monthly partners · $50 / month</span>
       <h2 class="d2">Give monthly, get first dibs.</h2>
       <p style="color:var(--sky)">Give $50 or more a month for 6 months or longer and get early access to buy Charity Dinner tickets before they go on sale to everyone.</p>
-      <div class="pills"><a class="pill p-pink" href="#donate" data-anchor="give">Start monthly giving</a></div>
+      <div class="pills"><a class="pill p-pink" href="#donate" data-anchor="give" data-monthly="50">Start monthly giving</a></div>
     </div>
   </div>
 
@@ -1893,6 +1893,9 @@ html.tickets-on .tix-off{display:none!important}
     f.querySelectorAll('[data-freq]').forEach(b=>b.addEventListener('click',()=>{monthly=b.dataset.freq==='monthly';f.querySelectorAll('[data-freq]').forEach(x=>x.classList.toggle('on',x===b));upd()}));
     f.querySelectorAll('[data-amt]').forEach(b=>b.addEventListener('click',()=>{amt=+b.dataset.amt;other.value='';other.parentElement.classList.remove('on');f.querySelectorAll('[data-amt]').forEach(x=>x.classList.toggle('on',x===b));upd()}));
     other.addEventListener('input',()=>{const v=parseFloat(other.value.replace(/[^0-9.]/g,''));f.querySelectorAll('[data-amt]').forEach(x=>x.classList.remove('on'));other.parentElement.classList.add('on');amt=v>0?Math.round(v*100)/100:0;upd()});
+    // Any "monthly" link (data-monthly="50") opens the form set to Monthly and that amount
+    const preset=v=>{f.querySelector('[data-freq="monthly"]').click();const b=f.querySelector(`[data-amt="${v}"]`);if(b)b.click();else{other.value=v;other.dispatchEvent(new Event('input'))}};
+    document.addEventListener('click',e=>{const a=e.target.closest('[data-monthly]');if(a)preset(a.dataset.monthly)},true);
     f.addEventListener('submit',e=>{e.preventDefault();if(!(amt>=5)){other.focus();btn.textContent='Minimum gift is $5';return}
       C2C.openCheckout({kind:'donation',item:'donation',name:(monthly?'Monthly gift':'Gift')+' · '+document.getElementById('g-fund').value,price:amt,recurring:monthly,fund:document.getElementById('g-fund').value});});
   })();
