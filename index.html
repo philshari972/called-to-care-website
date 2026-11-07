@@ -349,6 +349,8 @@ footer p{color:var(--sky);font-size:.95rem}
 .co-panel{position:relative;background:var(--white);width:min(560px,100%);height:100%;overflow-y:auto;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);animation:slidein .35s cubic-bezier(.22,.7,.18,1)}
 @keyframes slidein{from{transform:translateX(100%)}}
 .co-panel > .fs{padding:36px clamp(20px,5vw,56px) 40px;display:grid;gap:22px;min-width:0}
+.co-back{justify-self:start;border:0;background:none;padding:4px 0;font:inherit;font-weight:600;color:var(--teal);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.co-paybtn{width:100%;justify-content:center}
 .co-x{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:16px;border:0;background:none;font-size:2rem;line-height:1;color:var(--navy);cursor:pointer;z-index:2;padding:6px 10px}
 .co-line,.co-total{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:16px 0;border-bottom:1px solid var(--line)}
 .co-line .price{font-size:1.6rem}
@@ -1445,6 +1447,12 @@ html.tickets-on .tix-off{display:none!important}
             <label class="q" for="co-email"><span class="lbl"><span class="nw">Email<span class="req">*</span></span></span><input id="co-email" name="email" type="email" autocomplete="email" required></label>
             <label class="q" for="co-phone"><span class="lbl"><span class="nw">Phone<span class="req">*</span></span></span><input id="co-phone" name="phone" type="tel" autocomplete="tel" placeholder="(000) 000-0000" required></label>
           </div>
+          <label class="q" for="co-street"><span class="lbl">Mailing <span class="nw">Address<span class="req">*</span></span></span><span class="hint">So we can mail you a thank-you note.</span><input id="co-street" name="street" autocomplete="address-line1" placeholder="Street address" required></label>
+          <div class="c3">
+            <label class="q" for="co-city"><span class="lbl"><span class="nw">City<span class="req">*</span></span></span><input id="co-city" name="city" autocomplete="address-level2" required></label>
+            <label class="q" for="co-state"><span class="lbl"><span class="nw">State<span class="req">*</span></span></span><input id="co-state" name="state" autocomplete="address-level1" maxlength="2" value="IL" required></label>
+            <label class="q" for="co-zip"><span class="lbl"><span class="nw">ZIP<span class="req">*</span></span></span><input id="co-zip" name="zip" autocomplete="postal-code" inputmode="numeric" maxlength="10" required></label>
+          </div>
           <label class="q" for="co-guests" id="coGuestsWrap" hidden><span class="lbl">Guest Names</span><span class="hint">Optional. You can send these later.</span><textarea id="co-guests" name="guest_names" style="min-height:90px"></textarea></label>
           <div class="co-total"><span>Total</span><span id="coTotal" class="price">$0</span></div>
           <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
@@ -1458,10 +1466,11 @@ html.tickets-on .tix-off{display:none!important}
       </form>
       <div class="co-step fs" id="coPayStep" hidden>
         <span class="label" style="color:var(--pink)">Secure payment</span>
+        <button class="co-back" type="button" id="coBack">&larr; Edit my details</button>
         <h2 class="d3 c-navy">Card, Apple Pay, or Bank</h2>
         <div class="co-line"><span id="coItem2"></span><span id="coPrice2" class="price"></span></div>
         <div id="coElement"></div>
-        <div class="co-pay"><button class="pill p-hot" type="button" id="coConfirm">Pay</button><button class="pill p-line c-navy" type="button" id="coBack">Back</button></div>
+        <button class="pill p-hot co-paybtn" type="button" id="coConfirm">Pay</button>
         <p class="err" id="coErr2" role="alert"></p>
       </div>
       <div class="done-card" id="coDone" hidden style="box-shadow:none">
@@ -1638,7 +1647,7 @@ html.tickets-on .tix-off{display:none!important}
       f.querySelectorAll('.q').forEach(q=>q.classList.remove('invalid')); bad.forEach(i=>i.closest('.q').classList.add('invalid'));
       if(bad.length){$('coErr').textContent='Please fill in the fields marked in pink.'; bad[0].focus(); return false;} $('coErr').textContent=''; return true;}
     const payload=provider=>({action:'start',provider,kind:cur.kind,item:cur.item,qty:+$('co-qty').value||1,amount:cur.price,recurring:!!cur.recurring,designation:cur.fund||'',
-      display_name:f.display_name.value,guests:f.guest_names.value,website:hp(f),t:C2C.t,contact:{first:f.first_name.value,last:f.last_name.value,email:f.email.value,phone:f.phone.value}});
+      display_name:f.display_name.value,guests:f.guest_names.value,website:hp(f),t:C2C.t,contact:{first:f.first_name.value,last:f.last_name.value,email:f.email.value,phone:f.phone.value,street:f.street.value,city:f.city.value,state:f.state.value,zip:f.zip.value}});
     function done(note){
       const what=cur.kind==='donation'?`gift of ${fmt(total())}${cur.recurring?' each month':''}`:`${cur.name.toLowerCase()} (${fmt(total())})`;
       $('coDoneMsg').textContent=`Thank you, ${f.first_name.value}! Your ${what} is complete. A receipt is on its way to ${f.email.value}.`;
@@ -1654,7 +1663,7 @@ html.tickets-on .tix-off{display:none!important}
         await loadScript('https://js.stripe.com/v3/');
         stripe=stripe||window.Stripe(cfg.stripeKey);
         elements=stripe.elements({clientSecret:r.clientSecret,appearance:{theme:'stripe',variables:{colorPrimary:'#E2197A',colorText:'#1D4766',fontFamily:'Figtree, system-ui, sans-serif',borderRadius:'10px'}},fonts:[{cssSrc:'https://fonts.googleapis.com/css2?family=Figtree:wght@400;600&display=swap'}]});
-        $('coElement').innerHTML=''; elements.create('payment',{layout:'tabs',defaultValues:{billingDetails:{name:`${f.first_name.value} ${f.last_name.value}`,email:f.email.value}}}).mount('#coElement');
+        $('coElement').innerHTML=''; elements.create('payment',{layout:'tabs',defaultValues:{billingDetails:{name:`${f.first_name.value} ${f.last_name.value}`,email:f.email.value,address:{postal_code:f.zip.value,country:'US'}}}}).mount('#coElement');
         $('coItem2').textContent=$('coItem').textContent; $('coPrice2').textContent=fmt(total())+(cur.recurring?'/mo':'');
         $('coConfirm').textContent=`Pay ${fmt(total())}${cur.recurring?' a Month':''}`; step('pay');
       }catch(x){ $('coErr').textContent=x.message; }

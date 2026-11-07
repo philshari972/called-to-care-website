@@ -82,11 +82,15 @@ r = await post(submit, { form: 'message', data: { name: 'Bot', email: 'b@x.com',
 r = await post(submit, { form: 'evil', data: {} }); ok(r.status === 400, 'unknown form rejected');
 
 console.log('checkout');
-r = await (await post(checkout, { kind: 'sponsorship', item: 'sapphire', provider: 'stripe', contact: { first: 'Bo', last: 'Ng', email: 'bo@x.com' }, display_name: 'Ng Family', amount: 1 })).json();
+r = await (await post(checkout, { kind: 'sponsorship', item: 'sapphire', provider: 'stripe', contact: { first: 'Bo', last: 'Ng', email: 'bo@x.com', street: '1 Main St', city: 'Plano', state: 'IL', zip: '60545' }, display_name: 'Ng Family', amount: 1 })).json();
 const pi = stripeCalls.find((c) => c[1] === 'payment_intents');
 ok(r.ok && r.clientSecret && new URLSearchParams(pi[2]).get('amount') === '150000', 'sponsorship price set by server ($1,500), not by browser');
-r = await post(checkout, { kind: 'tickets', qty: 2, provider: 'stripe', contact: { first: 'Bo', last: 'Ng', email: 'bo@x.com' } }); ok(r.status === 400, 'tickets blocked while sales are off');
-r = await post(checkout, { kind: 'donation', amount: 2, provider: 'stripe', contact: { first: 'Bo', last: 'Ng', email: 'bo@x.com' } }); ok(r.status === 400, 'gift under $5 rejected');
+r = await post(checkout, { kind: 'tickets', qty: 2, provider: 'stripe', contact: { first: 'Bo', last: 'Ng', email: 'bo@x.com', street: '1 Main St', city: 'Plano', state: 'IL', zip: '60545' } }); ok(r.status === 400, 'tickets blocked while sales are off');
+r = await post(checkout, { kind: 'donation', amount: 2, provider: 'stripe', contact: { first: 'Bo', last: 'Ng', email: 'bo@x.com', street: '1 Main St', city: 'Plano', state: 'IL', zip: '60545' } }); ok(r.status === 400, 'gift under $5 rejected');
+
+r = await post(checkout, { kind: 'donation', amount: 25, provider: 'stripe', contact: { first: 'No', last: 'Addr', email: 'na@x.com' } }); ok(r.status === 400, 'checkout requires a mailing address');
+const sp = await (await post(checkout, { kind: 'donation', amount: 25, provider: 'stripe', contact: { first: 'Al', last: 'Ma', email: 'al@x.com', street: '9 Oak Ln', city: 'Yorkville', state: 'il', zip: '60560' } })).json();
+ok(sp.ok && T.contacts.find((c) => c.email === 'al@x.com').street === '9 Oak Ln' && T.contacts.find((c) => c.email === 'al@x.com').state === 'IL', 'donor mailing address saved for thank-you notes');
 
 console.log('stripe webhook');
 const pay = T.payments.find((p) => p.purpose === 'sponsorship');
@@ -104,14 +108,14 @@ const other = JSON.stringify({ type: 'payment_intent.succeeded', data: { object:
 r = await webhook(new Request('https://x/', { method: 'POST', body: other, headers: { 'stripe-signature': sig(other) } })); ok(r.status === 200 && !T.payments.some((p) => p.provider_id === 'pi_donorbox'), 'Donorbox payments ignored');
 
 console.log('monthly gift');
-r = await (await post(checkout, { kind: 'donation', amount: 50, recurring: true, provider: 'stripe', contact: { first: 'Cy', last: 'Ro', email: 'cy@x.com' } })).json();
+r = await (await post(checkout, { kind: 'donation', amount: 50, recurring: true, provider: 'stripe', contact: { first: 'Cy', last: 'Ro', email: 'cy@x.com', street: '1 Main St', city: 'Plano', state: 'IL', zip: '60545' } })).json();
 ok(r.ok && T.subscriptions.length === 1 && T.contacts.find((c) => c.email === 'cy@x.com').tags.includes('Monthly Partner'), 'monthly gift creates subscription + Monthly Partner tag');
 const inv = JSON.stringify({ type: 'invoice.paid', data: { object: { id: 'in_2', billing_reason: 'subscription_cycle', parent: { subscription_details: { subscription: 'sub_1' } }, amount_paid: 5000 } } });
 await webhook(new Request('https://x/', { method: 'POST', body: inv, headers: { 'stripe-signature': sig(inv) } }));
 ok(T.payments.some((p) => p.provider_id === 'pi_month2' && p.status === 'succeeded' && p.amount === 50), 'second month recorded and receipted (new Stripe event format)');
 
 console.log('paypal');
-r = await (await post(checkout, { kind: 'sponsorship', item: 'sapphire', provider: 'paypal', contact: { first: 'Di', last: 'Ko', email: 'di@x.com' } })).json();
+r = await (await post(checkout, { kind: 'sponsorship', item: 'sapphire', provider: 'paypal', contact: { first: 'Di', last: 'Ko', email: 'di@x.com', street: '1 Main St', city: 'Plano', state: 'IL', zip: '60545' } })).json();
 ok(r.orderID === 'ORDER1', 'PayPal order created');
 r = await (await post(checkout, { action: 'capture', orderID: 'ORDER1' })).json();
 ok(r.ok && r.receipt && T.sponsorships.length === 2, 'PayPal capture finalizes sponsorship + receipt');

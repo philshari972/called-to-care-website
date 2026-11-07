@@ -93,6 +93,7 @@ export default async (req) => {
   const c = b.contact || {};
   const email = clean(c.email, 200).toLowerCase();
   if (!clean(c.first) || !clean(c.last) || !isEmail(email)) return fail('Please enter your first name, last name, and a valid email.');
+  if (!clean(c.street) || !clean(c.city) || !clean(c.zip)) return fail('Please enter your mailing address so we can send a thank-you note.');
   let item; try { item = await price(b); } catch (e) { return fail(e.message); }
   if (b.provider === 'paypal' && item.recurring) return fail('Monthly gifts use card or bank account. PayPal is for one-time gifts.');
 
