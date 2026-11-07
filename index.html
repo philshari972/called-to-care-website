@@ -1531,7 +1531,7 @@ html.tickets-on .tix-off{display:none!important}
       <button class="co-x" type="button" data-close aria-label="Close checkout">×</button>
       <form id="coForm" class="apply" novalidate style="box-shadow:none;max-width:none">
         <div class="fs">
-          <span class="label" style="color:var(--pink)" id="coEyebrow">Charity Dinner &amp; Auction · March 13, 2027</span>
+          <span class="label" style="color:var(--pink);padding-right:44px;line-height:1.8" id="coEyebrow">Charity Dinner &amp; Auction · March 13, 2027</span>
           <h2 class="d3 c-navy" id="coTitle">Sponsor</h2>
           <div class="co-line"><span id="coItem">Item</span><span id="coPrice" class="price">$0</span></div>
           <label class="q" for="co-qty" id="coQtyWrap" hidden><span class="lbl">Number of <span class="nw">Tickets<span class="req">*</span></span></span><input id="co-qty" name="qty" type="number" min="1" max="20" value="1" inputmode="numeric"></label>
@@ -1741,7 +1741,7 @@ html.tickets-on .tix-off{display:none!important}
     function close(){co.hidden=true;document.body.classList.remove('locked');}
     C2C.openCheckout=function(o){
       cur=o; const isTicket=o.kind==='tickets', isTable=o.kind==='table', isGift=o.kind==='donation';
-      $('coEyebrow').textContent=isGift?'Give to We Are Called to Care':'Charity Dinner & Auction · March 13, 2027';
+      $('coEyebrow').innerHTML=isGift?'Give to We Are Called to Care':'<span class="nw">Charity Dinner &amp; Auction</span><span style="display:block">Saturday, March 13, 2027</span>';
       $('coTitle').textContent=isGift?(o.recurring?'Monthly Gift':'Your Gift'):isTicket?'Buy Tickets':isTable?'Reserve a Table':'Become a Sponsor';
       $('coItem').textContent=o.name+(isTicket?' · $100 each':''); $('coPrice').textContent=fmt(o.price)+(o.recurring?'/mo':'');
       $('coQtyWrap').hidden=!isTicket; $('coDisplayWrap').hidden=isTicket||isTable||isGift; $('co-display').required=!(isTicket||isTable||isGift);
