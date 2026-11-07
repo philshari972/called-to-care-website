@@ -9,7 +9,7 @@ Object.assign(process.env, {
 });
 
 // ---- tiny in-memory PostgREST ----
-const T = { contacts: [], submissions: [], payments: [], sponsorships: [], attendance: [], subscriptions: [], email_log: [], events: [], settings: [{ key: 'tickets_on', value: false }, { key: 'staff_alert_email', value: 'staff@example.org' }, { key: 'org', value: { legal_name: 'We Are Called to Care, NFP', ein: '86-2900453' } }] };
+const T = { contacts: [], submissions: [], payments: [], sponsorships: [], attendance: [], subscriptions: [], email_log: [], events: [], settings: [{ key: 'tickets_on', value: false }, { key: 'staff_alert_email', value: ['staff@example.org', 'boss@example.org'] }, { key: 'org', value: { legal_name: 'We Are Called to Care, NFP', ein: '86-2900453' } }] };
 let seq = 1001; const uid = () => crypto.randomUUID();
 function match(row, params) {
   for (const [k, v] of params) {
@@ -74,7 +74,7 @@ console.log('forms');
 let r = await (await post(submit, { form: 'placement', data: { first_name: 'Ann', last_name: 'Lee', email: 'Ann@Example.com', phone: '6305551234', placement_date: '2026-11-04', city: 'Plano', children: [{ first: 'Mia', age: '4' }] } })).json();
 ok(r.ok, 'placement saved');
 ok(T.contacts[0].email === 'ann@example.com' && T.contacts[0].tags.includes('Foster/Kinship Family') && T.contacts[0].phone === '(630) 555-1234', 'contact created, tagged, phone formatted');
-ok(sent.some((e) => e.to[0] === 'ann@example.com' && /care package/i.test(e.subject)) && sent.some((e) => e.to[0] === 'staff@example.org'), 'family confirmation + staff alert emailed');
+ok(sent.some((e) => e.to[0] === 'ann@example.com' && /care package/i.test(e.subject)) && sent.some((e) => e.to[0] === 'staff@example.org') && sent.some((e) => e.to[0] === 'boss@example.org'), 'family confirmation + staff alert emailed to every staff address');
 r = await (await post(submit, { form: 'volunteer', data: { first_name: 'Ann', last_name: 'Lee', email: 'ann@example.com', interests: ['Care Closet'] } })).json();
 ok(T.contacts.length === 1 && T.contacts[0].tags.includes('Volunteer: Care Closet') && T.contacts[0].tags.includes('Foster/Kinship Family'), 'same person reused; tags added, none lost');
 r = await post(submit, { form: 'volunteer', data: { first_name: 'X', last_name: 'Y', email: 'bad' } }); ok(r.status === 400, 'bad email rejected');

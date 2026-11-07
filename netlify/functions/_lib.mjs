@@ -121,9 +121,11 @@ export const box = (rows) => `<table role="presentation" width="100%" cellpaddin
 
 // Staff alert (plain and short).
 export async function alertStaff(subject, lines, link) {
-  const to = await setting('staff_alert_email', 'shari@wearecalledtocare.com');
+  // One address, a comma-separated list, or a JSON list of addresses.
+  const raw = await setting('staff_alert_email', 'shari@wearecalledtocare.com');
+  const list = [].concat(raw).flatMap((x) => String(x).split(',')).map((x) => x.trim()).filter(isEmail);
   const html = emailShell({ heading: esc(subject), bodyHtml: lines.map((l) => p(l)).join('') + (link ? btn('Open in admin', link) : ''), reason: 'Staff notification from the Called to Care website.' });
-  return sendEmail({ to, subject: `[Website] ${subject}`, html, template: 'staff-alert' });
+  for (const to of list) await sendEmail({ to, subject: `[Website] ${subject}`, html, template: 'staff-alert' });
 }
 
 // ---------- after a payment succeeds (Stripe webhook or PayPal capture) ----------
