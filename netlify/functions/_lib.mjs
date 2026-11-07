@@ -104,14 +104,14 @@ export function emailShell({ preheader = '', heading, bodyHtml, reason = "You're
 <div style="display:none;max-height:0;overflow:hidden;">${esc(preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FBF8F4;"><tr><td align="center" style="padding:24px 12px;">
 <table role="presentation" class="wrap" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;background:#fff;border-radius:14px;overflow:hidden;">
-<tr><td align="center" style="background:${NAVY};padding:26px 24px 22px;"><img src="${logo}" width="210" alt="We Are Called to Care" style="display:block;width:210px;height:auto;border:0;"></td></tr>
+<tr><td align="center" style="background:${NAVY};padding:26px 24px 22px;"><img src="${logo}" width="210" alt="We Are Called to Care" style="display:block;width:210px;height:auto;border:0;color:#ffffff;font-family:Georgia,serif;font-size:22px;"></td></tr>
 <tr><td class="px" style="padding:36px 44px 30px;">
 <h1 style="margin:0 0 16px;font-family:${SERIF};font-weight:400;font-size:40px;line-height:44px;color:${NAVY};">${heading}</h1>
 <div style="font-family:${SANS};font-size:16px;line-height:26px;color:${INK};">${bodyHtml}</div>
 </td></tr>
 <tr><td class="px" align="center" style="background:${NAVY};padding:26px 40px 30px;font-family:${SANS};font-size:12px;line-height:19px;color:#9fb6c7;">
 <div style="font-family:${SERIF};font-style:italic;font-size:20px;color:#fff;margin-bottom:10px;">&ldquo;Let us love in deed and in truth.&rdquo; <span style="font-style:normal;font-size:12px;color:#F6C3DA;">1 John 3:18</span></div>
-We Are Called to Care &middot; 201 E Veterans Parkway, Suite 13 &middot; Yorkville, IL 60560<br>${esc(reason)}<br>
+We Are Called to Care &middot; 201&#8203; E Veterans Park&#8203;way, Suite 13 &middot; York&#8203;ville, IL 605&#8203;60<br>${esc(reason)}<br>
 <a href="${SITE_URL()}" style="color:${SKY};">wearecalledtocare.com</a></td></tr>
 </table></td></tr></table></body></html>`;
 }
