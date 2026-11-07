@@ -426,7 +426,7 @@ async function q(p){const {data,error}=await p;if(error){console.error(error);to
 async function loadAll(){
  const jobs=[];
  jobs.push(q(SB.from('events').select('*').order('starts_at')).then(r=>EVENTS=r));
- if(PERMS.settings||PERMS.users)jobs.push(q(SB.from('settings').select('*')).then(r=>{SETTINGS={};r.forEach(x=>SETTINGS[x.key]=x.value)}));
+ jobs.push(q(SB.from('settings').select('*')).then(r=>{SETTINGS={};r.forEach(x=>SETTINGS[x.key]=x.value)}));
  const forms=Object.entries(FORM_OF).filter(([k])=>PERMS[k]).map(([,f])=>f);
  if(forms.length)jobs.push(q(SB.from('submissions').select('*').in('form',forms).order('created_at',{ascending:false})).then(r=>{
   Object.entries(FORM_OF).forEach(([k,f])=>{if(PERMS[k])DATA[k]=r.filter(x=>x.form===f).map(x=>mapSub(k,x))})}));
@@ -462,6 +462,9 @@ function mapPay(p){const c=CONTACTS.get(p.contact_id)||{};const m=p.meta||{};
 
 /* map one website form submission to the shape the list pages use */
 const BANDS=['Newborn–2 years','3–5 years','1st–5th grade'];
+// Childcare volunteers: one per N children in each age group (from the Support Night sheet: 1, 2, 2). Owners can change it in Settings.
+const RATIOS=()=>{const r=SETTINGS.childcare_ratios;return Array.isArray(r)&&r.length===3?r.map(Number):[1,2,2]};
+function workers(kids){const r=RATIOS();const per=BANDS.map((b,i)=>Math.ceil(kids.filter(k=>k.age===b).length/(r[i]||1)));const other=kids.filter(k=>!BANDS.includes(k.age)).length;return{per,other,total:per.reduce((a,b)=>a+b,0)+Math.ceil(other/(r[2]||2))}}
 function band(a){a=String(a||'').toLowerCase();if(/newborn|^0|infant|toddler|2 y/.test(a))return BANDS[0];if(/3|4|5 y|pre/.test(a)&&!/grade/.test(a))return BANDS[1];if(/grade|1st|5th/.test(a))return BANDS[2];
  const n=parseInt(a,10);if(!isNaN(n))return n<=2?BANDS[0]:n<=5?BANDS[1]:BANDS[2];return'Not given'}
 function mapSub(k,x){const d=x.data||{};const base={id:x.id,form:x.form,created:D(x.created_at),status:x.status,notesRaw:x.notes||[],data:d,eventId:x.event_id,
@@ -553,8 +556,8 @@ function greet(){const h=NOW().getHours();return h<12?'Good morning':h<17?'Good 
 function snPanel(){const sn=nextSN();if(!sn||!DATA.support)return'';const d=D(sn.starts_at);const regs=DATA.support.filter(r=>r.eventId===sn.id&&r.status!=='Cancelled');
  const kids=regs.flatMap(r=>r.kids);const cnt=BANDS.map(b=>kids.filter(k=>k.age===b).length);const other=kids.length-cnt.reduce((a,b)=>a+b,0);const mx=Math.max(...cnt,1);
  return`<div class="panel"><header><h2>Next Support Night</h2><a class="btn ghost" data-go="support">Open</a></header><div class="sn"><div><span class="label" style="color:var(--pink)">${d.toLocaleDateString('en-US',{weekday:'long'})} · ${d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</span><div class="date">${d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div></div>
- <div class="summary"><div><b>${regs.length}</b><span>Moms</span></div><div><b>${kids.length}</b><span>Kids in childcare</span></div></div>
- <div class="bars">${BANDS.map((b,i)=>`<div class="bar"><span>${b}</span><i><b style="width:${cnt[i]/mx*100}%"></b></i><span class="num">${cnt[i]}</span></div>`).join('')}${other?`<p class="note">${other} child${other>1?'ren':''} with no age given</p>`:''}</div></div></div>`}
+ <div class="summary"><div><b>${regs.length}</b><span>Moms</span></div><div><b>${kids.length}</b><span>Kids in childcare</span></div><div><b>${workers(kids).total}</b><span>Volunteers needed</span></div></div>
+ <div class="bars">${BANDS.map((b,i)=>`<div class="bar"><span>${b}</span><i><b style="width:${cnt[i]/mx*100}%"></b></i><span class="num">${cnt[i]} <small style="color:var(--muted)">· ${workers(kids).per[i]} vol.</small></span></div>`).join('')}${other?`<p class="note">${other} child${other>1?'ren':''} with no age given</p>`:''}</div></div></div>`}
 function dashboard(){
  const first=(ME.name||'there').split(' ')[0];const ym=monthKey(NOW());
  const ks=Object.keys(CFG).filter(k=>PERMS[k]&&DATA[k]);
@@ -583,7 +586,8 @@ function listPage(k){const cfg=CFG[k];if(!cfg)return'';const lv=PERMS[k],rows=ro
  const months=cfg.month?[...new Set(all.map(cfg.month).filter(Boolean))].sort().reverse():[];
  const statuses=[...new Set(all.map(r=>r.status))];
  let summary='';
- if(k==='support'){const kids=rows.filter(r=>r.status!=='Cancelled').flatMap(r=>r.kids);summary=`<div class="summary"><div><b>${rows.filter(r=>r.status!=='Cancelled').length}</b><span>Moms registered</span></div><div><b>${kids.length}</b><span>Kids in childcare</span></div>${BANDS.map(b=>`<div><b>${kids.filter(x=>x.age===b).length}</b><span>${b}</span></div>`).join('')}</div>`}
+ if(k==='support'){const kids=rows.filter(r=>r.status!=='Cancelled').flatMap(r=>r.kids);const w=workers(kids),r=RATIOS();summary=`<div class="summary"><div><b>${rows.filter(r=>r.status!=='Cancelled').length}</b><span>Moms registered</span></div><div><b>${kids.length}</b><span>Kids in childcare</span></div>${BANDS.map(b=>`<div><b>${kids.filter(x=>x.age===b).length}</b><span>${b}</span></div>`).join('')}</div>
+ <div class="summary vols"><div style="background:var(--navy);color:#fff;border-color:var(--navy)"><b style="color:#fff">${w.total}</b><span style="color:var(--sky)">Childcare volunteers needed</span></div>${BANDS.map((b,i)=>`<div><b>${w.per[i]}</b><span>${b} · 1 per ${r[i]}</span></div>`).join('')}${w.other?`<div><b>${w.other}</b><span>Kids with no age given (counted 1 per ${r[2]})</span></div>`:''}</div>`}
  if(['dinner','payments','donations'].includes(k)){const paid=rows.filter(r=>r.status==='Paid');summary=`<div class="summary"><div><b>${money(paid.reduce((s,r)=>s+r.amount,0))}</b><span>Total paid (shown)</span></div><div><b>${rows.length}</b><span>${k==='dinner'?'Purchases':'Records'}</span></div>${k==='dinner'?`<div><b>${paid.reduce((s,r)=>s+r.qty,0)}</b><span>Guests</span></div>`:''}</div>`}
  if(k==='emaillist')summary=`<div class="summary"><div><b>${all.filter(r=>r.okEmail).length}</b><span>Can be emailed</span></div><div><b>${all.filter(r=>r.unsub).length}</b><span>Unsubscribed</span></div><div><b>${all.length}</b><span>Total contacts</span></div></div>`;
  const access=lv==='notes'?`<span class="readonly">Read-only · you can add review notes</span>`:lv==='view'?`<span class="readonly">View only</span>`:'';
@@ -684,6 +688,7 @@ function settingsPage(){const owner=(ME.roles||[]).includes('owner');const org=S
  <form class="panel" id="setForm" style="padding:22px;display:grid;gap:18px">
   <h2 style="margin:0;font-family:var(--serif);font-weight:400;color:var(--navy)">Website</h2>
   <label class="toggle" for="set-tix"><input type="checkbox" id="set-tix" ${SETTINGS.tickets_on?'checked':''} ${owner?'':'disabled'}>Charity dinner tickets are on sale on the website</label>
+  <div style="display:grid;gap:8px"><span class="field">Support Night childcare: one volunteer for every…</span><div class="formgrid" style="grid-template-columns:repeat(3,minmax(0,1fr))">${BANDS.map((b,i)=>`<label class="field" for="set-r${i}">${b}<input id="set-r${i}" inputmode="numeric" value="${RATIOS()[i]}" ${owner?'':'readonly'}></label>`).join('')}</div><span class="note">Children per volunteer. Partial volunteers round up.</span></div>
   <label class="field" for="set-alerts">Staff alert emails (separate with commas)<input id="set-alerts" value="${esc(alerts)}" ${owner?'':'readonly'}></label>
   ${owner?'<button class="btn primary" type="submit" style="justify-self:start">Save Settings</button>':'<p class="note">Only an Owner can change these.</p>'}
  </form>
@@ -847,7 +852,7 @@ document.addEventListener('submit',async e=>{const fm=e.target;
   if(r.error){err.textContent=r.error.message;return}await loadAll();closeLayer();render();toast('Event saved');return}
  if(fm.id==='setForm'){e.preventDefault();const emails=$('#set-alerts').value.split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
   if(!emails.length||emails.some(x=>!/^\S+@\S+\.\S+$/.test(x))){toast('Check the staff alert emails',true);return}
-  busy(fm,true);const r=await SB.from('settings').upsert([{key:'staff_alert_email',value:emails},{key:'tickets_on',value:$('#set-tix').checked}]);busy(fm,false);
+  busy(fm,true);const ratios=[0,1,2].map(i=>Math.max(1,parseInt($('#set-r'+i).value,10)||1));const r=await SB.from('settings').upsert([{key:'staff_alert_email',value:emails},{key:'tickets_on',value:$('#set-tix').checked},{key:'childcare_ratios',value:ratios}]);busy(fm,false);
   if(r.error){toast('Not saved: '+r.error.message,true);return}await loadAll();render();toast('Settings saved. The website picks this up within a minute.');return}
  if(fm.id==='userForm'){e.preventDefault();const err=$('#uf-err');const name=$('#uf-name').value.trim(),email=$('#uf-email').value.trim().toLowerCase();const roles=[...fm.querySelectorAll('.rolepick input:checked')].map(i=>i.value);
   if(!name||!/^\S+@\S+\.\S+$/.test(email)){err.textContent='Enter a name and a valid email.';return}
