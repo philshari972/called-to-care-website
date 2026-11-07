@@ -236,6 +236,7 @@ section{padding-block:96px}
 /* people */
 .person{display:grid;grid-template-columns:200px 1fr;gap:40px;align-items:start;background:var(--white);padding:40px;color:var(--ink)}
 .person .photo{aspect-ratio:4/5;min-height:0}
+.founder-photo{display:block;margin:0 auto 6px;align-self:center;width:168px;height:168px;border-radius:50%;object-fit:cover;border:6px solid var(--white);box-shadow:0 18px 40px -22px rgba(19,40,58,.55)}
 .person .label{color:var(--pink)}
 .person h3{font-family:var(--serif);font-size:2.4rem;line-height:1;color:var(--navy);margin-top:6px}
 .person p{color:var(--muted)}
@@ -687,18 +688,18 @@ html.tickets-on .tix-off{display:none!important}
   <section class="b-skypale" id="therapists">
     <div class="wrap center vstack" style="gap:14px;margin-bottom:48px"><span class="label" style="color:var(--teal)">Meet the therapists</span><h2 class="d2 c-navy">Experienced, local, and at home in foster care</h2></div>
     <div class="wrap" style="display:grid;gap:28px">
-      <div class="person"><div class="photo"><span>Photo</span></div><div class="vstack" style="gap:14px">
+      <div class="person"><div class="photo has-img"><img src="assets/team/megan-gunier.jpg" alt="Megan Gunier, Clinical Director" width="640" height="800" loading="lazy"></div><div class="vstack" style="gap:14px">
         <span class="label">Clinical Director</span><h3>Megan Gunier, MSW, LCSW</h3>
         <p>Megan is a Licensed Clinical Social Worker with close to 20 years of experience as a school social worker, specializing in supporting youth in care. She has dedicated her career to helping vulnerable children secure essential resources and understand their rights, and she is passionate about advocating for those in need and creating opportunities for growth and stability.</p>
         <p>Outside of work, Megan enjoys time with her family and cheering on her children at their sporting events. She serves as Assistant Sunday School Director at her church.</p>
         <div class="creds"><span>MSW · University of Illinois Chicago</span><span>CPI Certified</span></div>
       </div></div>
-      <div class="person"><div class="photo"><span>Photo</span></div><div class="vstack" style="gap:14px">
+      <div class="person"><div class="photo has-img"><img src="assets/team/kari-frantzen.jpg" alt="Kari Frantzen, therapist" width="640" height="800" loading="lazy"></div><div class="vstack" style="gap:14px">
         <span class="label">Therapist</span><h3>Kari Frantzen, MSW, LCSW</h3>
         <p>Kari brings over 20 years of experience as a school social worker in public education. She is passionate about helping children and families discover new perspectives and build practical skills to overcome life's challenges. Much of her career has focused on suicide education and grief support, and her compassionate approach creates a safe space for clients to work through obstacles and heal.</p>
         <div class="creds"><span>MSW · Aurora University</span><span>LCSW</span><span>ASIST Trainer</span></div>
       </div></div>
-      <div class="person"><div class="photo"><span>Photo</span></div><div class="vstack" style="gap:14px">
+      <div class="person"><div class="photo has-img"><img src="assets/team/shari-chapman-therapist.jpg" alt="Shari Chapman, therapist" width="640" height="800" loading="lazy"></div><div class="vstack" style="gap:14px">
         <span class="label">Therapist</span><h3>Shari Chapman, MSW, LCSW</h3>
         <p>Shari enjoys walking alongside people on the challenging roads of life. She specializes in helping individuals gain the skills and insight to experience joy amid pain and struggle. Her own experience as a biological, foster, and adoptive parent gives her a unique approach with people affected by foster care and adoption.</p>
         <div class="creds"><span>MSW · Lewis University</span><span>TBRI® Practitioner</span><span>CWEL, CANS, CERAP</span></div>
@@ -1338,6 +1339,7 @@ html.tickets-on .tix-off{display:none!important}
 
   <section class="b-pink" id="founder">
     <div class="wrap center vstack" style="gap:14px;margin-bottom:44px">
+      <img class="founder-photo" src="assets/team/shari-chapman-director-square.jpg" alt="Shari Chapman, Founder and Executive Director" width="600" height="600" loading="lazy">
       <span class="label">A message from our founder</span>
       <h2 class="d2 c-navy">Hey there, <em class="it c-pink">I'm Shari.</em></h2>
     </div>
@@ -1355,7 +1357,7 @@ html.tickets-on .tix-off{display:none!important}
   <section class="b-skypale" id="staff">
     <div class="wrap center vstack" style="gap:14px;margin-bottom:44px"><span class="label" style="color:var(--teal)">Staff</span><h2 class="d2 c-navy">The people you'll meet</h2></div>
     <div class="wrap">
-      <div class="person"><div class="photo"><span>Photo</span></div><div class="vstack" style="gap:14px">
+      <div class="person"><div class="photo has-img"><img src="assets/team/jen-hall.jpg" alt="Jen Hall, Caregiver Support Coordinator" width="640" height="800" loading="lazy"></div><div class="vstack" style="gap:14px">
         <span class="label">Caregiver Support Coordinator</span><h3>Jen Hall</h3>
         <p>As a foster mom, Jen attended the very first support group Called to Care ever held and has been an integral part of it ever since. Her degree in Human Services and Psychology, her 20 years as a mental health professional at Linden Oaks Hospital, and her experience as a foster and adoptive parent make her uniquely qualified to walk alongside families through hard seasons.</p>
         <p>Jen is a CASA Kendall County advocate and is active at Harvest New Beginnings in Oswego, where Awana and Vacation Bible School have meant a lot to her family. Her favorite roles are wife and mom to five children, and you can catch her walking her dog most mornings, rain or shine.</p>
