@@ -111,7 +111,7 @@ export function emailShell({ preheader = '', heading, bodyHtml, reason = "You're
 </td></tr>
 <tr><td class="px" align="center" style="background:${NAVY};padding:26px 40px 30px;font-family:${SANS};font-size:12px;line-height:19px;color:#9fb6c7;">
 <div style="font-family:${SERIF};font-style:italic;font-size:20px;color:#fff;margin-bottom:10px;">&ldquo;Let us love in deed and in truth.&rdquo; <span style="font-style:normal;font-size:12px;color:#F6C3DA;">1 John 3:18</span></div>
-We Are Called to Care &middot; 201&#8203; E Veterans Park&#8203;way, Suite 13 &middot; York&#8203;ville, IL 605&#8203;60<br>${esc(reason)}<br>
+We Are Called to Care &middot; 201&#8203; E Veterans Park&#8203;way, Suite 13 &middot; York&#8203;ville, IL 605&#8203;60<br>${esc(reason).replace(/wearecalledtocare\.com/g, 'wearecalled&#8203;tocare&#8203;.com')}<br>
 <a href="${SITE_URL()}" style="color:${SKY};">wearecalledtocare.com</a></td></tr>
 </table></td></tr></table></body></html>`;
 }
