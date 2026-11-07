@@ -757,7 +757,7 @@ function settingsPage(){const owner=(ME.roles||[]).includes('owner');const org=S
   ${owner?'<button class="btn primary" type="submit" style="justify-self:start">Save Settings</button>':'<p class="note">Only an Owner can change these.</p>'}
  </form>
  <div class="cards">${con.map(([d,n,s])=>`<div class="card"><span class="label" style="color:var(--muted)">${d}</span><h3>${n}</h3>${pill(s==='Connected'?'Active':s)}</div>`).join('')}</div>
- <div class="panel"><header><h2>Organization</h2></header><div style="padding:18px"><dl class="fields"><dt>Legal name</dt><dd>${esc(org.legal_name||'We Are Called to Care, NFP')}</dd><dt>EIN</dt><dd>${esc(org.ein||'86-2900453')}</dd><dt>Office</dt><dd>1111 W South St, Plano, IL 60545</dd><dt>Mailing address</dt><dd>${esc(org.address||'201 E Veterans Parkway, Suite 13, Yorkville, IL 60560')}</dd><dt>Phone</dt><dd>${esc(org.phone||'815-200-9086')}</dd></dl></div></div>`}
+ <div class="panel"><header><h2>Organization</h2></header><div style="padding:18px"><dl class="fields"><dt>Legal name</dt><dd>${esc(org.legal_name||'We Are Called to Care, NFP')}</dd><dt>EIN</dt><dd>${esc(org.ein||'86-2900453')}</dd><dt>Office</dt><dd>1111 W South St, Plano, IL 60545</dd><dt>Mailing address</dt><dd>${esc(org.address||'Called to Care, 15450 State Route 47, Newark, IL 60541')}</dd><dt>Phone</dt><dd>${esc(org.phone||'815-200-9086')}</dd></dl></div></div>`}
 
 /* ---------------- charity dinner: sponsors & guests ---------------- */
 const LEVELS=[['Legacy',15000,null],['Gold',10000,null],['Platinum',5000,null],['Diamond',2500,null],['Sapphire',1500,null],['Ruby',750,null],['Friend',250,null],['Appetizer Table',1000,1],['Dessert Table',1000,2],['Flowers',1000,2]];

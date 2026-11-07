@@ -125,7 +125,7 @@ ok(r.ok && r.receipt && T.sponsorships.length === 2, 'PayPal capture finalizes s
 console.log('sponsor by check');
 r = await (await post(checkout, { action: 'pledge', kind: 'sponsorship', item: 'gold', display_name: 'Fox Dental', guests: 'A, B', contact: { first: 'Dana', last: 'Ellis', email: 'dana@fox.com', street: '1 Main', city: 'Yorkville', state: 'IL', zip: '60560' } })).json();
 ok(r.ok && T.sponsorships.some((x) => x.sponsor_name === 'Fox Dental' && x.status === 'Committed' && x.method === 'Check' && x.amount === 10000), 'check sponsorship reserved as Committed');
-ok(sent.some((e) => e.to[0] === 'dana@fox.com' && e.html.includes('201 E Veterans Pkwy')), 'check mailing instructions emailed');
+ok(sent.some((e) => e.to[0] === 'dana@fox.com' && e.html.includes('15450 State Route 47')), 'check mailing instructions emailed');
 r = await post(checkout, { action: 'pledge', kind: 'sponsorship', item: 'gold', contact: { first: 'Dana', last: 'Ellis', email: 'dana@fox.com', street: '1 Main', city: 'Yorkville', zip: '60560' } });
 ok(r.status === 400, 'no duplicate sponsorship for the same sponsor');
 console.log('support night rsvp');

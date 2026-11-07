@@ -918,7 +918,7 @@ html.tickets-on .tix-off{display:none!important}
 
   <section class="b-pinkpale" style="padding-block:64px">
     <div class="wrap g2" style="gap:40px">
-      <div class="vstack" style="gap:10px"><span class="label">Prefer to mail a check?</span><p class="d3 c-navy">We Are Called to Care<br>201 E Veterans Parkway, Suite 13<br>Yorkville, IL 60560</p><p class="hint">Make checks payable to We Are Called to Care, NFP.</p></div>
+      <div class="vstack" style="gap:10px"><span class="label">Prefer to mail a check?</span><p class="d3 c-navy">Called to Care<br>15450 State Route 47<br>Newark, IL 60541</p><p class="hint">Make checks payable to We Are Called to Care, NFP.</p></div>
       <div class="vstack" style="gap:10px"><span class="label">Questions about sponsoring?</span><p>Contact our Executive Director, Shari Chapman, at <span style="user-select:all;font-weight:700">shari@wearecalledtocare.com</span>.</p><a class="pill p-line" style="color:var(--navy);align-self:flex-start" href="assets/sponsor-packet-2027.pdf" target="_blank" rel="noopener">Download Sponsor Packet</a></div>
     </div>
   </section>
@@ -966,7 +966,7 @@ html.tickets-on .tix-off{display:none!important}
       <div class="lab cap-pink"><span class="label">New clothes</span><h3>Amazon wish list</h3><p>Ship new clothing straight to our Care Closet.</p><a class="pill p-navy" href="https://www.amazon.com/hz/wishlist/ls/38RK52RW3Q2M9" target="_blank" rel="noopener">Shop the list</a></div>
       <div class="lab cap-sky lemon"><span class="label">Kids giving</span><h3>Lemonade stand</h3><p>Raise money with a stand and deposit it online.</p><a class="pill p-navy" href="#lemonade">Learn how</a></div>
     </div>
-    <p class="wrap fine" style="margin-top:36px"><b>Prefer to give by check?</b> Mail it to We Are Called to Care, 201 E Veterans Parkway, Suite 13, Yorkville, IL 60560, payable to We Are Called to Care, NFP.<br>We Are Called to Care, NFP is a 501(c)(3) nonprofit. EIN 86-2900453. Gifts are tax-deductible as allowed by law.</p>
+    <p class="wrap fine" style="margin-top:36px"><b>Prefer to give by check?</b> Mail it to Called to Care, 15450 State Route 47, Newark, IL 60541, payable to We Are Called to Care, NFP.<br>We Are Called to Care, NFP is a 501(c)(3) nonprofit. EIN 86-2900453. Gifts are tax-deductible as allowed by law.</p>
   </section>
 </div>
 
@@ -1552,7 +1552,7 @@ html.tickets-on .tix-off{display:none!important}
           <div class="co-total"><span>Total</span><span id="coTotal" class="price">$0</span></div>
           <div class="q" id="coHowWrap" hidden><span class="lbl">How Would You Like to <span class="nw">Pay?</span></span>
             <div class="choices inline"><label class="choice" for="co-how1"><input type="radio" id="co-how1" name="how" value="online" checked> Pay online now</label><label class="choice" for="co-how2"><input type="radio" id="co-how2" name="how" value="check"> Mail a check</label></div>
-            <div class="check-note" id="coCheckNote" hidden><b>Make your check payable to We Are Called to Care, NFP</b> and mail it to:<br>201 E Veterans Pkwy, Suite 13<br>Yorkville, IL 60560<br><span class="hint">We'll reserve your sponsorship now and email these details to you.</span></div></div>
+            <div class="check-note" id="coCheckNote" hidden><b>Make your check payable to We Are Called to Care, NFP</b> and mail it to:<br>Called to Care<br>15450 State Route 47<br>Newark, IL 60541<br><span class="hint">We'll reserve your sponsorship now and email these details to you.</span></div></div>
           <input class="hp" name="c2c_hp_x7" tabindex="-1" autocomplete="off" data-lpignore="true" data-1p-ignore aria-hidden="true">
           <div class="co-pay">
             <button class="pill p-hot" type="submit" id="coNext">Continue to Payment</button>
@@ -1774,7 +1774,7 @@ html.tickets-on .tix-off{display:none!important}
       if(byCheck()){const b=$('coNext');C2C.busy(b,true,'Reserving…');
         try{const r=await C2C.api('checkout',{...payload('check'),action:'pledge'});
           $('coDoneMsg').innerHTML=`Thank you, ${esc(f.first_name.value)}! Your <b>${esc(cur.name)}</b> (${fmt(cur.price)}) is reserved.`;
-          $('coDoneNote').innerHTML=`<span class="check-note" style="display:block"><b>Please make your check payable to We Are Called to Care, NFP</b> and mail it to:<br>201 E Veterans Pkwy, Suite 13<br>Yorkville, IL 60560<br>Memo: 2027 Dinner Sponsor</span><br>We emailed these details to ${esc(f.email.value)}. Questions? donations@wearecalledtocare.com`;
+          $('coDoneNote').innerHTML=`<span class="check-note" style="display:block"><b>Please make your check payable to We Are Called to Care, NFP</b> and mail it to:<br>Called to Care<br>15450 State Route 47<br>Newark, IL 60541<br>Memo: 2027 Dinner Sponsor</span><br>We emailed these details to ${esc(f.email.value)}. Questions? donations@wearecalledtocare.com`;
           step('done');}catch(x){$('coErr').textContent=x.message}finally{C2C.busy(b,false);howUpd()}return}
       const b=$('coNext'); C2C.busy(b,true,'One moment…');
       try{

@@ -241,7 +241,7 @@ create table if not exists site.settings (key text primary key, value jsonb not 
 insert into site.settings (key, value) values
   ('staff_alert_email', '["shari@wearecalledtocare.com","phil@wearecalledtocare.com"]'),
   ('tickets_on', 'false'),
-  ('org', '{"legal_name":"We Are Called to Care, NFP","ein":"86-2900453","address":"201 E Veterans Parkway, Suite 13, Yorkville, IL 60560","phone":"815-200-9086"}')
+  ('org', '{"legal_name":"We Are Called to Care, NFP","ein":"86-2900453","address":"Called to Care, 15450 State Route 47, Newark, IL 60541","phone":"815-200-9086"}')
 on conflict (key) do nothing;
 
 create table if not exists site.audit (

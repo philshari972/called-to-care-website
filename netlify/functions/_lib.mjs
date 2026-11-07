@@ -22,7 +22,7 @@ export const TICKET_PRICE = 100, TABLE_PRICE = 1000;
 // Regular dinner tickets open on their own at noon (Chicago) on Dec 15, 2026. Turning tickets on in the admin opens them sooner.
 export const TICKETS_OPEN_AT = Date.parse('2026-12-15T18:00:00Z');
 export const ticketsOpen = async (now = Date.now()) => now >= TICKETS_OPEN_AT || !!(await setting('tickets_on', false));
-export const CHECK_ADDRESS = ['We Are Called to Care, NFP', '201 E Veterans Pkwy, Suite 13', 'Yorkville, IL 60560'];
+export const CHECK_ADDRESS = ['Called to Care', '15450 State Route 47', 'Newark, IL 60541'];
 
 // ---------- responses ----------
 const CORS = { 'content-type': 'application/json', 'cache-control': 'no-store' };
@@ -116,7 +116,7 @@ export function emailShell({ preheader = '', heading, bodyHtml, reason = "You're
 </td></tr>
 <tr><td class="px" align="center" style="background:${NAVY};padding:26px 40px 30px;font-family:${SANS};font-size:12px;line-height:19px;color:#9fb6c7;">
 <div style="font-family:${SERIF};font-style:italic;font-size:20px;color:#fff;margin-bottom:10px;">&ldquo;Let us love in deed and in truth.&rdquo; <span style="font-style:normal;font-size:12px;color:#F6C3DA;">1 John 3:18</span></div>
-We Are Called to Care &middot; 201&#8203; E Veterans Park&#8203;way, Suite 13 &middot; York&#8203;ville, IL 605&#8203;60<br>${esc(reason).replace(/wearecalledtocare\.com/g, 'wearecalled&#8203;tocare&#8203;.com')}<br>
+Called to Care &middot; 15450&#8203; State Route&#8203; 47 &middot; New&#8203;ark, IL 605&#8203;41<br>${esc(reason).replace(/wearecalledtocare\.com/g, 'wearecalled&#8203;tocare&#8203;.com')}<br>
 <a href="${SITE_URL()}" style="color:${SKY};">wearecalledtocare.com</a></td></tr>
 </table></td></tr></table></body></html>`;
 }
