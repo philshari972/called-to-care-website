@@ -390,6 +390,7 @@ const arr=v=>Array.isArray(v)?v:v?[v]:[];
 const title=k=>k.replace(/_/g,' ').replace(/\b(\w)/g,c=>c.toUpperCase()).replace(/\bDob\b/,'Date of Birth').replace(/\bFag\b/,'Foster/Adopted/Guardianship');
 function toast(t,bad){const el=document.createElement('div');el.className='toast';el.setAttribute('role','status');if(bad)el.style.background='var(--pink)';el.textContent=t;document.body.appendChild(el);setTimeout(()=>el.remove(),bad?5000:2600)}
 const NOW=()=>new Date();
+const hit=(obj,qq)=>{const hay=JSON.stringify(obj).toLowerCase();return qq.toLowerCase().split(/[\s,&]+/).filter(Boolean).every(w=>hay.includes(w))};
 
 /* ---------------- state ---------------- */
 let SB=null, CFGX=null, ME=null, PERMS={}, ROLES={}, VIEW='dashboard', Q='', MONTH='all', SF='all';
@@ -464,9 +465,9 @@ async function loadAll(){
  if(PERMS.dinner)DATA.dinner=pay.filter(p=>p.purpose==='tickets'||p.purpose==='table').map(mapPay);
 }
 function mapContact(c){const biz=['business','church','foundation'].includes(c.kind)&&c.org;
- const name=biz?c.org:(c.last_name?`${c.last_name}, ${c.first_name}`:c.first_name||c.email||'(no name)');
+ const name=biz?c.org:(c.household||(c.last_name?`${c.last_name}, ${c.first_name}`:c.first_name||c.email||'(no name)'));
  return{id:c.id,raw:c,name,type:biz?(c.kind==='church'?'Church':c.kind==='foundation'?'Foundation':'Business'):'Family',first:c.first_name,last:c.last_name,org:c.org,salutation:c.salutation||c.first_name,
-  email:c.email||'',phone:c.phone,street:c.street,city:c.city,state:c.state,zip:c.zip,okEmail:c.email_ok&&!c.do_not_email,okText:c.text_ok,okMail:c.mail_ok,unsub:c.do_not_email,tags:c.tags||[],source:c.source,notes:c.notes,created:D(c.created_at)}}
+  email:c.email||'',household:c.household||'',phone:c.phone,street:c.street,city:c.city,state:c.state,zip:c.zip,okEmail:c.email_ok&&!c.do_not_email,okText:c.text_ok,okMail:c.mail_ok,unsub:c.do_not_email,tags:c.tags||[],source:c.source,notes:c.notes,created:D(c.created_at)}}
 function mapSpon(s){return{id:s.id,cid:s.contact_id,year:s.year,name:s.sponsor_name,level:s.level,amount:Number(s.amount||0),status:s.status,received:Number(s.received||0),method:s.method,source:s.source,logo:s.logo_received,receipt:s.receipt_sent,thanks:s.thanks_sent,notes:s.notes,date:D(s.created_at)}}
 function mapAtt(a){return{id:a.id,cid:a.contact_id,year:a.year,guests:a.guests,ticket:a.ticket_type,table:a.table_label,present:a.present,bid:a.bid_number,source:a.source,total:a.auction_total}}
 function mapPay(p){const c=CONTACTS.get(p.contact_id)||{};const m=p.meta||{};
@@ -600,7 +601,7 @@ function dashboard(){
 function rowsFor(k){const cfg=CFG[k];let rows=(DATA[k]||[]).slice();
  if(MONTH!=='all'&&cfg.month)rows=rows.filter(r=>cfg.month(r)===MONTH);
  if(SF!=='all')rows=rows.filter(r=>r.status===SF);
- if(Q){const qq=Q.toLowerCase();rows=rows.filter(r=>JSON.stringify({...r,raw:undefined}).toLowerCase().includes(qq))}
+ if(Q){const qq=Q.toLowerCase();rows=rows.filter(r=>hit({...r,raw:undefined},qq))}
  return rows.sort((a,b)=>(b.created||0)-(a.created||0))}
 function listPage(k){const cfg=CFG[k];if(!cfg)return'';const lv=PERMS[k],rows=rowsFor(k);const all=DATA[k]||[];
  const months=cfg.month?[...new Set(all.map(cfg.month).filter(Boolean))].sort().reverse():[];
@@ -775,20 +776,20 @@ const spPill=s=>`<span class="pill ${{'Asked':'s-off','Committed':'s-info','Invo
 const yes=b=>b?`<span class="ok">✓</span>`:`<span class="no">—</span>`;
 const cName=(c,s)=>`<b>${esc(s&&s.name||c.name)}</b><span class="sub">${esc(c.type==='Family'?c.email:[c.first,c.last].filter(Boolean).join(' '))}</span>`;
 function spRows(){const y=SP.year;let rows=DIN.spons.filter(s=>s.year===y);if(SP.st!=='all')rows=rows.filter(s=>s.status===SP.st);
- if(SP.q){const qq=SP.q.toLowerCase();rows=rows.filter(s=>JSON.stringify({...cById(s.cid),raw:0}).toLowerCase().includes(qq)||(s.level+s.name).toLowerCase().includes(qq))}
+ if(SP.q){const qq=SP.q.toLowerCase();rows=rows.filter(s=>hit({...cById(s.cid),raw:0,lv:s.level,sn:s.name},qq))}
  return rows.sort((a,b)=>SPST.indexOf(b.status)-SPST.indexOf(a.status)||b.amount-a.amount)}
 function histRows(){let rows=DIN.contacts.filter(c=>DIN.spons.some(s=>s.cid===c.id&&COUNTS_AS(s.status)));
  if(SP.hy!=='any')rows=rows.filter(c=>yearsSpon(c).includes(+SP.hy));
  if(SP.hn!=='any')rows=rows.filter(c=>{const n=yearsSpon(c).length;return SP.hn==='all'?n===DYEARS.length:SP.hn==='5'?n>=5:n===+SP.hn});
  if(SP.lapsed)rows=rows.filter(c=>{const s=sponOf(c,CUR);return !(s&&COUNTS_AS(s.status))});
- if(SP.q){const qq=SP.q.toLowerCase();rows=rows.filter(c=>JSON.stringify({...c,raw:0}).toLowerCase().includes(qq))}
+ if(SP.q){const qq=SP.q.toLowerCase();rows=rows.filter(c=>hit({...c,raw:0},qq))}
  const so={life:(a,b)=>lifetime(b)-lifetime(a),years:(a,b)=>yearsSpon(b).length-yearsSpon(a).length||lifetime(b)-lifetime(a),name:(a,b)=>a.name.localeCompare(b.name)};
  return rows.sort(so[SP.sort]||so.life)}
 function attRows(){let rows=DIN.contacts.filter(c=>DIN.att.some(a=>a.cid===c.id));
  if(SP.an!=='any')rows=rows.filter(c=>{const n=attended(c).length;if(SP.an==='all')return n===HELD.length;if(SP.an==='0')return n===0;return SP.am==='exact'?n===+SP.an:n>=+SP.an});
  if(SP.ay!=='any')rows=rows.filter(c=>attended(c).includes(+SP.ay));
  if(SP.reg)rows=rows.filter(c=>registered(c));
- if(SP.q){const qq=SP.q.toLowerCase();rows=rows.filter(c=>JSON.stringify({...c,raw:0}).toLowerCase().includes(qq))}
+ if(SP.q){const qq=SP.q.toLowerCase();rows=rows.filter(c=>hit({...c,raw:0},qq))}
  return rows.sort((a,b)=>attended(b).length-attended(a).length||a.name.localeCompare(b.name))}
 function sponsorsPage(){if(SP.year==null)SP.year=CUR;const lv=PERMS.sponsors,edit=lv==='edit';
  const tabs=[['year','Sponsors by Year'],['history','Sponsor History'],['attend','Dinner Attendance']];
