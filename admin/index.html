@@ -217,6 +217,13 @@ dl.fields dt:nth-last-of-type(1),dl.fields dd:last-of-type{border-bottom:0}
 .matrix th,.matrix td{text-align:center;padding:10px 8px}
 .matrix th:first-child,.matrix td:first-child{text-align:left;padding-left:14px;min-width:230px}
 .matrix tbody tr{cursor:default}
+.matrix th+th,.matrix td+td{border-left:1px solid var(--line)}
+.matrix th:first-child,.matrix td:first-child{position:sticky;left:0;background:var(--surface,#fff);z-index:1;border-right:2px solid var(--line)}
+.matrix thead th{position:sticky;top:0;z-index:2;background:var(--bg,#f4f6f8)}
+.matrix thead th:first-child{z-index:3}
+.matrix tbody tr:hover td{background:rgba(181,207,220,.18)}
+.matrix tbody tr:hover td:first-child{background:#eef4f8}
+.matrix td:has(.mk):hover,.matrix tbody td:hover{box-shadow:inset 0 0 0 2px var(--teal)}
 .mk{font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:999px}
 .mk.edit{background:var(--ok-bg);color:var(--ok)}
 .mk.view{background:var(--info-bg);color:var(--info)}
