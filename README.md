@@ -1,6 +1,6 @@
 # We Are Called to Care website
 
-Static site for wearecalledtocare.com, hosted on Netlify (Selah Home's account).
+Static site for wearecalledtocare.com, hosted on Netlify (organization Netlify account).
 
 - `index.html`: the whole site (pages are shown by the address after `#`, e.g. `/#therapy`).
 - `assets/`: logos, photos, the 2027 sponsor packet.

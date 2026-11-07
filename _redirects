@@ -1,2 +1,6 @@
 # Old Amazon wish list address
 /amazon  https://www.amazon.com/hz/wishlist/ls/38RK52RW3Q2M9  301
+# keep project files private (only the website is public)
+/supabase/*  /404.html  404!
+/netlify/*   /404.html  404!
+/README.md   /404.html  404!

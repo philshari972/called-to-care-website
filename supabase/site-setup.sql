@@ -199,7 +199,7 @@ create table if not exists site.payments (
   contact_id uuid references site.contacts(id) on delete set null,
   purpose text not null check (purpose in ('donation','sponsorship','tickets','table','other')),
   description text not null default '',
-  designation text not null default '',        -- General, Selah Home...
+  designation text not null default '',        -- Where needed most, Care Closet...
   amount numeric(10,2) not null,
   fee numeric(10,2),
   status text not null default 'pending' check (status in ('pending','succeeded','failed','refunded','canceled')),
