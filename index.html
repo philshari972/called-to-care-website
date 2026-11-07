@@ -410,6 +410,18 @@ html:not(.lemonade-on) .lemon{display:none!important}
 .kid-head button{border:0;background:none;color:var(--pink);font-weight:600;cursor:pointer;padding:6px}
 .xmas-head{background:radial-gradient(60% 80% at 90% 10%,rgba(246,195,218,.18),transparent 60%),radial-gradient(50% 70% at 5% 100%,rgba(181,207,220,.16),transparent 60%),var(--navy)}
 /* Dinner ticket switch: add class tickets-on to <html> to open ticket sales */
+.photo-drop{display:inline-flex;align-items:center;justify-content:center;border:2px dashed var(--sky);border-radius:16px;padding:22px 28px;cursor:pointer;font-weight:700;color:var(--teal);background:var(--white);justify-self:start}
+.photo-drop input{position:absolute;opacity:0;width:1px;height:1px}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.photo-grid figure{margin:0;position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:var(--sky-pale)}
+.photo-grid img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-grid button{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(19,40,58,.75);color:#fff;font-size:1.1rem;line-height:1;cursor:pointer}
+
+/* Branded dropdowns: pink circle with a navy chevron */
+select{-webkit-appearance:none!important;-moz-appearance:none!important;appearance:none!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='14' r='14' fill='%23F6C3DA'/%3E%3Cpath d='M9 12l5 5 5-5' fill='none' stroke='%231D4766' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 12px center!important;background-size:26px 26px!important;padding-right:52px!important;cursor:pointer;text-overflow:ellipsis}
+select::-ms-expand{display:none}
+select:hover{border-color:var(--teal)!important}
+select:focus-visible{outline:3px solid rgba(226,25,122,.25);outline-offset:2px}
 html:not(.tickets-on) .tix-on{display:none!important}
 html.tickets-on .tix-off{display:none!important}
 #tickets .early{grid-column:1/-1;display:grid;gap:12px}
@@ -1169,6 +1181,49 @@ html.tickets-on .tix-off{display:none!important}
   </section>
 </div>
 
+<div class="page" data-page="camp-followup" hidden>
+  <div class="ph b-sky"><div class="wrap">
+    <span class="label c-navy">Camp scholarship follow-up</span>
+    <h1 class="d1 c-navy" style="font-size:clamp(2.8rem,7vw,5.4rem)">How was <em class="it c-pink">camp?</em></h1>
+    <p class="lede" id="cfLede">We'd love to hear about it! Share a favorite memory and a few photos. Your story helps our donors see what their gifts make possible and helps us send more kids to camp next year.</p>
+  </div></div>
+  <section class="b-skypale" style="padding-block:64px 96px">
+    <div class="wrap">
+    <form class="apply" id="cfForm" novalidate style="max-width:760px">
+      <fieldset class="fs">
+        <legend><span class="n">1</span><span class="t">About the Camper</span></legend>
+        <div class="c2">
+          <label class="q" for="cf-youth"><span class="lbl">Youth's <span class="nw">Name<span class="req">*</span></span></span><input id="cf-youth" name="youth_name" required></label>
+          <label class="q" for="cf-guardian"><span class="lbl">Guardian's <span class="nw">Name<span class="req">*</span></span></span><input id="cf-guardian" name="guardian_name" autocomplete="name" required></label>
+          <label class="q" for="cf-email"><span class="lbl">Guardian's <span class="nw">Email<span class="req">*</span></span></span><input id="cf-email" name="email" type="email" autocomplete="email" required></label>
+          <label class="q" for="cf-camp"><span class="lbl">Which Camp Did the Youth <span class="nw">Attend?</span></span><input id="cf-camp" name="camp_name"></label>
+        </div>
+        <label class="q" for="cf-dates"><span class="lbl">What Dates Did the Youth Attend <span class="nw">Camp?</span></span><input id="cf-dates" name="camp_dates"></label>
+      </fieldset>
+      <fieldset class="fs">
+        <legend><span class="n">2</span><span class="t">Photos</span></legend>
+        <div class="q"><span class="lbl">Upload 1 to 5 Photos From Camp</span><span class="hint">Tap to choose photos from your phone or computer. We only share photos publicly if you gave permission on your application.</span>
+          <label class="photo-drop" for="cf-photos"><input id="cf-photos" type="file" accept="image/*" multiple><span>Choose Photos</span></label>
+          <div class="photo-grid" id="cfThumbs"></div></div>
+      </fieldset>
+      <fieldset class="fs">
+        <legend><span class="n">3</span><span class="t">Your Stories</span></legend>
+        <label class="q" for="cf-ys"><span class="lbl">Youth: Share Something Positive, Meaningful, or Fun From <span class="nw">Camp</span></span><span class="hint">In their own words is perfect.</span><textarea id="cf-ys" name="youth_story"></textarea></label>
+        <label class="q" for="cf-gs"><span class="lbl">Guardian: Briefly Describe the Positive Impact Camp Had on the <span class="nw">Youth</span></span><textarea id="cf-gs" name="guardian_story"></textarea></label>
+        <div class="q" data-group="recommend"><span class="lbl">Would You Recommend This Camp Experience to Other <span class="nw">Families?</span></span><div class="choices inline"><label class="choice" for="cf-r1"><input type="radio" id="cf-r1" name="recommend" value="Yes"> Yes</label><label class="choice" for="cf-r2"><input type="radio" id="cf-r2" name="recommend" value="No"> No</label><label class="choice" for="cf-r3"><input type="radio" id="cf-r3" name="recommend" value="Not sure"> Not sure</label></div></div>
+        <label class="q" for="cf-else"><span class="lbl">Anything Else You'd Like Us to <span class="nw">Know?</span></span><textarea id="cf-else" name="anything_else"></textarea></label>
+      </fieldset>
+      <div class="submit-row"><button class="pill p-hot" type="submit">Send Our Camp Story</button><span class="hint" id="cfErr" role="alert"></span></div>
+    </form>
+    <div class="done-card" id="cfDone" hidden>
+      <span class="label" style="color:var(--pink)">Thank you</span>
+      <h2 class="d2 c-navy">We loved hearing about camp.</h2>
+      <p id="cfDoneMsg">Thank you for sharing. Stories like yours are why we do this.</p>
+      <a class="pill p-navy" href="#camp">Back to Camp Scholarships</a>
+    </div>
+    </div>
+  </section>
+</div>
 <div class="page" data-page="placement-request" hidden>
   <div class="ph b-navy"><div class="wrap">
     <span class="label c-pinkl">New placement · care package request</span>
@@ -1502,8 +1557,8 @@ html.tickets-on .tix-off{display:none!important}
   document.getElementById('scrim').addEventListener('click',()=>closeMenu(true));
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu(true)});
   drawer.addEventListener('click',e=>{if(e.target.closest('a'))closeMenu(false)});
-  const parentOf={'charity-dinner':'events','lemonade':'get-involved','careers':'get-involved','camp':'foster-parents','camp-apply':'foster-parents','volunteer-apply':'get-involved','christmas':'events','support-register':'foster-parents','placement-request':'foster-parents'};
-  const titles={home:'We Are Called to Care','foster-parents':'Foster Parents','therapy':'Therapy','get-involved':'Get Involved','events':'Events','donate':'Donate','about':'About Us','contact':'Contact','careers':'Careers','lemonade':'Lemonade Stand','camp':'Camp Scholarships','camp-apply':'Camp Scholarship Application','volunteer-apply':'Volunteer Application','christmas':'Christmas Gifts 2026','support-register':'Support Night Registration','placement-request':'Care Package Request','charity-dinner':'Charity Dinner & Auction'};
+  const parentOf={'charity-dinner':'events','lemonade':'get-involved','careers':'get-involved','camp':'foster-parents','camp-apply':'foster-parents','camp-followup':'foster-parents','volunteer-apply':'get-involved','christmas':'events','support-register':'foster-parents','placement-request':'foster-parents'};
+  const titles={home:'We Are Called to Care','foster-parents':'Foster Parents','therapy':'Therapy','get-involved':'Get Involved','events':'Events','donate':'Donate','about':'About Us','contact':'Contact','careers':'Careers','lemonade':'Lemonade Stand','camp':'Camp Scholarships','camp-apply':'Camp Scholarship Application','volunteer-apply':'Volunteer Application','christmas':'Christmas Gifts 2026','support-register':'Support Night Registration','placement-request':'Care Package Request','camp-followup':'Camp Follow-Up','charity-dinner':'Charity Dinner & Auction'};
   let pendingAnchor=null;
   function show(){
     let h=(location.hash||'#home').slice(1);
@@ -1806,6 +1861,28 @@ html.tickets-on .tix-off{display:none!important}
       try{await C2C.api('submit',{form:'placement',data,t:C2C.t,website:hp(f)});}catch(x){err.textContent=x.message;C2C.busy(b,false);return}
       document.getElementById('plDoneMsg').textContent=`Thank you, ${data.first_name}. We're packing a care package for ${children.length===1?children[0].first:children.length+' children'} and will call or text ${data.phone} within one business day.`;
       f.hidden=true;const d=document.getElementById('plDone');d.hidden=false;d.scrollIntoView({block:'center'});C2C.busy(b,false);});
+  })();
+
+
+  // ---- Camp follow-up (recap + photos) ----
+  (function(){
+    const f=document.getElementById('cfForm'); if(!f) return;
+    const ref=new URLSearchParams(location.search).get('cf')||'';
+    const thumbs=document.getElementById('cfThumbs'),input=document.getElementById('cf-photos'),err=document.getElementById('cfErr');let shots=[];
+    if(ref) fetch('/.netlify/functions/camp?ref='+encodeURIComponent(ref)).then(r=>r.ok?r.json():null).then(a=>{if(!a||!a.ok)return;
+      f.youth_name.value=a.youth||'';f.guardian_name.value=a.guardian||'';f.email.value=a.email||'';f.camp_name.value=a.camp||'';f.camp_dates.value=a.dates||'';
+      if(a.youth)document.getElementById('cfLede').textContent=`We'd love to hear about ${a.youth}'s time at ${a.camp||'camp'}! Share a favorite memory and a few photos.`;}).catch(()=>{});
+    const shrink=file=>new Promise((res,rej)=>{const img=new Image();const u=URL.createObjectURL(file);img.onload=()=>{const k=Math.min(1,1600/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);res(c.toDataURL('image/jpeg',.82))};img.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('bad image'))};img.src=u});
+    const draw=()=>{thumbs.innerHTML=shots.map((s,i)=>`<figure><img src="${s}" alt="Camp photo ${i+1}"><button type="button" data-rm="${i}" aria-label="Remove photo ${i+1}">×</button></figure>`).join('');input.closest('.photo-drop').querySelector('span').textContent=shots.length>=5?'5 photos added':shots.length?'Add More Photos':'Choose Photos';input.disabled=shots.length>=5};
+    input.addEventListener('change',async()=>{err.textContent='';for(const file of [...input.files]){if(shots.length>=5){err.textContent='Up to 5 photos.';break}try{shots.push(await shrink(file))}catch(x){err.textContent='One photo could not be read. Try a JPG or PNG.'}}input.value='';draw()});
+    thumbs.addEventListener('click',e=>{const b=e.target.closest('[data-rm]');if(b){shots.splice(+b.dataset.rm,1);draw()}});
+    ['input','change'].forEach(t=>f.addEventListener(t,e=>{const q=e.target.closest('.q');if(q)clearQ(q)}));
+    f.addEventListener('submit',async e=>{e.preventDefault();const first=checkForm(f);if(first)return showFirst(first,err);err.textContent='';
+      const fd=new FormData(f);const data={};['youth_name','guardian_name','email','camp_name','camp_dates','youth_story','guardian_story','recommend','anything_else'].forEach(k=>data[k]=fd.get(k)||'');
+      const b=f.querySelector('[type=submit]');C2C.busy(b,true);
+      try{await C2C.api('submit',{form:'camp_followup',data,photos:shots,ref,t:C2C.t,website:hp(f)})}catch(x){err.textContent=x.message;C2C.busy(b,false);return}
+      document.getElementById('cfDoneMsg').textContent=`Thank you, ${data.guardian_name.split(' ')[0]}! We loved hearing about ${data.youth_name.split(' ')[0]}'s time at camp${shots.length?' and seeing the photos':''}.`;
+      f.hidden=true;const d=document.getElementById('cfDone');d.hidden=false;d.scrollIntoView({block:'center'});C2C.busy(b,false)});
   })();
 
   // ---- Give online ----

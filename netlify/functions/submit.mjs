@@ -1,5 +1,7 @@
 // POST /.netlify/functions/submit  { form, data, website (honeypot), t (page-load time) }
 // Saves any website form, tags the person, emails them a confirmation, and alerts staff.
+import crypto from 'node:crypto';
+import { campEnd, newToken, savePhoto, patchAdmin } from './_camp.mjs';
 import { db, upsertContact, sendEmail, alertStaff, emailShell, p, btn, box, json, fail, clean, isEmail, fmtPhone, esc, looksLikeBot, SITE_URL } from './_lib.mjs';
 
 const year = () => new Date().getFullYear();
@@ -51,6 +53,16 @@ const FORMS = {
       body: p(`We received ${esc(d.youth_first)}'s camp scholarship application. Our scholarship committee reviews applications and will contact you with a decision.`) }),
     alert: (d) => [`Camp scholarship application for ${d.youth_first} ${d.youth_last || ''} (${d.camp_name || 'camp not listed'}).`, `From ${d.adult_first} ${d.adult_last} · ${d.email}`],
     section: 'camp',
+    admin: (d) => ({ camp_end: campEnd(d.camp_dates), followup_token: newToken() }),
+  },
+  camp_followup: {
+    required: ['youth_name', 'guardian_name', 'email'],
+    contact: (d) => ({ ...splitName(d.guardian_name), email: d.email, kind: 'family' }),
+    tags: () => ['Camp Family'],
+    confirm: (d) => ({ subject: 'Thank you for sharing camp with us', heading: `Thank you, ${esc(splitName(d.guardian_name).first)}!`,
+      body: p(`We loved hearing about ${esc(d.youth_name)}'s time at camp${d.camp_name ? ' at <b>' + esc(d.camp_name) + '</b>' : ''}. Stories like yours remind our donors why camp scholarships matter.`) + p('With gratitude, the Called to Care team') }),
+    alert: (d) => [`Camp recap from ${d.guardian_name} for ${d.youth_name} (${d.camp_name || 'camp'}).`, `${(d.photos || []).length} photo(s). ${d.youth_story ? 'Youth: “' + String(d.youth_story).slice(0, 200) + '”' : ''}`],
+    section: 'camp',
   },
   volunteer: {
     required: ['first_name', 'last_name', 'email'],
@@ -88,6 +100,7 @@ export default async (req) => {
   const spec = FORMS[body.form];
   if (!spec) return fail('Unknown form');
   const d = cleanDeep(body.data || {});
+  const photos = Array.isArray(body.photos) ? body.photos.slice(0, 5) : [];
   const missing = spec.required.filter((k) => !clean(d[k]));
   if (missing.length) return fail('Please fill in: ' + missing.join(', '));
   const c = spec.contact(d);
@@ -96,7 +109,16 @@ export default async (req) => {
 
   try {
     const contactId = await upsertContact({ ...c, tags: spec.tags(d), source: `Website: ${body.form}` });
-    const [sub] = await db('submissions', { method: 'POST', prefer: 'return=representation', body: { form: body.form, contact_id: contactId, event_id: d.event_id || null, data: d } });
+    if (body.form === 'camp_followup' && photos.length) {
+      const folder = `followups/${new Date().getFullYear()}/${crypto.randomUUID()}`;
+      d.photos = (await Promise.all(photos.map((ph, i) => savePhoto(folder, i, ph)))).filter(Boolean);
+    }
+    const row = { form: body.form, contact_id: contactId, event_id: d.event_id || null, data: d };
+    if (spec.admin) row.admin = spec.admin(d);
+    let sub;
+    try { [sub] = await db('submissions', { method: 'POST', prefer: 'return=representation', body: row }); }
+    catch (e) { if (!row.admin || !/admin/.test(e.message)) throw e; delete row.admin; [sub] = await db('submissions', { method: 'POST', prefer: 'return=representation', body: row }); }
+    if (body.form === 'camp_followup') await linkFollowup(sub, d, String(body.ref || ''));
     const m = spec.confirm(d);
     await sendEmail({ to: clean(c.email).toLowerCase(), subject: m.subject, html: emailShell({ preheader: m.subject, heading: m.heading, bodyHtml: m.body,
       reason: `You're receiving this because you filled out a form on wearecalledtocare.com.` }), template: `confirm-${body.form}`, contactId });
@@ -107,3 +129,25 @@ export default async (req) => {
     return fail('Sorry, something went wrong saving your form. Please try again or email hello@wearecalledtocare.com.', 500);
   }
 };
+
+// Attach a camp recap to its application: by the private link first, otherwise by email + youth first name.
+async function linkFollowup(sub, d, ref) {
+  try {
+    let app = null;
+    const [id, tok] = ref.split('.');
+    if (/^[0-9a-f-]{36}$/.test(id || '') && tok) {
+      const [a] = await db(`submissions?id=eq.${id}&form=eq.camp&select=*`);
+      if (a && a.admin?.followup_token === tok) app = a;
+    }
+    if (!app) {
+      const email = String(d.email || '').toLowerCase();
+      const apps = (await db(`submissions?form=eq.camp&select=*&order=created_at.desc`)).filter((a) => String(a.data?.email || '').toLowerCase() === email && !a.admin?.followup_id);
+      const yf = String(d.youth_name || '').trim().split(/\s+/)[0].toLowerCase();
+      const byName = apps.filter((a) => [a.data?.youth_first, a.data?.youth_preferred_name].some((n) => String(n || '').toLowerCase().startsWith(yf.slice(0, 3))));
+      app = (byName.length ? byName : apps.length === 1 ? apps : [])[0] || null;
+    }
+    if (!app) return;
+    await patchAdmin(app.id, { followup_id: sub.id, followup_at: new Date().toISOString() }, { status: 'Follow-up Received' });
+    await db(`submissions?id=eq.${sub.id}`, { method: 'PATCH', body: { status: 'Linked', admin: { application_id: app.id } } });
+  } catch (e) { console.error('linkFollowup', e.message); }
+}

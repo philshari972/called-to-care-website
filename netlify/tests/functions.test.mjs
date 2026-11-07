@@ -19,6 +19,7 @@ function match(row, params) {
     if (op === 'neq' && String(cell) === val) return false;
     if (op === 'ilike' && String(cell ?? '').toLowerCase() !== val.toLowerCase()) return false;
     if (op === 'gte' && !(String(cell) >= val)) return false;
+    if (op === 'in' && !val.replace(/^\(|\)$/g, '').split(',').includes(String(cell))) return false;
   }
   return true;
 }
@@ -26,6 +27,7 @@ function rest(url, init) {
   const u = new URL(url); const path = u.pathname.replace('/rest/v1/', ''); const params = [...u.searchParams];
   const body = init.body ? JSON.parse(init.body) : null; const m = init.method || 'GET';
   if (path === 'rpc/next_receipt') return `C2C-2027-0${seq++}`;
+  if (path === 'rpc/level_for') return init.headers.authorization === 'Bearer staff-jwt' ? 3 : 0;
   const tbl = T[path]; if (!tbl) throw new Error('no table ' + path);
   if (m === 'GET') { let rows = tbl.filter((r) => match(r, params)); const lim = u.searchParams.get('limit'); if (lim) rows = rows.slice(0, +lim); return rows; }
   if (m === 'POST') {
@@ -40,10 +42,11 @@ function rest(url, init) {
   }
   if (m === 'PATCH') { tbl.filter((r) => match(r, params)).forEach((r) => Object.assign(r, body)); return null; }
 }
-const sent = []; const stripeCalls = [];
+const sent = []; const stripeCalls = []; const stored = [];
 globalThis.fetch = async (url, init = {}) => {
   url = String(url); const ok = (o, s = 200) => new Response(o == null ? '' : JSON.stringify(o), { status: s });
   if (url.startsWith('https://db.test/rest/v1/')) { try { return ok(rest(url, init)); } catch (e) { return ok({ message: e.message }, 409); } }
+  if (url.startsWith('https://db.test/storage/v1/object/camp-photos/')) { stored.push(url); return ok({ Key: url }); }
   if (url === 'https://api.resend.com/emails') { const b = JSON.parse(init.body); sent.push(b); return ok({ id: 'em_' + sent.length }); }
   if (url.startsWith('https://api.stripe.com/v1/')) {
     const p = url.replace('https://api.stripe.com/v1/', ''); stripeCalls.push([init.method, p, init.body]);
@@ -119,4 +122,23 @@ r = await (await post(checkout, { kind: 'sponsorship', item: 'sapphire', provide
 ok(r.orderID === 'ORDER1', 'PayPal order created');
 r = await (await post(checkout, { action: 'capture', orderID: 'ORDER1' })).json();
 ok(r.ok && r.receipt && T.sponsorships.length === 2, 'PayPal capture finalizes sponsorship + receipt');
+console.log('camp scholarships');
+const camp = (await import('../functions/camp.mjs')).default;
+const reminders = await import('../functions/camp-reminders.mjs');
+r = await (await post(submit, { form: 'camp', data: { adult_first: 'Kim', adult_last: 'Fox', email: 'kim@x.com', youth_first: 'Eli', camp_name: 'Camp Hope', camp_dates: 'June 8-12, 2026' } })).json();
+const app = T.submissions.find((x) => x.id === r.id);
+ok(app.admin.camp_end === '2026-06-12' && app.admin.followup_token, 'camp application gets end date + private follow-up link');
+r = await camp(new Request('https://x/', { method: 'POST', body: JSON.stringify({ action: 'send_followup', id: app.id }) }));
+ok(r.status === 403, 'follow-up request refused without staff sign-in');
+r = await camp(new Request('https://x/', { method: 'POST', headers: { authorization: 'Bearer staff-jwt' }, body: JSON.stringify({ action: 'send_followup', id: app.id }) }));
+ok(r.status === 200 && sent.some((e) => e.to[0] === 'kim@x.com' && /How was camp, Eli/.test(e.subject) && e.html.includes(`cf=${app.id}.${app.admin.followup_token}`)), 'staff sends follow-up request with private link');
+app.status = 'Approved'; app.admin.followup_requested_at = '2026-06-01T00:00:00Z';
+let n = await reminders.run(new Date('2026-06-15T15:00:00Z')); ok(n.length === 0, 'no reminder before a week has passed');
+n = await reminders.run(new Date('2026-06-20T15:00:00Z')); ok(n.length === 1 && app.admin.reminder_sent_at, 'reminder sent one week after camp');
+n = await reminders.run(new Date('2026-06-25T15:00:00Z')); ok(n.length === 0, 'reminder only sent once');
+const tiny = 'data:image/jpeg;base64,' + Buffer.from('fakejpeg').toString('base64');
+r = await (await post(submit, { form: 'camp_followup', ref: `${app.id}.${app.admin.followup_token}`, photos: [tiny, tiny], data: { youth_name: 'Eli Fox', guardian_name: 'Kim Fox', email: 'kim@x.com', camp_name: 'Camp Hope', youth_story: 'I learned to canoe!' } })).json();
+const fu = T.submissions.find((x) => x.id === r.id);
+ok(fu.data.photos.length === 2 && stored.length === 2, 'recap photos saved to private storage');
+ok(app.status === 'Follow-up Received' && app.admin.followup_id === fu.id && fu.status === 'Linked', 'recap attached to the application');
 console.log(`\n${pass} checks passed`);

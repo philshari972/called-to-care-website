@@ -255,6 +255,13 @@ td .ok{color:var(--ok);font-weight:700} td .no,.no{color:var(--muted)}
 .formgrid .full{grid-column:1/-1}
 @media (max-width:520px){.formgrid{grid-template-columns:1fr}.flabel{min-width:100%}}
 .prefs{display:flex;flex-wrap:wrap;gap:16px}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}.photo-grid figure{margin:0;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#e8eef3}.photo-grid img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* Branded dropdowns: pink circle with a navy chevron */
+select{-webkit-appearance:none!important;-moz-appearance:none!important;appearance:none!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='14' r='14' fill='%23F6C3DA'/%3E%3Cpath d='M9 12l5 5 5-5' fill='none' stroke='%231D4766' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 8px center!important;background-size:22px 22px!important;padding-right:40px!important;cursor:pointer;text-overflow:ellipsis}
+select::-ms-expand{display:none}
+select:hover{border-color:var(--teal)!important}
+select:focus-visible{outline:3px solid rgba(226,25,122,.25);outline-offset:2px}
 </style>
 <style>[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
 </head>
@@ -380,7 +387,7 @@ const NOW=()=>new Date();
 /* ---------------- state ---------------- */
 let SB=null, CFGX=null, ME=null, PERMS={}, ROLES={}, VIEW='dashboard', Q='', MONTH='all', SF='all';
 const DATA={}, LOADED={};
-let EVENTS=[], CONTACTS=new Map(), DIN={contacts:[],spons:[],att:[]}, DYEARS=[], CUR=2027, HELD=[], STAFF=[], SETTINGS={};
+let CAMP_ORPHANS=[], EVENTS=[], CONTACTS=new Map(), DIN={contacts:[],spons:[],att:[]}, DYEARS=[], CUR=2027, HELD=[], STAFF=[], SETTINGS={};
 
 /* ---------------- sign in ---------------- */
 async function boot(){
@@ -427,9 +434,11 @@ async function loadAll(){
  const jobs=[];
  jobs.push(q(SB.from('events').select('*').order('starts_at')).then(r=>EVENTS=r));
  jobs.push(q(SB.from('settings').select('*')).then(r=>{SETTINGS={};r.forEach(x=>SETTINGS[x.key]=x.value)}));
- const forms=Object.entries(FORM_OF).filter(([k])=>PERMS[k]).map(([,f])=>f);
+ const forms=Object.entries(FORM_OF).filter(([k])=>PERMS[k]).map(([,f])=>f);if(PERMS.camp)forms.push('camp_followup');
  if(forms.length)jobs.push(q(SB.from('submissions').select('*').in('form',forms).order('created_at',{ascending:false})).then(r=>{
-  Object.entries(FORM_OF).forEach(([k,f])=>{if(PERMS[k])DATA[k]=r.filter(x=>x.form===f).map(x=>mapSub(k,x))})}));
+  Object.entries(FORM_OF).forEach(([k,f])=>{if(PERMS[k])DATA[k]=r.filter(x=>x.form===f).map(x=>mapSub(k,x))});
+  if(PERMS.camp){const fus=r.filter(x=>x.form==='camp_followup');DATA.camp.forEach(a=>{const fu=fus.find(f=>f.id===a.followupId||(f.admin||{}).application_id===a.id);if(fu){a.recap=fu.data||{};a.recapAt=D(fu.created_at)}});
+   CAMP_ORPHANS=fus.filter(f=>!DATA.camp.some(a=>a.recap===f.data))}}));
  const needContacts=PERMS.emaillist||PERMS.payments||PERMS.donations||PERMS.sponsors||PERMS.dinner;
  if(needContacts)jobs.push(q(SB.from('contacts').select('*').order('last_name')).then(r=>{CONTACTS=new Map(r.map(c=>[c.id,mapContact(c)]))}));
  if(PERMS.sponsors||PERMS.dinner){jobs.push(q(SB.from('sponsorships').select('*')).then(r=>DIN.spons=r.map(mapSpon)));jobs.push(q(SB.from('attendance').select('*')).then(r=>DIN.att=r.map(mapAtt)));jobs.push(q(SB.from('dinners').select('*').order('year')).then(r=>DIN.dinners=r))}
@@ -467,7 +476,7 @@ const RATIOS=()=>{const r=SETTINGS.childcare_ratios;return Array.isArray(r)&&r.l
 function workers(kids){const r=RATIOS();const per=BANDS.map((b,i)=>Math.ceil(kids.filter(k=>k.age===b).length/(r[i]||1)));const other=kids.filter(k=>!BANDS.includes(k.age)).length;return{per,other,total:per.reduce((a,b)=>a+b,0)+Math.ceil(other/(r[2]||2))}}
 function band(a){a=String(a||'').toLowerCase();if(/newborn|^0|infant|toddler|2 y/.test(a))return BANDS[0];if(/3|4|5 y|pre/.test(a)&&!/grade/.test(a))return BANDS[1];if(/grade|1st|5th/.test(a))return BANDS[2];
  const n=parseInt(a,10);if(!isNaN(n))return n<=2?BANDS[0]:n<=5?BANDS[1]:BANDS[2];return'Not given'}
-function mapSub(k,x){const d=x.data||{};const base={id:x.id,form:x.form,created:D(x.created_at),status:x.status,notesRaw:x.notes||[],data:d,eventId:x.event_id,
+function mapSub(k,x){const d=x.data||{};const base={id:x.id,form:x.form,created:D(x.created_at),status:x.status,notesRaw:x.notes||[],data:d,eventId:x.event_id,admin:x.admin||{},
   notes:(x.notes||[]).map(n=>({t:D(n.at),who:n.by,text:n.text})),log:[{t:D(x.created_at),text:d.source==='JotForm import'?'Imported from JotForm':'Submitted on the website'}]};
  const nm=(f,l)=>({first:f||'',last:l||'',name:[f,l].filter(Boolean).join(' ')});
  if(k==='support'){const ev=EVENTS.find(e=>e.id===x.event_id);const kids=d.children&&d.children.length?d.children.map(c=>({name:c.first||c.first_name||c.name||'',age:band(c.age_group||c.age)})):
@@ -475,13 +484,13 @@ function mapSub(k,x){const d=x.data||{};const base={id:x.id,form:x.form,created:
   return{...base,...nm(d.first_name,d.last_name),email:d.email,phone:d.phone,event:ev?D(ev.starts_at):null,eventLabel:d.event_label,kids,comments:d.comments||'',family:d.family_type||''}}
  if(k==='placements')return{...base,...nm(d.first_name,d.last_name),email:d.email,phone:d.phone,county:d.county||'',city:d.city||'',placed:dateOnly(d.placement_date),kids:arr(d.children)};
  if(k==='christmas'){const p=String(d.parent_name||'').split(/\s+/);return{...base,...nm(p[0],p.slice(1).join(' ')),email:d.email,phone:d.phone,kids:arr(d.kids)}}
- if(k==='camp')return{...base,...nm(d.adult_first,d.adult_last),email:d.email,phone:d.phone,youth:[d.youth_preferred_name||d.youth_first,d.youth_last].filter(Boolean).join(' '),age:d.youth_age||'',statusY:d.youth_status||'',campName:d.camp_name||'',dates:d.camp_dates||'',cost:d.camp_cost||''};
+ if(k==='camp'){const a=x.admin||{};return{...base,award:a.award_amount??null,paid:a.paid_amount??null,paidTo:a.paid_to||'',paidMethod:a.paid_method||'',checkNo:a.check_no||'',paidOn:a.paid_on||'',campEnd:a.camp_end||'',requestedAt:D(a.followup_requested_at),reminderAt:D(a.reminder_sent_at),followupId:a.followup_id||'',noReminder:!!a.no_reminder,...nm(d.adult_first,d.adult_last),email:d.email,phone:d.phone,youth:[d.youth_preferred_name||d.youth_first,d.youth_last].filter(Boolean).join(' '),age:d.youth_age||'',statusY:d.youth_status||'',campName:d.camp_name||'',dates:d.camp_dates||'',cost:d.camp_cost||''}}
  if(k==='volunteers')return{...base,...nm(d.first_name,d.last_name),email:d.email,phone:d.phone,interests:arr(d.interests)};
  if(k==='messages'){const p=String(d.name||'').split(/\s+/);return{...base,...nm(p[0],p.slice(1).join(' ')),email:d.email,phone:d.phone,topic:d.topic||'General',message:d.message||''}}
  return base}
 
 /* every answer on a form, for the record drawer */
-const SKIP=new Set(['signature_png','source','jotform_id','event_id','__form','submitted_at','children','kids','ack']);
+const SKIP=new Set(['photos','signature_png','source','jotform_id','event_id','__form','submitted_at','children','kids','ack']);
 function allAnswers(r){const out=[];const d=r.data||{};
  Object.entries(d).forEach(([key,v])=>{if(SKIP.has(key)||v===''||v==null)return;if(Array.isArray(v)&&!v.length)return;
   out.push([title(key),Array.isArray(v)?v.join(', '):typeof v==='boolean'?(v?'Yes':'No'):String(v)])});
@@ -489,10 +498,14 @@ function allAnswers(r){const out=[];const d=r.data||{};
  return out}
 
 /* ---------------- list configs ---------------- */
-const ST={def:['New','Contacted','Done'],support:['New','Registered','Confirmed','Attended','No-show','Cancelled'],placements:['New','Packing','Delivered'],christmas:['New','Shopping','Wrapped','Picked Up'],camp:['New','In Review','Approved','Declined'],volunteers:['New','Contacted','Active','Not Now'],messages:['New','Replied','Done']};
-const tone=s=>({'New':'s-new','Registered':'s-info','Contacted':'s-mid','Confirmed':'s-info','Packing':'s-mid','Shopping':'s-mid','Wrapped':'s-info','In Review':'s-mid','Replied':'s-mid','Attended':'s-done','Delivered':'s-done','Picked Up':'s-done','Approved':'s-done','Active':'s-done','Done':'s-done','Paid':'s-done','Subscribed':'s-done','No-show':'s-off','Cancelled':'s-off','Not Now':'s-off','Unsubscribed':'s-off','Declined':'s-bad','Refunded':'s-bad'}[s]||'s-off');
+const ST={def:['New','Contacted','Done'],support:['New','Registered','Confirmed','Attended','No-show','Cancelled'],placements:['New','Packing','Delivered'],christmas:['New','Shopping','Wrapped','Picked Up'],camp:['New','In Review','Approved','Funded','Follow-up Received','Declined'],volunteers:['New','Contacted','Active','Not Now'],messages:['New','Replied','Done']};
+const tone=s=>({'Funded':'s-info','Follow-up Received':'s-done','New':'s-new','Registered':'s-info','Contacted':'s-mid','Confirmed':'s-info','Packing':'s-mid','Shopping':'s-mid','Wrapped':'s-info','In Review':'s-mid','Replied':'s-mid','Attended':'s-done','Delivered':'s-done','Picked Up':'s-done','Approved':'s-done','Active':'s-done','Done':'s-done','Paid':'s-done','Subscribed':'s-done','No-show':'s-off','Cancelled':'s-off','Not Now':'s-off','Unsubscribed':'s-off','Declined':'s-bad','Refunded':'s-bad'}[s]||'s-off');
 const pill=s=>`<span class="pill ${tone(s)}">${esc(s)}</span>`;
 const kidsTxt=k=>k.length?k.map(x=>`${x.name} (${x.age})`).join(', '):'—';
+
+const num=v=>Number(String(v??'').replace(/[^0-9.]/g,''))||0;
+function recapTxt(r){if(r.recap)return`<span class="pill s-done">Received</span>`;if(r.reminderAt)return`<span class="sub" style="color:var(--ink)">Reminder sent ${fmtD(r.reminderAt)}</span>`;if(r.requestedAt)return`<span class="sub" style="color:var(--ink)">Asked ${fmtD(r.requestedAt)}</span>`;
+ if(['Approved','Funded'].includes(r.status)&&r.campEnd&&!r.noReminder){const due=dateOnly(r.campEnd);due.setDate(due.getDate()+7);return`<span class="sub">Auto email ${fmtD(due)}</span>`}return'<span class="no">—</span>'}
 const CFG={
  support:{sub:"Monthly Foster & Adoptive Moms' Support Night",month:r=>monthKey(r.event||r.created),monthLabel:'Support night',
   cols:[['Name',r=>`<b>${esc(r.name)}</b><span class="sub">${esc(r.email)}</span>`],['Phone',r=>esc(r.phone)],['Children',r=>r.kids.length?`${r.kids.length} <span class="sub">${esc(r.kids.map(k=>k.name).join(', '))}</span>`:'—'],['Support night',r=>r.event?fmtD(r.event):esc(r.eventLabel||'—')],['Status',r=>pill(r.status)]],
@@ -503,9 +516,9 @@ const CFG={
  christmas:{sub:'Christmas gift sign-ups for foster, adoptive, and kinship families',month:r=>monthKey(r.created),
   cols:[['Parent',r=>`<b>${esc(r.name)}</b><span class="sub">${esc(r.email)}</span>`],['Phone',r=>esc(r.phone)],['Kids',r=>`${r.kids.length} <span class="sub">${esc(r.kids.map(k=>k.first_name).join(', '))}</span>`],['Signed up',r=>fmtD(r.created)],['Status',r=>pill(r.status)]],
   csv:[['Parent',r=>r.name],['Email',r=>r.email],['Phone',r=>r.phone],['Kids',r=>r.kids.map(k=>`${k.first_name} (${k.gender||''} ${k.age||''}) shirt ${k.shirt||'-'} pants ${k.pants||'-'} likes ${k.interests||'-'}`).join(' | ')],['Status',r=>r.status]]},
- camp:{sub:'Camp scholarship applications',month:r=>monthKey(r.created),
-  cols:[['Youth',r=>`<b>${esc(r.youth)}</b><span class="sub">${r.age?'Age '+esc(r.age)+' · ':''}${esc(r.statusY)}</span>`],['Camp',r=>`${esc(r.campName)}<span class="sub">${esc(r.dates)}</span>`],['Cost',r=>r.cost?money(String(r.cost).replace(/[^0-9.]/g,'')):'—','r'],['Applicant',r=>`${esc(r.name)}<span class="sub">${esc(r.email)}</span>`],['Status',r=>pill(r.status)]],
-  csv:[['Youth',r=>r.youth],['Age',r=>r.age],['Status',r=>r.statusY],['Camp',r=>r.campName],['Dates',r=>r.dates],['Cost',r=>r.cost],['Applicant',r=>r.name],['Email',r=>r.email],['Phone',r=>r.phone],['Decision',r=>r.status]]},
+ camp:{sub:'Camp scholarship applications, funding, and follow-up recaps',month:r=>monthKey(r.created),
+  cols:[['Youth',r=>`<b>${esc(r.youth)}</b><span class="sub">${r.age?'Age '+esc(r.age)+' · ':''}${esc(r.statusY)}</span>`],['Camp',r=>`${esc(r.campName)}<span class="sub">${esc(r.dates)}${r.campEnd?' · ends '+fmtD(dateOnly(r.campEnd)):''}</span>`],['Cost',r=>r.cost?money(num(r.cost)):'—','r'],['Award',r=>r.award!=null?`${money(r.award)}${r.paid?`<span class="sub">paid ${money(r.paid)}</span>`:'<span class="sub">not paid yet</span>'}`:'—','r'],['Status',r=>pill(r.status)],['Recap',r=>recapTxt(r)]],
+  csv:[['Youth',r=>r.youth],['Age',r=>r.age],['Youth Status',r=>r.statusY],['Camp',r=>r.campName],['Dates',r=>r.dates],['Camp Ends',r=>r.campEnd],['Cost',r=>r.cost],['Award',r=>r.award??''],['Paid',r=>r.paid??''],['Paid To',r=>r.paidTo],['Method',r=>r.paidMethod],['Check #',r=>r.checkNo],['Paid On',r=>r.paidOn],['Applicant',r=>r.name],['Email',r=>r.email],['Phone',r=>r.phone],['Status',r=>r.status],['Recap',r=>r.recap?'Received':'']]},
  volunteers:{sub:'Volunteer applications',month:r=>monthKey(r.created),
   cols:[['Name',r=>`<b>${esc(r.name)}</b><span class="sub">${esc(r.email)}</span>`],['Phone',r=>esc(r.phone)],['Interests',r=>esc(r.interests.join(', '))],['Applied',r=>fmtD(r.created)],['Status',r=>pill(r.status)]],
   csv:[['Email',r=>r.email],['First Name',r=>r.first],['Last Name',r=>r.last],['Phone',r=>r.phone],['Interests',r=>r.interests.join('; ')],['Status',r=>r.status]]},
@@ -588,6 +601,7 @@ function listPage(k){const cfg=CFG[k];if(!cfg)return'';const lv=PERMS[k],rows=ro
  let summary='';
  if(k==='support'){const kids=rows.filter(r=>r.status!=='Cancelled').flatMap(r=>r.kids);const w=workers(kids),r=RATIOS();summary=`<div class="summary"><div><b>${rows.filter(r=>r.status!=='Cancelled').length}</b><span>Moms registered</span></div><div><b>${kids.length}</b><span>Kids in childcare</span></div>${BANDS.map(b=>`<div><b>${kids.filter(x=>x.age===b).length}</b><span>${b}</span></div>`).join('')}</div>
  <div class="summary vols"><div style="background:var(--navy);color:#fff;border-color:var(--navy)"><b style="color:#fff">${w.total}</b><span style="color:var(--sky)">Childcare volunteers needed</span></div>${BANDS.map((b,i)=>`<div><b>${w.per[i]}</b><span>${b} · 1 per ${r[i]}</span></div>`).join('')}${w.other?`<div><b>${w.other}</b><span>Kids with no age given (counted 1 per ${r[2]})</span></div>`:''}</div>`}
+ if(k==='camp'){const act=rows.filter(r=>r.status!=='Declined');const aw=act.reduce((a,r)=>a+(r.award||0),0),pd=act.reduce((a,r)=>a+(r.paid||0),0);summary=`<div class="summary"><div><b>${rows.length}</b><span>Applications</span></div><div><b>${money(aw)}</b><span>Awarded</span></div><div><b>${money(pd)}</b><span>Paid</span></div><div><b>${money(Math.max(aw-pd,0))}</b><span>Still to pay</span></div><div><b>${act.filter(r=>r.recap).length}</b><span>Recaps received</span></div><div><b>${act.filter(r=>!r.recap&&['Approved','Funded'].includes(r.status)).length}</b><span>Waiting on a recap</span></div></div>${CAMP_ORPHANS.length?`<p class="note">${CAMP_ORPHANS.length} recap${CAMP_ORPHANS.length>1?'s':''} couldn't be matched to an application: ${CAMP_ORPHANS.map(f=>esc((f.data||{}).youth_name)).join(', ')}.</p>`:''}`}
  if(['dinner','payments','donations'].includes(k)){const paid=rows.filter(r=>r.status==='Paid');summary=`<div class="summary"><div><b>${money(paid.reduce((s,r)=>s+r.amount,0))}</b><span>Total paid (shown)</span></div><div><b>${rows.length}</b><span>${k==='dinner'?'Purchases':'Records'}</span></div>${k==='dinner'?`<div><b>${paid.reduce((s,r)=>s+r.qty,0)}</b><span>Guests</span></div>`:''}</div>`}
  if(k==='emaillist')summary=`<div class="summary"><div><b>${all.filter(r=>r.okEmail).length}</b><span>Can be emailed</span></div><div><b>${all.filter(r=>r.unsub).length}</b><span>Unsubscribed</span></div><div><b>${all.length}</b><span>Total contacts</span></div></div>`;
  const access=lv==='notes'?`<span class="readonly">Read-only · you can add review notes</span>`:lv==='view'?`<span class="readonly">View only</span>`:'';
@@ -610,12 +624,13 @@ function openRecord(k,id){const r=(DATA[k]||[]).find(x=>x.id===id);if(!r)return;
   <button class="x" data-close aria-label="Close">×</button>
   <div><span class="label" style="color:var(--pink)">${SECTIONS[k].title}</span><h2>${esc(r.display||r.youth||r.name)}</h2><p class="note">Received ${fmtDT(r.created)}</p></div>
   <div class="statusrow">${canStatus?`<label class="field" for="st" style="grid-template-columns:auto auto;align-items:center;gap:10px">Status<select id="st" data-rec="${k}:${r.id}">${[...new Set([...opts,r.status])].map(o=>`<option ${o===r.status?'selected':''}>${esc(o)}</option>`).join('')}</select></label>`:pill(r.status)}</div>
-  <dl class="fields">${fields.map(([a,b])=>`<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join('')}</dl>
+  ${k==='camp'?campPanel(r,lv):''}
+  ${k==='camp'?'<span class="label" style="color:var(--muted)">Application</span>':''}<dl class="fields">${fields.map(([a,b])=>`<dt>${esc(a)}</dt><dd>${/^https?:\/\//.test(b)?b.split(/\s+/).map((u,i)=>`<a href="${esc(u)}" target="_blank" rel="noopener">${/jotform/.test(u)?'Open on JotForm ↗':'Open ↗'}</a>`).join('<br>'):esc(b)}</dd>`).join('')}</dl>
   ${r.data&&r.data.signature_png?`<div><span class="label" style="color:var(--muted)">Signature</span><img src="${esc(r.data.signature_png)}" alt="Signature" style="max-width:320px;background:#fff;border:1px solid var(--line);border-radius:8px;margin-top:6px"></div>`:''}
   ${canNote?`<div class="notebox"><label class="field" for="nt">Add a note<textarea id="nt" placeholder="${k==='camp'?'Review notes for the committee':'Only staff can see notes'}"></textarea></label><button class="btn primary" style="justify-self:start" data-note="${k}:${r.id}">Save note</button></div>`:''}
   ${log.length?`<div style="display:grid;gap:10px"><span class="label" style="color:var(--muted)">Activity</span><ul class="log">${log.map(l=>`<li class="${l.kind==='note'?'note-item':''}"><span>${l.kind==='note'?l.text:esc(l.text)}</span><time>${fmtDT(l.t)}</time></li>`).join('')}</ul></div>`:''}
  </div></div>`);
- setTimeout(()=>{const x=document.querySelector('.sheet .x');if(x)x.focus()},30)}
+ setTimeout(()=>{const x=document.querySelector('.sheet .x');if(x)x.focus()},30);if(k==='camp')loadPhotos()}
 function layer(html){$('#layer').innerHTML=html;document.body.style.overflow='hidden'}
 function closeLayer(){$('#layer').innerHTML='';document.body.style.overflow=''}
 async function saveStatus(k,id,st){const r=DATA[k].find(x=>x.id===id);const old=r.status;r.status=st;
@@ -625,6 +640,47 @@ async function saveStatus(k,id,st){const r=DATA[k].find(x=>x.id===id);const old=
 async function saveNote(k,id,text){const r=DATA[k].find(x=>x.id===id);const n={by:ME.name||ME.email,at:new Date().toISOString(),text};
  const notes=[...(r.notesRaw||[]),n];const {error}=await SB.from('submissions').update({notes}).eq('id',id);
  if(error){toast('Note not saved: '+error.message,true);return}r.notesRaw=notes;r.notes.push({t:new Date(),who:n.by,text});openRecord(k,id);toast('Note saved')}
+
+
+/* ---------------- camp: funding + follow-up ---------------- */
+function campPanel(r,lv){const edit=lv==='edit';const v=x=>esc(x??'');
+ const rc=r.recap;const end=r.campEnd?dateOnly(r.campEnd):null;const due=end?new Date(end.getFullYear(),end.getMonth(),end.getDate()+7):null;
+ const fstate=rc?`<b>Recap received</b> ${fmtD(r.recapAt)}`:r.reminderAt?`Automatic reminder sent ${fmtDT(r.reminderAt)}`:r.requestedAt?`Follow-up request sent ${fmtDT(r.requestedAt)}`:'No follow-up sent yet';
+ const auto=!rc&&!r.reminderAt&&due&&!r.noReminder?`<p class="note" style="margin:0">If there's no recap, an automatic reminder goes out <b>${fmtD(due)}</b>${['Approved','Funded'].includes(r.status)?'':' (once the application is Approved or Funded)'}.</p>`:'';
+ return`<div class="panel" style="padding:18px;display:grid;gap:14px;background:var(--sky-pale,#eef4f8)"><span class="label" style="color:var(--teal)">Scholarship funding</span>
+  ${edit?`<form id="campForm" data-id="${r.id}" class="formgrid" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+   <label class="field" for="cp-award">Amount Awarded<input id="cp-award" inputmode="decimal" value="${v(r.award)}" placeholder="${r.cost?'Camp cost '+money(num(r.cost)):'0'}"></label>
+   <label class="field" for="cp-paid">Amount Paid<input id="cp-paid" inputmode="decimal" value="${v(r.paid)}" placeholder="0"></label>
+   <label class="field" for="cp-to">Paid To<select id="cp-to">${['','The camp','The family'].map(o=>`<option ${o===r.paidTo?'selected':''} value="${o}">${o||'—'}</option>`).join('')}</select></label>
+   <label class="field" for="cp-method">Method<select id="cp-method">${['','Check','Card','PayPal','ACH','Cash'].map(o=>`<option ${o===r.paidMethod?'selected':''} value="${o}">${o||'—'}</option>`).join('')}</select></label>
+   <label class="field" for="cp-check">Check #<input id="cp-check" value="${v(r.checkNo)}"></label>
+   <label class="field" for="cp-on">Date Paid<input id="cp-on" type="date" value="${v(r.paidOn)}"></label>
+   <label class="field" for="cp-end">Last Day of Camp<input id="cp-end" type="date" value="${v(r.campEnd)}"></label>
+   <label class="tick" for="cp-noauto" style="align-self:end"><input type="checkbox" id="cp-noauto" ${r.noReminder?'checked':''}> No automatic reminder</label>
+   <div style="grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn primary" type="submit">Save Funding</button><span class="note">Entering an amount paid moves the status to Funded.</span></div></form>`
+  :`<dl class="fields"><dt>Awarded</dt><dd>${r.award!=null?money(r.award):'—'}</dd><dt>Paid</dt><dd>${r.paid?money(r.paid)+(r.paidTo?' to '+esc(r.paidTo.replace('The ','the ')):''):'—'}</dd><dt>Last day of camp</dt><dd>${end?fmtD(end):'—'}</dd></dl>`}
+  <span class="label" style="color:var(--teal);margin-top:6px">Follow-up</span>
+  <p style="margin:0">${fstate}</p>${auto}
+  ${edit&&!rc?`<button class="btn" type="button" data-campsend="${r.id}" style="justify-self:start">${ic('mail')} ${r.requestedAt||r.reminderAt?'Send Follow-Up Request Again':'Send Follow-Up Request'}</button>`:''}
+  ${rc?recapHtml(rc):''}</div>`}
+function recapHtml(d){const ph=Array.isArray(d.photos)?d.photos:[];const links=String(d.photo_links||'').split(/\s+/).filter(x=>/^https?:/.test(x));
+ const rows=[['Camp',d.camp_name],['Dates',d.camp_dates],['From the youth',d.youth_story],['From the guardian',d.guardian_story],['Would recommend',d.recommend],['Anything else',d.anything_else]].filter(x=>x[1]);
+ return`<div style="display:grid;gap:10px;background:#fff;border-radius:12px;padding:14px"><b>Camp recap${d.guardian_name?' from '+esc(d.guardian_name):''}</b>
+  ${ph.length?`<div class="photo-grid" data-photos='${esc(JSON.stringify(ph))}'>${ph.map(()=>'<figure class="ph-load"></figure>').join('')}</div>`:''}
+  ${links.length?`<p style="margin:0">${links.map((u,i)=>`<a href="${esc(u)}" target="_blank" rel="noopener">Photo ${i+1} on JotForm ↗</a>`).join(' · ')}</p>`:''}
+  <dl class="fields">${rows.map(([a,b])=>`<dt>${a}</dt><dd>${esc(b)}</dd>`).join('')}</dl></div>`}
+async function loadPhotos(){const g=document.querySelector('.sheet [data-photos]');if(!g)return;const paths=JSON.parse(g.dataset.photos);
+ const {data,error}=await SB.storage.from('camp-photos').createSignedUrls(paths,3600);if(error){g.outerHTML=`<p class="note">Photos couldn't load: ${esc(error.message)}</p>`;return}
+ g.innerHTML=data.map((x,i)=>x.signedUrl?`<figure><a href="${esc(x.signedUrl)}" target="_blank" rel="noopener"><img src="${esc(x.signedUrl)}" alt="Camp photo ${i+1}"></a></figure>`:'').join('')}
+async function saveCamp(fm){const id=fm.dataset.id;const r=DATA.camp.find(x=>x.id===id);const n=x=>{const t=String(x).trim();return t===''?null:num(t)};
+ const ch={award_amount:n($('#cp-award').value),paid_amount:n($('#cp-paid').value),paid_to:$('#cp-to').value,paid_method:$('#cp-method').value,check_no:$('#cp-check').value.trim(),paid_on:$('#cp-on').value,camp_end:$('#cp-end').value||null,no_reminder:$('#cp-noauto').checked};
+ const admin={...r.admin,...ch};const upd={admin};if(ch.paid_amount>0&&['New','In Review','Approved'].includes(r.status))upd.status='Funded';
+ busy(fm,true);const {error}=await SB.from('submissions').update(upd).eq('id',id);busy(fm,false);
+ if(error){toast('Not saved: '+error.message,true);return}await loadAll();render();renderShell();markNav();openRecord('camp',id);toast(upd.status?'Saved · status set to Funded':'Funding saved')}
+async function sendCampFollowup(btn){btn.disabled=true;btn.textContent='Sending…';const id=btn.dataset.campsend;
+ try{const {data:{session}}=await SB.auth.getSession();const res=await fetch('/.netlify/functions/camp',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+(session&&session.access_token)},body:JSON.stringify({action:'send_followup',id})});
+  const out=await res.json().catch(()=>({}));if(!res.ok||!out.ok)throw new Error(out.error||'Could not send');
+  await loadAll();render();openRecord('camp',id);toast('Follow-up request sent to '+out.to)}catch(e){btn.disabled=false;btn.textContent='Send Follow-Up Request';toast(e.message,true)}}
 
 /* ---------------- CSV (real download) ---------------- */
 const csvq=v=>{v=String(v??'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
@@ -845,6 +901,7 @@ document.addEventListener('submit',async e=>{const fm=e.target;
   busy(fm,true);const r=fm.dataset.new==='true'?await SB.from('sponsorships').insert({...row,contact_id:cid,year:SP.year,sponsor_name:sname,source:'Added by staff'}).select().single():await SB.from('sponsorships').update(row).eq('id',fm.dataset.sid).select().single();busy(fm,false);
   if(r.error){err.textContent=r.error.message;return}
   await loadAll();closeLayer();render();toast(fm.dataset.new==='true'?'Sponsor added':'Sponsorship saved');return}
+ if(fm.id==='campForm'){e.preventDefault();await saveCamp(fm);return}
  if(fm.id==='eventForm'){e.preventDefault();const err=$('#ef-err');const t=$('#ef-title').value.trim(),dv=$('#ef-date').value,tv=$('#ef-time').value;if(!t||!dv||!tv){err.textContent='Enter a name, date, and time.';return}
   const [y,m,d]=dv.split('-').map(Number),[h,mi]=tv.split(':').map(Number);const when=new Date(y,m-1,d,h,mi);
   const row={kind:$('#ef-kind').value,title:t,starts_at:when.toISOString(),location:$('#ef-loc').value.trim(),capacity:$('#ef-cap').value?Number($('#ef-cap').value):null,registration_open:$('#ef-open').checked};
@@ -870,6 +927,7 @@ document.addEventListener('click',async e=>{
  const o=e.target.closest('[data-open]');if(o){const[k,id]=o.dataset.open.split(':');openRecord(k,id);return}
  const u=e.target.closest('[data-user]');if(u&&(ME.roles||[]).includes('owner')){openUser(u.dataset.user);return}
  const sf=e.target.closest('[data-sf]');if(sf){SF=sf.dataset.sf;render();return}
+ const cs=e.target.closest('[data-campsend]');if(cs){sendCampFollowup(cs);return}
  const ee=e.target.closest('[data-editevent]');if(ee){eventForm(ee.dataset.editevent);return}
  const de=e.target.closest('[data-delevent]');if(de){if(!confirmDel(de))return;const r=await SB.from('events').delete().eq('id',de.dataset.delevent);if(r.error){toast(r.error.message,true);return}await loadAll();closeLayer();render();toast('Event deleted');return}
  const a=e.target.closest('[data-act]');if(a){const act=a.dataset.act;
