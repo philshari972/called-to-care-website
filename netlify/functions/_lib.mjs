@@ -19,6 +19,10 @@ export const SPONSOR_LEVELS = {
   flowers: { name: 'Flowers Sponsor', level: 'Flowers', price: 1000, limit: 2 },
 };
 export const TICKET_PRICE = 100, TABLE_PRICE = 1000;
+// Regular dinner tickets open on their own at noon (Chicago) on Dec 15, 2026. Turning tickets on in the admin opens them sooner.
+export const TICKETS_OPEN_AT = Date.parse('2026-12-15T18:00:00Z');
+export const ticketsOpen = async (now = Date.now()) => now >= TICKETS_OPEN_AT || !!(await setting('tickets_on', false));
+export const CHECK_ADDRESS = ['We Are Called to Care, NFP', '201 E Veterans Pkwy, Suite 13', 'Yorkville, IL 60560'];
 
 // ---------- responses ----------
 const CORS = { 'content-type': 'application/json', 'cache-control': 'no-store' };

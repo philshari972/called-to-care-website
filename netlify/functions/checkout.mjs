@@ -4,6 +4,7 @@
 //   -> Stripe: { clientSecret, paymentId }  |  PayPal: { orderID, paymentId }
 //   { action:'capture', orderID }  (PayPal, after the buyer approves)
 // Prices are decided here on the server, never by the browser.
+import { ticketsOpen, CHECK_ADDRESS, sendEmail, emailShell, p, box, alertStaff, money as fmtMoney, esc, SITE_URL } from './_lib.mjs';
 import { db, setting, upsertContact, finalizePayment, json, fail, clean, isEmail, looksLikeBot, env, money,
   SPONSOR_LEVELS, TICKET_PRICE, TABLE_PRICE, DINNER_YEAR } from './_lib.mjs';
 
@@ -50,7 +51,7 @@ async function price(b) {
     return { purpose: 'sponsorship', amount: lv.price, description: `${DINNER_YEAR} Charity Dinner: ${lv.name}`, tags: [`Sponsor ${DINNER_YEAR}`, 'Charity Dinner Sponsor'] };
   }
   if (b.kind === 'tickets' || b.kind === 'table') {
-    if (!(await setting('tickets_on', false))) throw new Error('Dinner tickets are not on sale yet.');
+    if (!(await ticketsOpen())) throw new Error('Dinner tickets go on sale December 15 at noon.');
     if (b.kind === 'table') return { purpose: 'table', amount: TABLE_PRICE, description: `${DINNER_YEAR} Charity Dinner: Table of 10`, qty: 10, tags: [`Dinner Guest ${DINNER_YEAR}`] };
     const qty = Math.max(1, Math.min(20, parseInt(b.qty, 10) || 1));
     return { purpose: 'tickets', amount: qty * TICKET_PRICE, description: `${DINNER_YEAR} Charity Dinner: ${qty} ticket${qty > 1 ? 's' : ''}`, qty, tags: [`Dinner Guest ${DINNER_YEAR}`] };
@@ -90,6 +91,7 @@ export default async (req) => {
 
   // ----- start a payment -----
   if (looksLikeBot(b)) return fail('Please try again.');
+  if (b.action === 'pledge') return pledge(b);
   const c = b.contact || {};
   const email = clean(c.email, 200).toLowerCase();
   if (!clean(c.first) || !clean(c.last) || !isEmail(email)) return fail('Please enter your first name, last name, and a valid email.');
@@ -134,3 +136,31 @@ export default async (req) => {
     return fail('Sorry, checkout is not available right now. Please try again in a few minutes or contact us.', 500);
   }
 };
+
+// Sponsor now, pay by check: reserve the sponsorship, email mailing instructions, alert staff.
+async function pledge(b) {
+  if (b.kind !== 'sponsorship') return fail('Checks are for sponsorships. Please pay online.');
+  const c = b.contact || {}; const email = clean(c.email, 200).toLowerCase();
+  if (!clean(c.first) || !clean(c.last) || !isEmail(email)) return fail('Please enter your first name, last name, and a valid email.');
+  if (!clean(c.street) || !clean(c.city) || !clean(c.zip)) return fail('Please enter your mailing address so we can send a thank-you note.');
+  let item; try { item = await price(b); } catch (e) { return fail(e.message); }
+  try {
+    const lv = SPONSOR_LEVELS[b.item]; const display = clean(b.display_name, 120) || `${clean(c.first)} ${clean(c.last)}`;
+    const contactId = await upsertContact({ first: c.first, last: c.last, email, phone: c.phone, street: c.street, city: c.city, state: c.state, zip: c.zip, tags: item.tags, source: 'Website checkout' });
+    const dupe = await db(`sponsorships?contact_id=eq.${contactId}&year=eq.${DINNER_YEAR}&status=neq.Declined&select=id`);
+    if (dupe.length) return fail(`You already have a ${DINNER_YEAR} sponsorship with us. Questions? Email donations@wearecalledtocare.com.`);
+    await db('sponsorships', { method: 'POST', body: { contact_id: contactId, year: DINNER_YEAR, sponsor_name: display, level: lv.level, amount: item.amount, status: 'Committed',
+      received: 0, method: 'Check', source: 'Website (check)', program_name: display, notes: clean(b.guests, 1000) ? `Guest names: ${clean(b.guests, 1000)}` : '' } });
+    const addr = CHECK_ADDRESS.map(esc).join('<br>');
+    const html = emailShell({ preheader: `Your ${lv.name} is reserved. Here's where to mail your check.`, heading: `Thank you, ${esc(clean(c.first))}!`,
+      bodyHtml: p(`Your <b>${esc(lv.name)}</b> for the ${DINNER_YEAR} Charity Dinner &amp; Auction is reserved. We're so grateful to have <b>${esc(display)}</b> with us.`)
+        + box([['Sponsorship', esc(lv.name)], ['Amount', fmtMoney(item.amount)], ['Pay by', 'Check']])
+        + p(`<b>Please make your check payable to We Are Called to Care, NFP</b> and mail it to:`)
+        + `<div style="margin:0 0 16px;padding:16px 20px;border-left:4px solid #E2197A;background:#FBF8F4;font-size:16px;line-height:24px;">${addr}</div>`
+        + p(`Write "${DINNER_YEAR} Dinner Sponsor" in the memo. We'll email your tax receipt when it arrives. Please send your logo (for signage and the program) to donations@wearecalledtocare.com.`),
+      reason: "You're receiving this because you became a Charity Dinner sponsor on wearecalledtocare.com." });
+    await sendEmail({ to: email, subject: `Your ${lv.name} is reserved: mailing your check`, html, template: 'sponsor-check', contactId });
+    await alertStaff(`New sponsor (paying by check): ${display}`, [`${lv.name} · ${fmtMoney(item.amount)} · check is coming by mail.`, `Contact: ${clean(c.first)} ${clean(c.last)} · ${email} · ${clean(c.phone)}`], `${SITE_URL()}/admin/#sponsors`);
+    return json({ ok: true, check: CHECK_ADDRESS });
+  } catch (e) { console.error('pledge', e.message); return fail('Sorry, something went wrong. Please try again or email donations@wearecalledtocare.com.', 500); }
+}

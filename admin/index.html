@@ -751,7 +751,7 @@ function settingsPage(){const owner=(ME.roles||[]).includes('owner');const org=S
  return`<div class="ph"><div><span class="label">Admin</span><h1>Settings</h1><p>Website switches, staff alerts, and organization details.</p></div></div>
  <form class="panel" id="setForm" style="padding:22px;display:grid;gap:18px">
   <h2 style="margin:0;font-family:var(--serif);font-weight:400;color:var(--navy)">Website</h2>
-  <label class="toggle" for="set-tix"><input type="checkbox" id="set-tix" ${SETTINGS.tickets_on?'checked':''} ${owner?'':'disabled'}>Charity dinner tickets are on sale on the website</label>
+  <label class="toggle" for="set-tix"><input type="checkbox" id="set-tix" ${SETTINGS.tickets_on?'checked':''} ${owner?'':'disabled'}>Open charity dinner tickets now <span class="note">(they open on their own Dec 15, 2026 at noon)</span></label>
   <div style="display:grid;gap:8px"><span class="field">Support Night childcare: one volunteer for every…</span><div class="formgrid" style="grid-template-columns:repeat(3,minmax(0,1fr))">${BANDS.map((b,i)=>`<label class="field" for="set-r${i}">${b}<input id="set-r${i}" inputmode="numeric" value="${RATIOS()[i]}" ${owner?'':'readonly'}></label>`).join('')}</div><span class="note">Children per volunteer. Partial volunteers round up.</span></div>
   <label class="field" for="set-alerts">Staff alert emails (separate with commas)<input id="set-alerts" value="${esc(alerts)}" ${owner?'':'readonly'}></label>
   ${owner?'<button class="btn primary" type="submit" style="justify-self:start">Save Settings</button>':'<p class="note">Only an Owner can change these.</p>'}

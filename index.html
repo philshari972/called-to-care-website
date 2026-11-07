@@ -354,6 +354,7 @@ footer p{color:var(--sky);font-size:.95rem}
 .co-panel > .fs{padding:36px clamp(20px,5vw,56px) 40px;display:grid;gap:22px;min-width:0}
 .co-back{justify-self:start;border:0;background:none;padding:4px 0;font:inherit;font-weight:600;color:var(--teal);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .co-paybtn{width:100%;justify-content:center}
+.check-note{margin-top:4px;padding:14px 18px;border-left:4px solid var(--pink);background:var(--pink-pale,#FDF0F6);border-radius:0 12px 12px 0;line-height:1.6}
 .co-x{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:16px;border:0;background:none;font-size:2rem;line-height:1;color:var(--navy);cursor:pointer;z-index:2;padding:6px 10px}
 .co-line,.co-total{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:16px 0;border-bottom:1px solid var(--line)}
 .co-line .price{font-size:1.6rem}
@@ -422,6 +423,11 @@ select{-webkit-appearance:none!important;-moz-appearance:none!important;appearan
 select::-ms-expand{display:none}
 select:hover{border-color:var(--teal)!important}
 select:focus-visible{outline:3px solid rgba(226,25,122,.25);outline-offset:2px}
+.cd{display:flex;justify-content:center;gap:clamp(10px,2.4vw,22px);margin:6px auto 4px}
+.cd div{min-width:clamp(64px,13vw,96px);padding:12px 6px 10px;border:1px solid rgba(181,207,220,.35);border-radius:16px;background:rgba(255,255,255,.06);display:grid;gap:4px;text-align:center}
+.cd b{font-family:var(--serif);font-weight:400;font-size:clamp(2rem,5vw,3.2rem);line-height:1;color:var(--white);font-variant-numeric:tabular-nums}
+.cd span{font-family:var(--mono);font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;color:var(--pink-light)}
+.soon-cd{display:block;margin-top:12px;font-family:var(--mono);font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--pink);font-variant-numeric:tabular-nums}
 html:not(.tickets-on) .tix-on{display:none!important}
 html.tickets-on .tix-off{display:none!important}
 #tickets .early{grid-column:1/-1;display:grid;gap:12px}
@@ -809,6 +815,7 @@ html.tickets-on .tix-off{display:none!important}
     <span class="label c-pinkl">Save the date · 6th annual</span>
     <h1 class="d1">Charity Dinner <em class="it c-pinkl">&amp;</em> Auction</h1>
     <p style="font-family:var(--serif);font-size:clamp(1.8rem,4vw,2.8rem);color:var(--sky)">Saturday, March 13, 2027</p>
+    <div class="cd" data-countdown="2027-03-13T17:00:00-06:00" aria-label="Countdown to the Charity Dinner"><div><b data-u="d">--</b><span>Days</span></div><div><b data-u="h">--</b><span>Hours</span></div><div><b data-u="m">--</b><span>Minutes</span></div><div><b data-u="s">--</b><span>Seconds</span></div></div>
     <p class="label c-pinkl"><a href="https://www.google.com/maps/search/?api=1&query=Whitetail+Ridge+Golf+Club+7671+Clubhouse+Drive+Yorkville+IL" target="_blank" rel="noopener" style="color:inherit;text-underline-offset:5px">Whitetail Ridge Golf Club · 7671 Clubhouse Drive, Yorkville</a></p>
     <p class="lede" style="color:var(--sky)">An evening of dinner, an auction, and stories from the families you help us serve.</p>
     <nav class="subnav c-pinkl" style="justify-content:center" aria-label="On this page"><a href="#charity-dinner" data-anchor="tickets">Tickets</a><a href="#charity-dinner" data-anchor="sponsors">Sponsorships</a><a href="#charity-dinner" data-anchor="underwriting">Underwriting</a><a href="#charity-dinner" data-anchor="monthly">Monthly Partners</a></nav>
@@ -820,8 +827,8 @@ html.tickets-on .tix-off{display:none!important}
     <div class="wrap g2" style="align-items:center;gap:40px">
       <div class="vstack" style="gap:14px"><span class="label">Tickets</span><h2 class="d2 c-navy">Join us for dinner.</h2><p>Come for the night, or fill a table with your friends, small group, or coworkers.</p><p class="tix-off"><b>Regular tickets go on sale December 15, 2026.</b></p></div>
       <div class="g2" style="gap:20px">
-        <div class="lab cap-hot tier"><div class="tier-top"><span class="label">Single Ticket</span><span class="price">$100</span></div><ul class="perks"><li>Dinner, auction, and program for one guest</li></ul><span class="pill p-line tix-off soon" style="color:var(--navy)">On Sale Soon</span><button type="button" class="pill p-hot pick tix-on" data-item="ticket" data-name="Dinner Ticket" data-price="100" data-qty="1">Buy Tickets</button></div>
-        <div class="lab cap-navy tier"><div class="tier-top"><span class="label">Table of 10</span><span class="price">$1,000</span></div><ul class="perks"><li>Reserved table for 10 guests</li></ul><span class="pill p-line tix-off soon" style="color:var(--navy)">On Sale Soon</span><button type="button" class="pill p-navy pick tix-on" data-item="table" data-name="Table of 10" data-price="1000">Reserve a Table</button></div>
+        <div class="lab cap-hot tier"><div class="tier-top"><span class="label">Single Ticket</span><span class="price">$100</span></div><ul class="perks"><li>Dinner, auction, and program for one guest</li></ul><span class="pill p-line tix-off soon" style="color:var(--navy)">On Sale Soon</span><span class="tix-off soon-cd" data-countdown="2026-12-15T12:00:00-06:00" data-short="1">On sale Dec 15 at noon</span><button type="button" class="pill p-hot pick tix-on" data-item="ticket" data-name="Dinner Ticket" data-price="100" data-qty="1">Buy Tickets</button></div>
+        <div class="lab cap-navy tier"><div class="tier-top"><span class="label">Table of 10</span><span class="price">$1,000</span></div><ul class="perks"><li>Reserved table for 10 guests</li></ul><span class="pill p-line tix-off soon" style="color:var(--navy)">On Sale Soon</span><span class="tix-off soon-cd" data-countdown="2026-12-15T12:00:00-06:00" data-short="1">On sale Dec 15 at noon</span><button type="button" class="pill p-navy pick tix-on" data-item="table" data-name="Table of 10" data-price="1000">Reserve a Table</button></div>
         <div class="lab cap-teal tier tix-off early"><span class="label" style="color:var(--teal)">Early access</span><h3 class="d3 c-navy" style="margin:0">Buy tickets early by becoming a monthly partner.</h3><p style="margin:0">Regular tickets to the Charity Dinner go on sale <b>December 15, 2026</b>. Monthly partners get first access.</p><a class="pill p-hot" href="#donate" data-anchor="give" data-monthly="50" style="justify-self:start">Become a Monthly Partner</a></div>
       </div>
     </div>
@@ -1515,6 +1522,9 @@ html.tickets-on .tix-off{display:none!important}
           </div>
           <label class="q" for="co-guests" id="coGuestsWrap" hidden><span class="lbl">Guest Names</span><span class="hint">Optional. You can send these later.</span><textarea id="co-guests" name="guest_names" style="min-height:90px"></textarea></label>
           <div class="co-total"><span>Total</span><span id="coTotal" class="price">$0</span></div>
+          <div class="q" id="coHowWrap" hidden><span class="lbl">How Would You Like to <span class="nw">Pay?</span></span>
+            <div class="choices inline"><label class="choice" for="co-how1"><input type="radio" id="co-how1" name="how" value="online" checked> Pay online now</label><label class="choice" for="co-how2"><input type="radio" id="co-how2" name="how" value="check"> Mail a check</label></div>
+            <div class="check-note" id="coCheckNote" hidden><b>Make your check payable to We Are Called to Care, NFP</b> and mail it to:<br>201 E Veterans Pkwy, Suite 13<br>Yorkville, IL 60560<br><span class="hint">We'll reserve your sponsorship now and email these details to you.</span></div></div>
           <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
           <div class="co-pay">
             <button class="pill p-hot" type="submit" id="coNext">Continue to Payment</button>
@@ -1681,6 +1691,7 @@ html.tickets-on .tix-off{display:none!important}
   (function(){
     const co=document.getElementById('checkout'); if(!co) return;
     const $=id=>document.getElementById(id); const f=$('coForm'); let cur=null, stripe=null, elements=null, ppRendered=false;
+    const esc=v=>String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     const fmt=n=>'$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2});
     const total=()=>cur.kind==='donation'?cur.price:cur.price*(cur.qty?Math.max(1,+$('co-qty').value||1):1);
     const upd=()=>{$('coTotal').textContent=fmt(total())+(cur.recurring?' / month':'');};
@@ -1694,12 +1705,16 @@ html.tickets-on .tix-off{display:none!important}
       $('coItem').textContent=o.name+(isTicket?' · $100 each':''); $('coPrice').textContent=fmt(o.price)+(o.recurring?'/mo':'');
       $('coQtyWrap').hidden=!isTicket; $('coDisplayWrap').hidden=isTicket||isTable||isGift; $('co-display').required=!(isTicket||isTable||isGift);
       $('coGuestsWrap').hidden=!(isTicket||isTable||['legacy','gold','platinum','diamond'].includes(o.item));
+      const isSp=o.kind==='sponsorship'; $('coHowWrap').hidden=!isSp; $('co-how1').checked=true; howUpd();
       $('coErr').textContent=''; $('coErr2').textContent=''; step('form'); upd();
       $('coPaypal').hidden=!!o.recurring; renderPayPal();
       co.hidden=false; document.body.classList.add('locked'); setTimeout(()=>$('co-first').focus(),60);
     };
     document.querySelectorAll('.pick').forEach(b=>b.addEventListener('click',()=>C2C.openCheckout({kind:b.dataset.item==='ticket'?'tickets':b.dataset.item==='table'?'table':'sponsorship',item:b.dataset.item,name:b.dataset.name,price:+b.dataset.price,qty:!!b.dataset.qty})));
     $('co-qty').addEventListener('input',upd);
+    const byCheck=()=>cur&&cur.kind==='sponsorship'&&$('co-how2').checked;
+    function howUpd(){const c=byCheck();$('coCheckNote').hidden=!c;$('coNext').textContent=c?'Reserve My Sponsorship':'Continue to Payment';$('coPaypal').style.display=c?'none':'';}
+    ['co-how1','co-how2'].forEach(id=>$(id).addEventListener('change',howUpd));
     co.addEventListener('click',e=>{if(e.target.closest('[data-close]'))close();});
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!co.hidden)close();});
     phoneFmt($('co-phone'));
@@ -1715,6 +1730,11 @@ html.tickets-on .tix-off{display:none!important}
     }
     // Step 1 -> Step 2 (Stripe Payment Element: card, Apple Pay, Google Pay, bank)
     f.addEventListener('submit',async e=>{e.preventDefault(); if(!valid()) return;
+      if(byCheck()){const b=$('coNext');C2C.busy(b,true,'Reserving…');
+        try{const r=await C2C.api('checkout',{...payload('check'),action:'pledge'});
+          $('coDoneMsg').innerHTML=`Thank you, ${esc(f.first_name.value)}! Your <b>${esc(cur.name)}</b> (${fmt(cur.price)}) is reserved.`;
+          $('coDoneNote').innerHTML=`<span class="check-note" style="display:block"><b>Please make your check payable to We Are Called to Care, NFP</b> and mail it to:<br>201 E Veterans Pkwy, Suite 13<br>Yorkville, IL 60560<br>Memo: 2027 Dinner Sponsor</span><br>We emailed these details to ${esc(f.email.value)}. Questions? donations@wearecalledtocare.com`;
+          step('done');}catch(x){$('coErr').textContent=x.message}finally{C2C.busy(b,false);howUpd()}return}
       const b=$('coNext'); C2C.busy(b,true,'One moment…');
       try{
         const r=await C2C.api('checkout',payload('stripe'));
@@ -1884,6 +1904,17 @@ html.tickets-on .tix-off{display:none!important}
       document.getElementById('cfDoneMsg').textContent=`Thank you, ${data.guardian_name.split(' ')[0]}! We loved hearing about ${data.youth_name.split(' ')[0]}'s time at camp${shots.length?' and seeing the photos':''}.`;
       f.hidden=true;const d=document.getElementById('cfDone');d.hidden=false;d.scrollIntoView({block:'center'});C2C.busy(b,false)});
   })();
+
+
+  // ---- Countdowns ----
+  (function(){const els=[...document.querySelectorAll('[data-countdown]')];if(!els.length)return;
+    const pad=n=>String(n).padStart(2,'0');
+    const tick=()=>{const now=Date.now();els.forEach(el=>{const t=Date.parse(el.dataset.countdown)-now;
+      if(el.dataset.short){el.textContent=t<=0?'On sale now':`On sale in ${Math.floor(t/864e5)}d ${Math.floor(t/36e5)%24}h ${pad(Math.floor(t/6e4)%60)}m`;return}
+      if(t<=0){el.hidden=true;return}
+      const v={d:Math.floor(t/864e5),h:Math.floor(t/36e5)%24,m:Math.floor(t/6e4)%60,s:Math.floor(t/1e3)%60};
+      el.querySelectorAll('[data-u]').forEach(b=>b.textContent=b.dataset.u==='d'?v.d:pad(v[b.dataset.u]))})};
+    tick();setInterval(tick,1000);})();
 
   // ---- Give online ----
   (function(){
