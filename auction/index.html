@@ -415,9 +415,11 @@ body.screenmode .wrap{max-width:none;gap:0}
 .hdr{background:var(--hdr);color:var(--hdr-ink);padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
 .hdr-in{max-width:1360px;margin:0 auto;display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"logo search right";align-items:center;gap:14px;padding-block:8px}
 .hlogo{grid-area:logo;display:flex;flex-direction:column;border:1px solid transparent;border-radius:4px;padding:3px 6px;background:none;color:inherit;text-align:left}
-.hlogo:hover{border-color:rgba(255,255,255,.7)}
+.hlogo{border:0!important;-webkit-appearance:none;appearance:none;outline:none;-webkit-tap-highlight-color:transparent;align-items:flex-start;cursor:pointer}
+.hlogo:hover .hlogo-img{opacity:.85}
+.hlogo:focus-visible{outline:2px solid #F6C3DA;outline-offset:3px}
 .hlogo b{font-family:var(--f-display);font-weight:800;font-size:19px;line-height:1.05;letter-spacing:-.01em}
-.hlogo-img{height:58px;width:auto;display:block}
+.hlogo-img{height:58px;width:auto;max-width:100%;object-fit:contain;object-position:left center;align-self:flex-start;flex:none;display:block;aspect-ratio:442/120}
 @media (max-width:899px){ .hlogo-img{height:48px} }
 @media (max-width:420px){ .hlogo-img{height:42px} }
 .hlogo small{font-size:10.5px;opacity:.75;display:flex;align-items:center;gap:5px;margin-top:3px}
@@ -506,7 +508,7 @@ body.wide .list .grid{grid-template-columns:1fr}
     <button data-act="feedback" type="button">Report a problem</button>
   </div>
   <div class="hdr"><div class="hdr-in">
-    <button class="hlogo" type="button" data-act="home" aria-label="Called To Care auction home"><img class="hlogo-img" src="img/logo-auction.png" alt="Called To Care Auction" width="440" height="120"><small><span class="sync" id="sync"><i></i><span id="synctxt">Connecting…</span></span></small></button>
+    <button class="hlogo" type="button" data-act="home" aria-label="Called To Care auction home"><img class="hlogo-img" src="img/logo-auction.png" alt="Called To Care Auction" width="442" height="120"><small><span class="sync" id="sync"><i></i><span id="synctxt">Connecting…</span></span></small></button>
     <form class="hsearch" id="hsearch" role="search" onsubmit="return false">
       <select id="hcat" aria-label="Search in category"><option value="all">All</option><option value="travel">Travel</option><option value="dining">Dining</option><option value="sports">Sports</option><option value="home">Home</option><option value="kids">Kids</option><option value="exp">Experiences</option></select>
       <input id="hq" type="search" placeholder="Search the auction" aria-label="Search items or item number" autocomplete="off">
