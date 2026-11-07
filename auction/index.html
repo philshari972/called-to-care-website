@@ -195,6 +195,7 @@ details.how summary{font-weight:700;cursor:pointer}
 @media (min-width:720px){ .grid{grid-template-columns:repeat(3,minmax(0,1fr))} .wrap{max-width:760px} .eventbar-in,.nav-in{max-width:760px} }
 </style>
 
+<style>body:not(.ok)>*{visibility:hidden}body:not(.ok){background:#1D4766}</style>
 </head><body>
 <style>
 .bidform{display:flex;flex-direction:column;gap:12px}
@@ -2411,10 +2412,10 @@ function listen(){
     else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED") setSync("Reconnecting…");
   });
 }
-function stop(html){ document.getElementById("view").innerHTML=`<section class="sec">${html}</section>`; document.getElementById("synctxt").textContent="Not connected"; }
+function stop(html){ document.body.classList.add("ok"); document.getElementById("view").innerHTML=`<section class="sec">${html}</section>`; document.getElementById("synctxt").textContent="Not connected"; }
 function comingSoon(){
   document.title="Called to Care Auction · Coming soon";
-  document.body.style.overflow="hidden";document.body.insertAdjacentHTML("beforeend",`<main style="position:fixed;inset:0;z-index:2147483000;overflow:auto;display:grid;place-items:center;padding:32px 20px;background:#1D4766;color:#fff;font-family:'Public Sans',system-ui,sans-serif;text-align:center">
+  document.body.style.overflow="hidden";document.body.classList.add("ok");document.body.insertAdjacentHTML("beforeend",`<main style="position:fixed;inset:0;z-index:2147483000;overflow:auto;display:grid;place-items:center;padding:32px 20px;background:#1D4766;color:#fff;font-family:'Public Sans',system-ui,sans-serif;text-align:center">
    <div style="max-width:520px;display:grid;gap:18px;justify-items:center">
     <img src="img/logo-auction.png" alt="Called to Care Auction" style="width:min(320px,80vw);height:auto">
     <div style="font-size:.8rem;letter-spacing:.25em;text-transform:uppercase;color:#F6C3DA">Charity Dinner &amp; Auction · Saturday, March 13, 2027</div>
@@ -2443,6 +2444,7 @@ async function start(){
   if(pv){ try{ await sb.rpc("enter_preview",{p_code:pv}); }catch(e){} history.replaceState(null,"",location.pathname+location.hash); }
   let acc=null; try{ acc=(await sb.rpc("my_access")).data; }catch(e){}
   if(acc&&!acc.open&&!acc.admin&&!acc.tester) return comingSoon();
+  document.body.classList.add("ok");
   try{ isAdmin=(await q("admins",t=>t.select("uid"))).length>0; }catch(e){}
   try{ await loadCatalog(); }
   catch(e){ return stop(`<h2>Database not set up</h2><p>Run <b>setup.sql</b> in the Supabase SQL editor, then reload.</p>`); }
