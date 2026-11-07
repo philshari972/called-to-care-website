@@ -410,6 +410,20 @@ html.tickets-on .tix-off{display:none!important}
 .pill.soon::after{content:none}
 .page[hidden]{display:none!important}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+
+.give .seg2{display:inline-flex;background:var(--skypale,#EEF5F9);border-radius:999px;padding:4px;gap:4px;margin:6px 0 2px}
+.give .seg2 button{border:0;background:none;border-radius:999px;padding:9px 18px;font:inherit;font-weight:700;color:var(--navy);cursor:pointer}
+.give .seg2 button.on{background:var(--navy);color:#fff}
+.give .amts{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:8px;margin:10px 0}
+.give .amts button{border:2px solid var(--sky);background:#fff;border-radius:12px;padding:12px 6px;font:inherit;font-weight:700;font-size:1.05rem;color:var(--navy);cursor:pointer}
+.give .amts button.on{border-color:var(--pink);background:var(--pink);color:#fff}
+.give .other{display:flex;align-items:center;gap:4px;border:2px solid var(--sky);border-radius:12px;padding:0 10px;background:#fff}
+.give .other input{border:0;outline:0;width:100%;font:inherit;font-weight:700;padding:12px 0;background:none}
+.give .other.on{border-color:var(--pink)}
+.co-step[hidden]{display:none!important}
+#coElement{margin:6px 0 14px}
+#coPaypal{margin-top:10px;min-height:46px}
+.hp{position:absolute!important;left:-9999px!important;width:1px;height:1px;overflow:hidden}
 </style>
 <style>[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
 </head>
@@ -418,7 +432,7 @@ html.tickets-on .tix-off{display:none!important}
 <div class="promo"><div class="wrap">
   <span class="label" style="font-size:.7rem">Foster &amp; adoptive moms</span>
   <b>Support Night · <span data-sn="short">Thu, Nov 5</span> · 6:30 PM</b>
-  <a href="https://form.jotform.com/262945432903157" target="_blank" rel="noopener">Yes! Save me a seat →</a>
+  <a href="#support-register">Yes! Save me a seat →</a>
 </div></div>
 
 <header class="site">
@@ -470,7 +484,7 @@ html.tickets-on .tix-off{display:none!important}
       <div class="extras">
         <a class="on-teal" href="#donate">Give today</a>
         <a class="on-teal" href="#contact">Get in touch</a>
-        <a class="on-teal" href="https://form.jotform.com/220196204357048" target="_blank" rel="noopener">Request a care package</a>
+        <a class="on-teal" href="#placement-request">Request a care package</a>
       </div>
       <div class="socials m-socials">
         <a href="https://www.instagram.com/weare.calledtocare/" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></a>
@@ -516,7 +530,7 @@ html.tickets-on .tix-off{display:none!important}
       <span class="label c-navy">New placement</span>
       <h2 class="d2 c-navy">Just welcomed a child into your home?</h2>
       <p>If you live in DeKalb, DuPage, Grundy, Kane, Kendall, LaSalle, or Will County, tell us within the first week and we'll bring a care package and a hot meal to your door.</p>
-      <div class="pills"><a class="pill p-navy" href="https://form.jotform.com/220196204357048" target="_blank" rel="noopener">Request a care package</a></div>
+      <div class="pills"><a class="pill p-navy" href="#placement-request">Request a care package</a></div>
     </div>
   </div>
 
@@ -547,7 +561,7 @@ html.tickets-on .tix-off{display:none!important}
       <div class="vstack">
         <p class="lede">Snacks, honest conversation, and real training for moms of foster and adoptive kids. Childcare is on site so you can be fully present.</p>
         <p style="font-family:var(--serif);font-size:2rem;line-height:1.1;color:var(--pink)" data-sn="full">Thursday, November 5, 2026</p>
-        <div class="pills"><a class="pill p-hot" href="https://form.jotform.com/262945432903157" target="_blank" rel="noopener">Register (required)</a><a class="pill p-line c-navy" href="#foster-parents" data-anchor="supportnight">Details</a></div>
+        <div class="pills"><a class="pill p-hot" href="#support-register">Register (required)</a><a class="pill p-line c-navy" href="#foster-parents" data-anchor="supportnight">Details</a></div>
       </div>
     </div>
   </section>
@@ -620,7 +634,7 @@ html.tickets-on .tix-off{display:none!important}
       <div class="counties" aria-label="Counties served"><span>DeKalb</span><span>DuPage</span><span>Grundy</span><span>Kane</span><span>Kendall</span><span>LaSalle</span><span>Will</span></div>
     </div>
     <div class="wrap steps">
-      <div class="step"><h3>Request a care package</h3><p>For placements in the last week or less. Tell us about your new arrival and we'll take it from there.</p><a class="pill p-hot" href="https://form.jotform.com/220196204357048" target="_blank" rel="noopener">Request</a></div>
+      <div class="step"><h3>Request a care package</h3><p>For placements in the last week or less. Tell us about your new arrival and we'll take it from there.</p><a class="pill p-hot" href="#placement-request">Request</a></div>
       <div class="step"><h3>Join the foster parent email</h3><p>Trainings, events, and resources sent just to foster and adoptive families.</p><a class="pill p-navy" href="https://view.flodesk.com/pages/6104c8d91ab913927d9160b0" target="_blank" rel="noopener">Join</a></div>
       <div class="step"><h3>Come to support night</h3><p>Meet moms who understand, the first Thursday of every month, with childcare on site.</p><a class="pill p-pink" href="#foster-parents" data-anchor="supportnight">Details</a></div>
     </div>
@@ -634,7 +648,7 @@ html.tickets-on .tix-off{display:none!important}
       <p style="color:var(--sky)">On-site childcare is provided. Registration is required for adults and children, so please register early.</p>
       <p style="font-family:var(--serif);font-size:1.9rem;line-height:1.1" data-sn="full">Thursday, November 5, 2026</p>
       <p class="label c-pinkl" style="font-size:.7rem">6:30 PM · 1111 W South St, Plano, IL 60545</p>
-      <div class="pills"><a class="pill p-pink" href="https://form.jotform.com/262945432903157" target="_blank" rel="noopener">Register now</a><a class="pill p-line c-white" href="https://www.google.com/maps/place/Called+to+Care/@41.6562866,-88.5558264,17z" target="_blank" rel="noopener">Directions</a></div>
+      <div class="pills"><a class="pill p-pink" href="#support-register">Register now</a><a class="pill p-line c-white" href="https://www.google.com/maps/place/Called+to+Care/@41.6562866,-88.5558264,17z" target="_blank" rel="noopener">Directions</a></div>
     </div>
     <div class="photo has-img" style="--pos:center"><img src="assets/kids-curls.jpg" alt="Two smiling kids with curly hair resting their chins in their hands" loading="lazy" width="1800" height="1200"></div>
   </div>
@@ -759,7 +773,7 @@ html.tickets-on .tix-off{display:none!important}
       <div class="row" id="supportnightevent">
         <div class="dot"><span><small data-sn="m">Nov</small><b data-sn="d">5</b></span></div>
         <div class="vstack" style="gap:6px"><span class="label">Monthly · first Thursday</span><h3>Foster &amp; Adoptive Moms' Support Night</h3><span class="meta">6:30 PM · Plano office · Childcare provided · Registration required</span></div>
-        <a class="pill p-pink" href="https://form.jotform.com/262945432903157" target="_blank" rel="noopener">Register</a>
+        <a class="pill p-pink" href="#support-register">Register</a>
       </div>
       <div class="row">
         <div class="dot"><span><small>Mar</small><b>13</b></span></div>
@@ -875,43 +889,7 @@ html.tickets-on .tix-off{display:none!important}
     </div>
   </section>
 
-  <!-- checkout drawer -->
-  <div class="co" id="checkout" hidden>
-    <button class="scrim" type="button" data-close aria-label="Close checkout"></button>
-    <div class="co-panel" role="dialog" aria-modal="true" aria-labelledby="coTitle">
-      <button class="co-x" type="button" data-close aria-label="Close checkout">×</button>
-      <form id="coForm" class="apply" novalidate style="box-shadow:none;max-width:none">
-        <div class="fs">
-          <span class="label" style="color:var(--pink)">Charity Dinner &amp; Auction · March 13, 2027</span>
-          <h2 class="d3 c-navy" id="coTitle">Sponsor</h2>
-          <div class="co-line"><span id="coItem">Item</span><span id="coPrice" class="price">$0</span></div>
-          <label class="q" for="co-qty" id="coQtyWrap" hidden><span class="lbl">Number of <span class="nw">Tickets<span class="req">*</span></span></span><input id="co-qty" name="qty" type="number" min="1" max="20" value="1" inputmode="numeric"></label>
-          <label class="q" for="co-display" id="coDisplayWrap"><span class="lbl">Name as It Should Appear on <span class="nw">Signage<span class="req">*</span></span></span><input id="co-display" name="display_name" placeholder="Company, family, or individual"></label>
-          <div class="c2">
-            <label class="q" for="co-first"><span class="lbl">First <span class="nw">Name<span class="req">*</span></span></span><input id="co-first" name="first_name" autocomplete="given-name" required></label>
-            <label class="q" for="co-last"><span class="lbl">Last <span class="nw">Name<span class="req">*</span></span></span><input id="co-last" name="last_name" autocomplete="family-name" required></label>
-            <label class="q" for="co-email"><span class="lbl"><span class="nw">Email<span class="req">*</span></span></span><input id="co-email" name="email" type="email" autocomplete="email" required></label>
-            <label class="q" for="co-phone"><span class="lbl"><span class="nw">Phone<span class="req">*</span></span></span><input id="co-phone" name="phone" type="tel" autocomplete="tel" placeholder="(000) 000-0000" required></label>
-          </div>
-          <label class="q" for="co-guests" id="coGuestsWrap" hidden><span class="lbl">Guest Names</span><span class="hint">Optional. You can send these later.</span><textarea id="co-guests" name="guest_names" style="min-height:90px"></textarea></label>
-          <div class="co-total"><span>Total</span><span id="coTotal" class="price">$0</span></div>
-          <div class="co-pay">
-            <button class="pill p-hot" type="submit" data-method="card">Pay with Card</button>
-            <button class="paypal" type="submit" data-method="paypal" aria-label="Pay with PayPal"><b>Pay</b><i>Pal</i></button>
-          </div>
-          <p class="hint">Card payments include Apple Pay and Google Pay. Your payment is processed securely by Stripe or PayPal.</p>
-          <p class="err" id="coErr" role="alert"></p>
-        </div>
-      </form>
-      <div class="done-card" id="coDone" hidden style="box-shadow:none">
-        <span class="label" style="color:var(--pink)">Thank you</span>
-        <h2 class="d2 c-navy">You're in!</h2>
-        <p id="coDoneMsg"></p>
-        <p class="hint">(Preview: no payment was taken. Once Stripe and PayPal are connected, this opens secure checkout.)</p>
-        <button class="pill p-navy" type="button" data-close>Done</button>
-      </div>
-    </div>
-  </div>
+
 </div>
 
 <!-- ======================= DONATE ======================= -->
@@ -924,9 +902,18 @@ html.tickets-on .tix-off{display:none!important}
   </div></div>
 
   <section class="b-skypale" id="give">
-    <div class="wrap g2">
-      <div class="lab cap-hot"><span class="label">General donation</span><h3>Support children and families in foster care</h3><p>Practical support, wrap-around care, and lasting relationships help families stabilize, heal, and flourish. Your gift stocks the supply room, funds placement-night meals, and lets us celebrate birthdays, graduations, and holidays with the kids we serve.</p><a class="pill p-hot" href="https://donorbox.org/called-to-care-2021" target="_blank" rel="noopener">Donate now</a></div>
-      <div class="lab cap-sky"><span class="label">Selah Home</span><h3>Help launch a sanctuary for children in emergency care</h3><p>The Selah Home will give children who need emergency foster care a safe, nurturing place to land.</p><a class="pill p-navy" href="https://www.paypal.com/donate/?hosted_button_id=TYWTRM9KQS66J" target="_blank" rel="noopener">Give to Selah Home</a></div>
+    <div class="wrap g2" style="align-items:start">
+      <form class="lab cap-hot give" id="giveForm" novalidate>
+        <span class="label">Give online</span><h3>Support children and families in foster care</h3>
+        <div class="seg2" role="group" aria-label="How often"><button type="button" class="on" data-freq="once">One Time</button><button type="button" data-freq="monthly">Monthly</button></div>
+        <div class="amts" role="group" aria-label="Amount"><button type="button" data-amt="25">$25</button><button type="button" data-amt="50" class="on">$50</button><button type="button" data-amt="100">$100</button><button type="button" data-amt="250">$250</button>
+          <label class="other" for="g-other"><span>$</span><input id="g-other" inputmode="decimal" placeholder="Other" aria-label="Other amount"></label></div>
+        <label class="q" for="g-fund"><span class="lbl">Give To</span><select id="g-fund"><option>Where needed most</option><option>Selah Home</option><option>Care Closet</option><option>Camp scholarships</option></select></label>
+        <button class="pill p-hot" type="submit" id="giveBtn">Give $50</button>
+        <p class="hint">Card, Apple Pay, Google Pay, bank account, or PayPal (one-time). You'll get an emailed tax receipt.</p>
+      </form>
+      <div class="lab cap-sky"><span class="label">Monthly Partners</span><h3>Become someone's steady.</h3><p>Monthly gifts let us say yes the same day a child is placed. Partners giving $50 or more a month for six months get early access to Charity Dinner tickets.</p><p class="hint">Already give monthly through Donorbox? Nothing changes for you.</p>
+        <span class="label" style="margin-top:14px">Selah Home</span><p>Help launch a sanctuary for children who need emergency foster care. Choose "Selah Home" when you give.</p></div>
     </div>
   </section>
 
@@ -1130,7 +1117,6 @@ html.tickets-on .tix-off{display:none!important}
       <span class="label" style="color:var(--pink)">Application received</span>
       <h2 class="d2 c-navy">Thank you!</h2>
       <p>Your camp scholarship application is in. Our scholarship committee reviews applications on a rolling basis, and most families hear back within 14 business days.</p>
-      <p class="hint">(Preview: nothing was sent. On the live site this saves to the admin dashboard.)</p>
       <a class="pill p-navy" href="#home">Back to home</a>
     </div>
     </div>
@@ -1138,6 +1124,110 @@ html.tickets-on .tix-off{display:none!important}
 </div>
 
 <!-- ======================= VOLUNTEER APPLICATION ======================= -->
+<div class="page" data-page="support-register" hidden>
+  <div class="ph b-teal"><div class="wrap">
+    <span class="label c-pinkl">Support Night registration</span>
+    <h1 class="d1" style="font-size:clamp(2.8rem,7vw,5.4rem)">Save your seat. <em class="it c-pinkl">Come as you are.</em></h1>
+    <p class="lede" style="color:var(--sky)">An evening of encouragement and connection with other foster and adoptive parents. Registration helps us plan food and childcare.</p>
+  </div></div>
+  <section class="b-skypale" style="padding-block:64px 96px">
+    <div class="wrap">
+    <form class="apply" id="snForm" novalidate style="max-width:760px">
+      <fieldset class="fs">
+        <legend><span class="n">1</span><span class="t">Which Night</span></legend>
+        <label class="q" for="sn-event"><span class="lbl">Support <span class="nw">Night<span class="req">*</span></span></span><select id="sn-event" name="event" required></select></label>
+      </fieldset>
+      <fieldset class="fs">
+        <legend><span class="n">2</span><span class="t">About You</span></legend>
+        <div class="c2">
+          <label class="q" for="sn-first"><span class="lbl">First <span class="nw">Name<span class="req">*</span></span></span><input id="sn-first" name="first_name" autocomplete="given-name" required></label>
+          <label class="q" for="sn-last"><span class="lbl">Last <span class="nw">Name<span class="req">*</span></span></span><input id="sn-last" name="last_name" autocomplete="family-name" required></label>
+          <label class="q" for="sn-email"><span class="lbl"><span class="nw">Email<span class="req">*</span></span></span><input id="sn-email" name="email" type="email" autocomplete="email" required></label>
+          <label class="q" for="sn-phone"><span class="lbl">Cell Phone</span><input id="sn-phone" name="phone" type="tel" autocomplete="tel" placeholder="(000) 000-0000"></label>
+        </div>
+        <div class="q" data-group="family_type"><span class="lbl">Your <span class="nw">Family<span class="req">*</span></span></span>
+          <div class="choices inline"><label class="choice" for="sn-t1"><input type="radio" id="sn-t1" name="family_type" value="Foster"> Foster</label><label class="choice" for="sn-t2"><input type="radio" id="sn-t2" name="family_type" value="Adoptive"> Adoptive</label><label class="choice" for="sn-t3"><input type="radio" id="sn-t3" name="family_type" value="Kinship"> Kinship</label><label class="choice" for="sn-t4"><input type="radio" id="sn-t4" name="family_type" value="Considering foster care"> Considering</label></div></div>
+        <label class="q" for="sn-kids"><span class="lbl">Children Coming With You</span><span class="hint">First names and ages, so we can plan childcare. Leave blank if none.</span><input id="sn-kids" name="children_text" placeholder="e.g. Mia 4, Leo 7"></label>
+        <label class="q" for="sn-notes"><span class="lbl">Anything We Should Know?</span><span class="hint">Allergies, first time coming, questions.</span><textarea id="sn-notes" name="comments"></textarea></label>
+      </fieldset>
+      <div class="submit-row"><button class="pill p-hot" type="submit">Register</button><span class="hint" id="snErr" role="alert"></span></div>
+    </form>
+    <div class="done-card" id="snDone" hidden>
+      <span class="label" style="color:var(--pink)">You're registered</span>
+      <h2 class="d2 c-navy">See you soon!</h2>
+      <p id="snDoneMsg">We sent a confirmation to your email.</p>
+      <a class="pill p-navy" href="#foster-parents">Back to Foster Parents</a>
+    </div>
+    </div>
+  </section>
+</div>
+
+<div class="page" data-page="placement-request" hidden>
+  <div class="ph b-navy"><div class="wrap">
+    <span class="label c-pinkl">New placement · care package request</span>
+    <h1 class="d1" style="font-size:clamp(2.8rem,7vw,5.4rem)">Welcome. <em class="it c-pinkl">We've got you.</em></h1>
+    <p class="lede" style="color:var(--sky)">For placements in the last week or less. Tell us about your new arrival and we'll put together a care package for each child. We'll call or text within one business day.</p>
+  </div></div>
+  <section class="b-skypale" style="padding-block:64px 96px">
+    <div class="wrap">
+    <form class="apply" id="plForm" novalidate style="max-width:820px">
+      <fieldset class="fs">
+        <legend><span class="n">1</span><span class="t">About You</span></legend>
+        <div class="c2">
+          <label class="q" for="pl-first"><span class="lbl">First <span class="nw">Name<span class="req">*</span></span></span><input id="pl-first" name="first_name" autocomplete="given-name" required></label>
+          <label class="q" for="pl-last"><span class="lbl">Last <span class="nw">Name<span class="req">*</span></span></span><input id="pl-last" name="last_name" autocomplete="family-name" required></label>
+          <label class="q" for="pl-email"><span class="lbl"><span class="nw">Email<span class="req">*</span></span></span><input id="pl-email" name="email" type="email" autocomplete="email" required></label>
+          <label class="q" for="pl-phone"><span class="lbl">Cell <span class="nw">Phone<span class="req">*</span></span></span><input id="pl-phone" name="phone" type="tel" autocomplete="tel" placeholder="(000) 000-0000" required></label>
+          <label class="q" for="pl-street"><span class="lbl">Street Address</span><input id="pl-street" name="street" autocomplete="street-address"></label>
+          <label class="q" for="pl-city"><span class="lbl"><span class="nw">City<span class="req">*</span></span></span><input id="pl-city" name="city" autocomplete="address-level2" required></label>
+          <label class="q" for="pl-zip"><span class="lbl">ZIP</span><input id="pl-zip" name="zip" autocomplete="postal-code" inputmode="numeric" maxlength="5"></label>
+          <label class="q" for="pl-county"><span class="lbl"><span class="nw">County<span class="req">*</span></span></span><select id="pl-county" name="county" required><option value="">Choose one</option><option>DeKalb</option><option>DuPage</option><option>Grundy</option><option>Kane</option><option>Kendall</option><option>LaSalle</option><option>Will</option><option>Other</option></select></label>
+        </div>
+      </fieldset>
+      <fieldset class="fs">
+        <legend><span class="n">2</span><span class="t">The Placement</span></legend>
+        <div class="c2">
+          <label class="q" for="pl-date"><span class="lbl">Placement <span class="nw">Date<span class="req">*</span></span></span><input id="pl-date" name="placement_date" type="date" required></label>
+          <div class="q" data-group="placement_type"><span class="lbl">Type of <span class="nw">Placement<span class="req">*</span></span></span><div class="choices inline"><label class="choice" for="pl-t1"><input type="radio" id="pl-t1" name="placement_type" value="Foster"> Foster</label><label class="choice" for="pl-t2"><input type="radio" id="pl-t2" name="placement_type" value="Kinship"> Kinship</label><label class="choice" for="pl-t3"><input type="radio" id="pl-t3" name="placement_type" value="Adoptive"> Adoptive</label></div></div>
+          <label class="q" for="pl-agency"><span class="lbl">Agency</span><input id="pl-agency" name="agency" placeholder="e.g. DCFS, Lutheran Social Services"></label>
+          <label class="q" for="pl-household"><span class="lbl">People Living in Your Home</span><input id="pl-household" name="household" inputmode="numeric" placeholder="Including the new children"></label>
+        </div>
+      </fieldset>
+      <fieldset class="fs">
+        <legend><span class="n">3</span><span class="t">The Children</span></legend>
+        <p class="hint" style="margin-top:-6px">First names only. We use sizes to pack clothes that fit.</p>
+        <div id="plKids"></div>
+        <button type="button" class="pill p-line c-navy" id="plAdd" style="align-self:flex-start">+ Add another child</button>
+      </fieldset>
+      <fieldset class="fs">
+        <legend><span class="n">4</span><span class="t">What Would Help Most</span></legend>
+        <div class="q" data-group="needs"><span class="lbl">Check All That Apply</span>
+          <div class="choices">
+            <label class="choice" for="pn-1"><input type="checkbox" id="pn-1" name="needs" value="Clothing"> Clothing</label>
+            <label class="choice" for="pn-2"><input type="checkbox" id="pn-2" name="needs" value="Pajamas"> Pajamas</label>
+            <label class="choice" for="pn-3"><input type="checkbox" id="pn-3" name="needs" value="Diapers and wipes"> Diapers and wipes</label>
+            <label class="choice" for="pn-4"><input type="checkbox" id="pn-4" name="needs" value="Formula and bottles"> Formula and bottles</label>
+            <label class="choice" for="pn-5"><input type="checkbox" id="pn-5" name="needs" value="Car seat"> Car seat</label>
+            <label class="choice" for="pn-6"><input type="checkbox" id="pn-6" name="needs" value="Crib or Pack 'n Play"> Crib or Pack 'n Play</label>
+            <label class="choice" for="pn-7"><input type="checkbox" id="pn-7" name="needs" value="Toiletries"> Toiletries</label>
+            <label class="choice" for="pn-8"><input type="checkbox" id="pn-8" name="needs" value="School supplies"> School supplies</label>
+          </div></div>
+        <div class="q" data-group="handoff"><span class="lbl">Pickup or <span class="nw">Delivery<span class="req">*</span></span></span><div class="choices inline"><label class="choice" for="ph-1"><input type="radio" id="ph-1" name="handoff" value="Pick up at the Care Closet"> I'll pick it up</label><label class="choice" for="ph-2"><input type="radio" id="ph-2" name="handoff" value="Please deliver"> Please deliver</label></div></div>
+        <label class="q" for="pl-heard"><span class="lbl">How Did You Hear About Us?</span><input id="pl-heard" name="heard"></label>
+        <label class="q" for="pl-info"><span class="lbl">Anything Else?</span><span class="hint">Allergies, special needs, or anything urgent.</span><textarea id="pl-info" name="info"></textarea></label>
+      </fieldset>
+      <div class="submit-row"><button class="pill p-hot" type="submit">Request Care Package</button><span class="hint" id="plErr" role="alert"></span></div>
+    </form>
+    <div class="done-card" id="plDone" hidden>
+      <span class="label" style="color:var(--pink)">Request received</span>
+      <h2 class="d2 c-navy">We've got you.</h2>
+      <p id="plDoneMsg">We'll call or text within one business day to set a pickup or delivery time.</p>
+      <a class="pill p-navy" href="#foster-parents">Back to Foster Parents</a>
+    </div>
+    </div>
+  </section>
+</div>
+
 <div class="page" data-page="volunteer-apply" hidden>
   <div class="ph b-teal"><div class="wrap">
     <span class="label c-pinkl">Volunteer application</span>
@@ -1172,7 +1262,6 @@ html.tickets-on .tix-off{display:none!important}
       <span class="label" style="color:var(--pink)">Application received</span>
       <h2 class="d2 c-navy">Thank you!</h2>
       <p id="volDoneMsg">A team member will reach out soon to walk you through the next steps.</p>
-      <p class="hint">(Preview: nothing was sent. On the live site this saves to the admin Volunteers list and adds you to the Volunteers email list.)</p>
       <a class="pill p-navy" href="#get-involved">Back to Get Involved</a>
     </div>
     </div>
@@ -1216,7 +1305,6 @@ html.tickets-on .tix-off{display:none!important}
       <span class="label" style="color:var(--pink)">Merry Christmas</span>
       <h2 class="d2 c-navy">Thank you!</h2>
       <p id="xDoneMsg"></p>
-      <p class="hint">(Preview: nothing was sent. On the live site this saves to the admin Christmas Gifts list.)</p>
       <a class="pill p-navy" href="#home">Back to home</a>
     </div>
     </div>
@@ -1340,6 +1428,53 @@ html.tickets-on .tix-off{display:none!important}
   </div>
 </footer>
 
+  <!-- checkout drawer -->
+  <div class="co" id="checkout" hidden>
+    <button class="scrim" type="button" data-close aria-label="Close checkout"></button>
+    <div class="co-panel" role="dialog" aria-modal="true" aria-labelledby="coTitle">
+      <button class="co-x" type="button" data-close aria-label="Close checkout">×</button>
+      <form id="coForm" class="apply" novalidate style="box-shadow:none;max-width:none">
+        <div class="fs">
+          <span class="label" style="color:var(--pink)" id="coEyebrow">Charity Dinner &amp; Auction · March 13, 2027</span>
+          <h2 class="d3 c-navy" id="coTitle">Sponsor</h2>
+          <div class="co-line"><span id="coItem">Item</span><span id="coPrice" class="price">$0</span></div>
+          <label class="q" for="co-qty" id="coQtyWrap" hidden><span class="lbl">Number of <span class="nw">Tickets<span class="req">*</span></span></span><input id="co-qty" name="qty" type="number" min="1" max="20" value="1" inputmode="numeric"></label>
+          <label class="q" for="co-display" id="coDisplayWrap"><span class="lbl">Name as It Should Appear on <span class="nw">Signage<span class="req">*</span></span></span><input id="co-display" name="display_name" placeholder="Company, family, or individual"></label>
+          <div class="c2">
+            <label class="q" for="co-first"><span class="lbl">First <span class="nw">Name<span class="req">*</span></span></span><input id="co-first" name="first_name" autocomplete="given-name" required></label>
+            <label class="q" for="co-last"><span class="lbl">Last <span class="nw">Name<span class="req">*</span></span></span><input id="co-last" name="last_name" autocomplete="family-name" required></label>
+            <label class="q" for="co-email"><span class="lbl"><span class="nw">Email<span class="req">*</span></span></span><input id="co-email" name="email" type="email" autocomplete="email" required></label>
+            <label class="q" for="co-phone"><span class="lbl"><span class="nw">Phone<span class="req">*</span></span></span><input id="co-phone" name="phone" type="tel" autocomplete="tel" placeholder="(000) 000-0000" required></label>
+          </div>
+          <label class="q" for="co-guests" id="coGuestsWrap" hidden><span class="lbl">Guest Names</span><span class="hint">Optional. You can send these later.</span><textarea id="co-guests" name="guest_names" style="min-height:90px"></textarea></label>
+          <div class="co-total"><span>Total</span><span id="coTotal" class="price">$0</span></div>
+          <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <div class="co-pay">
+            <button class="pill p-hot" type="submit" id="coNext">Continue to Payment</button>
+          </div>
+          <div id="coPaypal" aria-label="Pay with PayPal"></div>
+          <p class="hint">Card, Apple Pay, Google Pay, or bank account through Stripe, or PayPal. Your payment is processed securely; we never see your card number.</p>
+          <p class="err" id="coErr" role="alert"></p>
+        </div>
+      </form>
+      <div class="co-step fs" id="coPayStep" hidden>
+        <span class="label" style="color:var(--pink)">Secure payment</span>
+        <h2 class="d3 c-navy">Card, Apple Pay, or Bank</h2>
+        <div class="co-line"><span id="coItem2"></span><span id="coPrice2" class="price"></span></div>
+        <div id="coElement"></div>
+        <div class="co-pay"><button class="pill p-hot" type="button" id="coConfirm">Pay</button><button class="pill p-line c-navy" type="button" id="coBack">Back</button></div>
+        <p class="err" id="coErr2" role="alert"></p>
+      </div>
+      <div class="done-card" id="coDone" hidden style="box-shadow:none">
+        <span class="label" style="color:var(--pink)">Thank you</span>
+        <h2 class="d2 c-navy">You're in!</h2>
+        <p id="coDoneMsg"></p>
+        <p class="hint" id="coDoneNote">A receipt is on its way to your email.</p>
+        <button class="pill p-navy" type="button" data-close>Done</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 (function(){
   const pages=[...document.querySelectorAll('.page')];
@@ -1354,8 +1489,8 @@ html.tickets-on .tix-off{display:none!important}
   document.getElementById('scrim').addEventListener('click',()=>closeMenu(true));
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu(true)});
   drawer.addEventListener('click',e=>{if(e.target.closest('a'))closeMenu(false)});
-  const parentOf={'charity-dinner':'events','lemonade':'get-involved','careers':'get-involved','camp':'foster-parents','camp-apply':'foster-parents','volunteer-apply':'get-involved','christmas':'events'};
-  const titles={home:'We Are Called to Care','foster-parents':'Foster Parents','therapy':'Therapy','get-involved':'Get Involved','events':'Events','donate':'Donate','about':'About Us','contact':'Contact','careers':'Careers','lemonade':'Lemonade Stand','camp':'Camp Scholarships','camp-apply':'Camp Scholarship Application','volunteer-apply':'Volunteer Application','christmas':'Christmas Gifts 2026','charity-dinner':'Charity Dinner & Auction'};
+  const parentOf={'charity-dinner':'events','lemonade':'get-involved','careers':'get-involved','camp':'foster-parents','camp-apply':'foster-parents','volunteer-apply':'get-involved','christmas':'events','support-register':'foster-parents','placement-request':'foster-parents'};
+  const titles={home:'We Are Called to Care','foster-parents':'Foster Parents','therapy':'Therapy','get-involved':'Get Involved','events':'Events','donate':'Donate','about':'About Us','contact':'Contact','careers':'Careers','lemonade':'Lemonade Stand','camp':'Camp Scholarships','camp-apply':'Camp Scholarship Application','volunteer-apply':'Volunteer Application','christmas':'Christmas Gifts 2026','support-register':'Support Night Registration','placement-request':'Care Package Request','charity-dinner':'Charity Dinner & Auction'};
   let pendingAnchor=null;
   function show(){
     let h=(location.hash||'#home').slice(1);
@@ -1388,9 +1523,44 @@ html.tickets-on .tix-off{display:none!important}
   document.querySelectorAll('[data-sn]').forEach(el=>{const k=el.dataset.sn;el.textContent=k==='m'?M[next.getMonth()]:k==='d'?next.getDate():k==='short'?short:full;});
   document.getElementById('yr').textContent=now.getFullYear();
 
-  // Forms confirm locally in this preview; on the live site they post to the form service.
-  document.querySelectorAll('.js-form').forEach(f=>f.addEventListener('submit',e=>{
-    e.preventDefault(); const m=document.createElement('p'); m.className='ok'; m.textContent=f.dataset.done+' (Preview: nothing was sent.)'; f.replaceWith(m);
+  // ---- Connection to the server (forms + payments) ----
+  const C2C=window.C2C={t:Date.now(),cfg:{}};
+  const LIVE_HOST=/(^|\.)wearecalledtocare\.com$|netlify\.app$|^localhost$|^127\.0\.0\.1$/.test(location.hostname);
+  C2C.api=async function(fn,body){
+    let r;
+    try{ r=await fetch('/.netlify/functions/'+fn,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}); }
+    catch(e){ if(!LIVE_HOST) return {ok:true,preview:true}; throw new Error('We could not reach our server. Please check your connection and try again.'); }
+    if(!LIVE_HOST&&(r.status===404||r.status===405)) return {ok:true,preview:true};
+    const out=await r.json().catch(()=>({}));
+    if(!r.ok||out.ok===false) throw new Error(out.error||'Something went wrong. Please try again.');
+    return out;
+  };
+  C2C.send=(form,data)=>C2C.api('submit',{form,data,t:C2C.t,website:(document.querySelector('form#'+(data&&data.__form)+' .hp')||{}).value||''});
+  C2C.busy=(btn,on,txt)=>{if(!btn)return;if(on){btn.dataset.txt=btn.textContent;btn.textContent=txt||'Sending…';btn.disabled=true}else{btn.textContent=btn.dataset.txt||btn.textContent;btn.disabled=false}};
+  C2C.ready=fetch('/.netlify/functions/config').then(r=>r.ok?r.json():{}).catch(()=>({})).then(c=>{C2C.cfg=c||{};if(c&&c.ticketsOn)document.documentElement.classList.add('tickets-on');return C2C.cfg;});
+  // honeypot field on every form (people never see it; bots fill it in)
+  document.querySelectorAll('form').forEach(f=>{if(!f.querySelector('.hp'))f.insertAdjacentHTML('beforeend','<input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">')});
+  const hp=f=>(f.querySelector('.hp')||{}).value||'';
+  const phoneFmt=i=>i&&i.addEventListener('input',()=>{const d=i.value.replace(/\D/g,'').slice(0,10);i.value=d.length>6?`(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`:d.length>3?`(${d.slice(0,3)}) ${d.slice(3)}`:d;});
+  const markQ=(q,msg)=>{q.classList.add('invalid');let e=q.querySelector('.err');if(!e){e=document.createElement('span');e.className='err';q.appendChild(e)}e.textContent=msg};
+  const clearQ=q=>{q.classList.remove('invalid');const e=q.querySelector('.err');if(e)e.remove()};
+  function checkForm(f){let first=null;
+    f.querySelectorAll('input[required],select[required],textarea[required]').forEach(i=>{if(i.closest('[hidden]'))return;if(!i.checkValidity()){markQ(i.closest('.q'),i.validity.valueMissing?'This field is required.':i.type==='email'?'Enter a valid email address.':'Check this answer.');first=first||i}});
+    f.querySelectorAll('input[type=tel]').forEach(i=>{if(i.value&&i.value.replace(/\D/g,'').length!==10){markQ(i.closest('.q'),'Enter a 10-digit phone number.');first=first||i}});
+    return first;}
+  function radioReq(f,names){let first=null;names.forEach(n=>{const g=f.querySelector(`[data-group=${n}]`);if(g&&![...g.querySelectorAll('input')].some(b=>b.checked)){markQ(g,'Please choose one.');first=first||g.querySelector('input')}});return first;}
+  function showFirst(first,errEl){errEl.textContent='Some answers need attention. They are marked in pink.';first.scrollIntoView({block:'center'});if(first.focus)first.focus({preventScroll:true});}
+
+  // Email signup + contact form
+  document.querySelectorAll('.js-form').forEach(f=>f.addEventListener('submit',async e=>{
+    e.preventDefault(); const fd=new FormData(f); const b=f.querySelector('[type=submit]');
+    const name=(fd.get('name')||'').trim(); const [first,...rest]=name.split(/\s+/);
+    const isContact=f.name==='contact';
+    const data=isContact?{name,email:fd.get('email'),phone:fd.get('phone')||'',topic:fd.get('topic'),message:fd.get('message'),emaillist:!!fd.get('emaillist')}:{first_name:first||'',last_name:rest.join(' '),email:fd.get('email'),segment:fd.get('segment')||''};
+    let m=f.querySelector('.form-err'); if(!m){m=document.createElement('p');m.className='hint form-err';m.setAttribute('role','alert');f.appendChild(m);} m.textContent='';
+    C2C.busy(b,true);
+    try{ await C2C.api('submit',{form:isContact?'message':'emaillist',data,t:C2C.t,website:hp(f)}); }catch(x){ m.textContent=x.message; C2C.busy(b,false); return; }
+    const ok=document.createElement('p'); ok.className='ok'; ok.textContent=f.dataset.done; f.replaceWith(ok);
   }));
 
   // ---- Camp scholarship application ----
@@ -1431,42 +1601,86 @@ html.tickets-on .tix-off{display:none!important}
       msg.textContent='';
       const data=Object.fromEntries([...new FormData(f).keys()].map(k=>[k,new FormData(f).getAll(k).length>1?new FormData(f).getAll(k):new FormData(f).get(k)]));
       data.signature_png=cv.toDataURL('image/png'); data.submitted_at=new Date().toISOString();
-      window.__lastCampApplication=data; // on the live site: POST to /.netlify/functions/submit?form=camp
-      f.hidden=true; document.getElementById('campDone').hidden=false; document.getElementById('campDone').scrollIntoView({block:'center'});
+      const b=f.querySelector('[type=submit]'); C2C.busy(b,true);
+      C2C.api('submit',{form:'camp',data,t:C2C.t,website:hp(f)}).then(()=>{
+        f.hidden=true; document.getElementById('campDone').hidden=false; document.getElementById('campDone').scrollIntoView({block:'center'});
+      }).catch(x=>{msg.textContent=x.message;}).finally(()=>C2C.busy(b,false));
     });
   })();
 
-  // ---- Charity dinner checkout ----
+  // ---- Checkout: sponsorships, tickets, tables, and gifts (Stripe + PayPal) ----
   (function(){
     const co=document.getElementById('checkout'); if(!co) return;
-    const f=document.getElementById('coForm'); let cur=null;
-    const $=id=>document.getElementById(id); const fmt=n=>'$'+n.toLocaleString('en-US');
-    function total(){return cur.price*(cur.qty?Math.max(1,+$('co-qty').value||1):1)}
-    function upd(){$('coTotal').textContent=fmt(total());}
-    document.querySelectorAll('.pick').forEach(b=>b.addEventListener('click',()=>{
-      cur={item:b.dataset.item,name:b.dataset.name,price:+b.dataset.price,qty:!!b.dataset.qty};
-      const isTicket=cur.item==='ticket', isTable=cur.item==='table';
-      $('coTitle').textContent=isTicket?'Buy Tickets':isTable?'Reserve a Table':'Become a Sponsor';
-      $('coItem').textContent=cur.name+(isTicket?' · $100 each':''); $('coPrice').textContent=fmt(cur.price);
-      $('coQtyWrap').hidden=!isTicket; $('coDisplayWrap').hidden=isTicket||isTable; $('co-display').required=!(isTicket||isTable);
-      $('coGuestsWrap').hidden=!(isTicket||isTable||['legacy','gold','platinum','diamond'].includes(cur.item));
-      f.hidden=false; $('coDone').hidden=true; $('coErr').textContent=''; upd();
+    const $=id=>document.getElementById(id); const f=$('coForm'); let cur=null, stripe=null, elements=null, ppRendered=false;
+    const fmt=n=>'$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2});
+    const total=()=>cur.kind==='donation'?cur.price:cur.price*(cur.qty?Math.max(1,+$('co-qty').value||1):1);
+    const upd=()=>{$('coTotal').textContent=fmt(total())+(cur.recurring?' / month':'');};
+    const loadScript=src=>new Promise((res,rej)=>{if(document.querySelector(`script[src="${src}"]`))return res();const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('Could not load the payment form. Please refresh and try again.'));document.head.appendChild(s)});
+    function step(which){f.hidden=which!=='form';$('coPayStep').hidden=which!=='pay';$('coDone').hidden=which!=='done';}
+    function close(){co.hidden=true;document.body.classList.remove('locked');}
+    C2C.openCheckout=function(o){
+      cur=o; const isTicket=o.kind==='tickets', isTable=o.kind==='table', isGift=o.kind==='donation';
+      $('coEyebrow').textContent=isGift?'Give to We Are Called to Care':'Charity Dinner & Auction · March 13, 2027';
+      $('coTitle').textContent=isGift?(o.recurring?'Monthly Gift':'Your Gift'):isTicket?'Buy Tickets':isTable?'Reserve a Table':'Become a Sponsor';
+      $('coItem').textContent=o.name+(isTicket?' · $100 each':''); $('coPrice').textContent=fmt(o.price)+(o.recurring?'/mo':'');
+      $('coQtyWrap').hidden=!isTicket; $('coDisplayWrap').hidden=isTicket||isTable||isGift; $('co-display').required=!(isTicket||isTable||isGift);
+      $('coGuestsWrap').hidden=!(isTicket||isTable||['legacy','gold','platinum','diamond'].includes(o.item));
+      $('coErr').textContent=''; $('coErr2').textContent=''; step('form'); upd();
+      $('coPaypal').hidden=!!o.recurring; renderPayPal();
       co.hidden=false; document.body.classList.add('locked'); setTimeout(()=>$('co-first').focus(),60);
-    }));
+    };
+    document.querySelectorAll('.pick').forEach(b=>b.addEventListener('click',()=>C2C.openCheckout({kind:b.dataset.item==='ticket'?'tickets':b.dataset.item==='table'?'table':'sponsorship',item:b.dataset.item,name:b.dataset.name,price:+b.dataset.price,qty:!!b.dataset.qty})));
     $('co-qty').addEventListener('input',upd);
-    co.addEventListener('click',e=>{if(e.target.closest('[data-close]')){co.hidden=true;document.body.classList.remove('locked');}});
-    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!co.hidden){co.hidden=true;document.body.classList.remove('locked');}});
-    $('co-phone').addEventListener('input',e=>{const i=e.target,d=i.value.replace(/\D/g,'').slice(0,10);i.value=d.length>6?`(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`:d.length>3?`(${d.slice(0,3)}) ${d.slice(3)}`:d;});
-    f.addEventListener('submit',e=>{
-      e.preventDefault();
-      const bad=[...f.querySelectorAll('input[required]')].filter(i=>!i.closest('[hidden]')&&!i.checkValidity());
+    co.addEventListener('click',e=>{if(e.target.closest('[data-close]'))close();});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!co.hidden)close();});
+    phoneFmt($('co-phone'));
+    function valid(){const bad=[...f.querySelectorAll('input[required]')].filter(i=>!i.closest('[hidden]')&&!i.checkValidity());
       f.querySelectorAll('.q').forEach(q=>q.classList.remove('invalid')); bad.forEach(i=>i.closest('.q').classList.add('invalid'));
-      if(bad.length){$('coErr').textContent='Please fill in the fields marked in pink.'; bad[0].focus(); return;}
-      const method=e.submitter&&e.submitter.dataset.method||'card';
-      window.__lastCheckout={...cur,qty:cur.qty?+$('co-qty').value:1,total:total(),method,...Object.fromEntries(new FormData(f))}; // live site: POST to /.netlify/functions/checkout
-      $('coDoneMsg').textContent=`Thank you, ${f.first_name.value}! Your ${cur.name.toLowerCase()} (${fmt(total())}) is reserved. A receipt will be emailed to ${f.email.value}.`;
-      f.hidden=true; $('coDone').hidden=false;
+      if(bad.length){$('coErr').textContent='Please fill in the fields marked in pink.'; bad[0].focus(); return false;} $('coErr').textContent=''; return true;}
+    const payload=provider=>({action:'start',provider,kind:cur.kind,item:cur.item,qty:+$('co-qty').value||1,amount:cur.price,recurring:!!cur.recurring,designation:cur.fund||'',
+      display_name:f.display_name.value,guests:f.guest_names.value,website:hp(f),t:C2C.t,contact:{first:f.first_name.value,last:f.last_name.value,email:f.email.value,phone:f.phone.value}});
+    function done(note){
+      const what=cur.kind==='donation'?`gift of ${fmt(total())}${cur.recurring?' each month':''}`:`${cur.name.toLowerCase()} (${fmt(total())})`;
+      $('coDoneMsg').textContent=`Thank you, ${f.first_name.value}! Your ${what} is complete. A receipt is on its way to ${f.email.value}.`;
+      $('coDoneNote').textContent=note||'Questions? Email shari@wearecalledtocare.com.'; step('done');
+    }
+    // Step 1 -> Step 2 (Stripe Payment Element: card, Apple Pay, Google Pay, bank)
+    f.addEventListener('submit',async e=>{e.preventDefault(); if(!valid()) return;
+      const b=$('coNext'); C2C.busy(b,true,'One moment…');
+      try{
+        const r=await C2C.api('checkout',payload('stripe'));
+        if(r.preview){ done('(Preview: no payment was taken.)'); return; }
+        const cfg=await C2C.ready; if(!cfg.stripeKey) throw new Error('Card payments are not available right now. Please try PayPal or contact us.');
+        await loadScript('https://js.stripe.com/v3/');
+        stripe=stripe||window.Stripe(cfg.stripeKey);
+        elements=stripe.elements({clientSecret:r.clientSecret,appearance:{theme:'stripe',variables:{colorPrimary:'#E2197A',colorText:'#1D4766',fontFamily:'Figtree, system-ui, sans-serif',borderRadius:'10px'}},fonts:[{cssSrc:'https://fonts.googleapis.com/css2?family=Figtree:wght@400;600&display=swap'}]});
+        $('coElement').innerHTML=''; elements.create('payment',{layout:'tabs',defaultValues:{billingDetails:{name:`${f.first_name.value} ${f.last_name.value}`,email:f.email.value}}}).mount('#coElement');
+        $('coItem2').textContent=$('coItem').textContent; $('coPrice2').textContent=fmt(total())+(cur.recurring?'/mo':'');
+        $('coConfirm').textContent=`Pay ${fmt(total())}${cur.recurring?' a Month':''}`; step('pay');
+      }catch(x){ $('coErr').textContent=x.message; }
+      finally{ C2C.busy(b,false); }
     });
+    $('coBack').addEventListener('click',()=>step('form'));
+    $('coConfirm').addEventListener('click',async()=>{const b=$('coConfirm'); C2C.busy(b,true,'Processing…'); $('coErr2').textContent='';
+      const {error,paymentIntent}=await stripe.confirmPayment({elements,redirect:'if_required',confirmParams:{return_url:location.origin+location.pathname+'#paid'}});
+      C2C.busy(b,false);
+      if(error){ $('coErr2').textContent=error.message||'Your payment did not go through. Please try again.'; return; }
+      done(paymentIntent&&paymentIntent.status==='processing'?'Bank payments take a few business days to clear. We will email your receipt when it does.':'');
+    });
+    // PayPal (one-time only)
+    async function renderPayPal(){
+      if(ppRendered||cur.recurring) return; const cfg=await C2C.ready; if(!cfg.paypalClientId){ $('coPaypal').hidden=true; return; }
+      try{ await loadScript(`https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(cfg.paypalClientId)}&currency=USD&intent=capture&components=buttons&disable-funding=card,credit,paylater`); }catch(x){ $('coPaypal').hidden=true; return; }
+      ppRendered=true;
+      window.paypal.Buttons({style:{shape:'pill',color:'gold',label:'paypal',height:46},
+        onClick:(d,actions)=>valid()?actions.resolve():actions.reject(),
+        createOrder:async()=>{const r=await C2C.api('checkout',payload('paypal'));return r.orderID;},
+        onApprove:async d=>{try{await C2C.api('checkout',{action:'capture',orderID:d.orderID});done();}catch(x){$('coErr').textContent=x.message;}},
+        onError:()=>{$('coErr').textContent='PayPal had a problem. You were not charged. Please try again or use a card.';}
+      }).render('#coPaypal');
+    }
+    // Back from a bank or card verification page
+    if(/redirect_status=succeeded/.test(location.search)){ history.replaceState(null,'',location.pathname+'#home'); setTimeout(()=>alert('Thank you! Your payment went through and a receipt is on its way.'),300); }
   })();
 
   // ---- Volunteer application ----
@@ -1486,9 +1700,12 @@ html.tickets-on .tix-off{display:none!important}
       const msg=document.getElementById('volErr');
       if(first){msg.textContent='Some answers need attention. They are marked in pink.';first.scrollIntoView({block:'center'});first.focus({preventScroll:true});return}
       msg.textContent='';
-      const fd=new FormData(f);window.__lastVolunteer={first_name:fd.get('first_name'),last_name:fd.get('last_name'),email:fd.get('email'),phone:fd.get('phone'),interests:fd.getAll('interests'),notes:fd.get('notes'),submitted_at:new Date().toISOString()}; // live site: POST to /.netlify/functions/submit?form=volunteer
-      document.getElementById('volDoneMsg').textContent=`Thanks, ${fd.get('first_name')}! A team member will reach out at ${fd.get('email')} soon to walk you through the next steps.`;
-      f.reset();f.hidden=true;const d=document.getElementById('volDone');d.hidden=false;d.scrollIntoView({block:'center'});
+      const fd=new FormData(f);const data={first_name:fd.get('first_name'),last_name:fd.get('last_name'),email:fd.get('email'),phone:fd.get('phone'),interests:fd.getAll('interests'),notes:fd.get('notes')};
+      const b=f.querySelector('[type=submit]');C2C.busy(b,true);
+      C2C.api('submit',{form:'volunteer',data,t:C2C.t,website:hp(f)}).then(()=>{
+        document.getElementById('volDoneMsg').textContent=`Thanks, ${data.first_name}! A team member will reach out at ${data.email} soon to walk you through the next steps.`;
+        f.reset();f.hidden=true;const d=document.getElementById('volDone');d.hidden=false;d.scrollIntoView({block:'center'});
+      }).catch(x=>{msg.textContent=x.message;}).finally(()=>C2C.busy(b,false));
     });
   })();
 
@@ -1522,10 +1739,71 @@ html.tickets-on .tix-off{display:none!important}
       if(first){msg.textContent='Some answers need attention. They are marked in pink.';first.scrollIntoView({block:'center'});first.focus({preventScroll:true});return}
       msg.textContent='';
       const kids=[...box.querySelectorAll('.kid')].map(k=>({first_name:k.querySelector('[name=first_name]').value,gender:(k.querySelector('input[type=radio]:checked')||{}).value,age:k.querySelector('[name=age]').value,shirt:k.querySelector('[name=shirt]').value,pants:k.querySelector('[name=pants]').value,interests:k.querySelector('[name=interests]').value}));
-      window.__lastChristmas={parent_name:f.parent_name.value,email:f.email.value,phone:f.phone.value,kids,submitted_at:new Date().toISOString()}; // live site: POST to /.netlify/functions/submit?form=christmas
-      document.getElementById('xDoneMsg').textContent=`Thank you, ${f.parent_name.value}! We received gift details for ${kids.length} ${kids.length===1?'child':'children'}. If we have questions, we'll reach out at ${f.phone.value}.`;
-      f.hidden=true;const d=document.getElementById('xDone');d.hidden=false;d.scrollIntoView({block:'center'});
+      const data={parent_name:f.parent_name.value,email:f.email.value,phone:f.phone.value,kids};
+      const b=f.querySelector('[type=submit]');C2C.busy(b,true);
+      C2C.api('submit',{form:'christmas',data,t:C2C.t,website:hp(f)}).then(()=>{
+        document.getElementById('xDoneMsg').textContent=`Thank you, ${data.parent_name}! We received gift details for ${kids.length} ${kids.length===1?'child':'children'}. If we have questions, we'll reach out at ${data.phone}.`;
+        f.hidden=true;const d=document.getElementById('xDone');d.hidden=false;d.scrollIntoView({block:'center'});
+      }).catch(x=>{msg.textContent=x.message;}).finally(()=>C2C.busy(b,false));
     });
+  })();
+  // ---- Support Night registration ----
+  (function(){
+    const f=document.getElementById('snForm'); if(!f) return;
+    const sel=f.event; phoneFmt(f.phone);
+    ['input','change'].forEach(t=>f.addEventListener(t,e=>{const q=e.target.closest('.q');if(q)clearQ(q)}));
+    const fallback=()=>{const o=[];let d=new Date();for(let i=0;o.length<3&&i<4;i++){const x=firstThu(d.getFullYear(),d.getMonth()+i);if(x>new Date(Date.now()-3*3600e3))o.push({id:'',starts_at:x.toISOString()})}return o};
+    C2C.ready.then(c=>{const list=(c.supportNights&&c.supportNights.length)?c.supportNights:fallback();
+      sel.innerHTML=list.map(e=>{const d=new Date(e.starts_at);const l=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+' · '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});return `<option value="${e.id||''}" data-label="${l}">${l}</option>`}).join('');});
+    f.addEventListener('submit',async e=>{e.preventDefault();const err=document.getElementById('snErr');
+      const first=checkForm(f)||radioReq(f,['family_type']); if(first) return showFirst(first,err); err.textContent='';
+      const fd=new FormData(f),opt=sel.selectedOptions[0];
+      const data={first_name:fd.get('first_name'),last_name:fd.get('last_name'),email:fd.get('email'),phone:fd.get('phone'),family_type:fd.get('family_type'),event_id:sel.value||null,event_label:opt?opt.dataset.label:'',children_text:fd.get('children_text'),comments:fd.get('comments')};
+      const b=f.querySelector('[type=submit]');C2C.busy(b,true);
+      try{await C2C.api('submit',{form:'support',data,t:C2C.t,website:hp(f)});}catch(x){err.textContent=x.message;C2C.busy(b,false);return}
+      document.getElementById('snDoneMsg').textContent=`Thanks, ${data.first_name}! You're registered for ${data.event_label}. A confirmation is on its way to ${data.email}.`;
+      f.hidden=true;const d=document.getElementById('snDone');d.hidden=false;d.scrollIntoView({block:'center'});C2C.busy(b,false);});
+  })();
+
+  // ---- New placement / care package request ----
+  (function(){
+    const f=document.getElementById('plForm'); if(!f) return;
+    const box=document.getElementById('plKids'), add=document.getElementById('plAdd'); let uid=0;
+    phoneFmt(f.phone); f.placement_date.max=new Date().toISOString().slice(0,10);
+    const kid=n=>`<div class="kid" data-kid="${n}"><div class="kid-head"><b>Child #<span class="kn"></span></b><button type="button" data-remove aria-label="Remove this child">Remove</button></div>
+      <div class="c2"><label class="q" for="pk${n}-name"><span class="lbl">First <span class="nw">Name<span class="req">*</span></span></span><input id="pk${n}-name" data-k="first" required></label>
+      <label class="q" for="pk${n}-age"><span class="lbl"><span class="nw">Age<span class="req">*</span></span></span><input id="pk${n}-age" data-k="age" placeholder="e.g. 8 months, 6" required></label>
+      <div class="q" data-group="pg-${n}"><span class="lbl"><span class="nw">Gender<span class="req">*</span></span></span><div class="choices inline"><label class="choice" for="pk${n}-g1"><input type="radio" id="pk${n}-g1" name="pg-${n}" value="Boy"> Boy</label><label class="choice" for="pk${n}-g2"><input type="radio" id="pk${n}-g2" name="pg-${n}" value="Girl"> Girl</label></div></div>
+      <label class="q" for="pk${n}-clothes"><span class="lbl">Clothing <span class="nw">Size<span class="req">*</span></span></span><input id="pk${n}-clothes" data-k="clothes" placeholder="e.g. 3T, Youth M" required></label>
+      <label class="q" for="pk${n}-shoes"><span class="lbl">Shoe Size</span><input id="pk${n}-shoes" data-k="shoes"></label>
+      <label class="q" for="pk${n}-diaper"><span class="lbl">Diaper Size</span><input id="pk${n}-diaper" data-k="diaper" placeholder="If needed"></label></div></div>`;
+    function renum(){const k=[...box.querySelectorAll('.kid')];k.forEach((x,i)=>{x.querySelector('.kn').textContent=i+1;x.querySelector('[data-remove]').hidden=k.length===1});add.hidden=k.length>=8}
+    function addKid(focus){box.insertAdjacentHTML('beforeend',kid(++uid));renum();if(focus)box.lastElementChild.querySelector('input').focus()}
+    addKid(false); add.addEventListener('click',()=>addKid(true));
+    box.addEventListener('click',e=>{const r=e.target.closest('[data-remove]');if(r){r.closest('.kid').remove();renum()}});
+    ['input','change'].forEach(t=>f.addEventListener(t,e=>{const q=e.target.closest('.q');if(q)clearQ(q)}));
+    f.addEventListener('submit',async e=>{e.preventDefault();const err=document.getElementById('plErr');
+      const first=checkForm(f)||radioReq(f,['placement_type','handoff',...[...box.querySelectorAll('.kid')].map(k=>'pg-'+k.dataset.kid)]);
+      if(first) return showFirst(first,err); err.textContent='';
+      const fd=new FormData(f);
+      const children=[...box.querySelectorAll('.kid')].map(k=>{const o={};k.querySelectorAll('[data-k]').forEach(i=>o[i.dataset.k]=i.value);o.gender=(k.querySelector('input[type=radio]:checked')||{}).value;return o});
+      const data={first_name:fd.get('first_name'),last_name:fd.get('last_name'),email:fd.get('email'),phone:fd.get('phone'),street:fd.get('street'),city:fd.get('city'),zip:fd.get('zip'),county:fd.get('county'),placement_date:fd.get('placement_date'),placement_type:fd.get('placement_type'),agency:fd.get('agency'),household:fd.get('household'),children,needs:fd.getAll('needs'),handoff:fd.get('handoff'),heard:fd.get('heard'),info:fd.get('info')};
+      const b=f.querySelector('[type=submit]');C2C.busy(b,true);
+      try{await C2C.api('submit',{form:'placement',data,t:C2C.t,website:hp(f)});}catch(x){err.textContent=x.message;C2C.busy(b,false);return}
+      document.getElementById('plDoneMsg').textContent=`Thank you, ${data.first_name}. We're packing a care package for ${children.length===1?children[0].first:children.length+' children'} and will call or text ${data.phone} within one business day.`;
+      f.hidden=true;const d=document.getElementById('plDone');d.hidden=false;d.scrollIntoView({block:'center'});C2C.busy(b,false);});
+  })();
+
+  // ---- Give online ----
+  (function(){
+    const f=document.getElementById('giveForm'); if(!f) return;
+    let amt=50,monthly=false; const btn=document.getElementById('giveBtn'), other=document.getElementById('g-other');
+    const upd=()=>{btn.textContent=`Give $${amt.toLocaleString('en-US')}${monthly?' a Month':''}`;};
+    f.querySelectorAll('[data-freq]').forEach(b=>b.addEventListener('click',()=>{monthly=b.dataset.freq==='monthly';f.querySelectorAll('[data-freq]').forEach(x=>x.classList.toggle('on',x===b));upd()}));
+    f.querySelectorAll('[data-amt]').forEach(b=>b.addEventListener('click',()=>{amt=+b.dataset.amt;other.value='';other.parentElement.classList.remove('on');f.querySelectorAll('[data-amt]').forEach(x=>x.classList.toggle('on',x===b));upd()}));
+    other.addEventListener('input',()=>{const v=parseFloat(other.value.replace(/[^0-9.]/g,''));f.querySelectorAll('[data-amt]').forEach(x=>x.classList.remove('on'));other.parentElement.classList.add('on');amt=v>0?Math.round(v*100)/100:0;upd()});
+    f.addEventListener('submit',e=>{e.preventDefault();if(!(amt>=5)){other.focus();btn.textContent='Minimum gift is $5';return}
+      C2C.openCheckout({kind:'donation',item:'donation',name:(monthly?'Monthly gift':'Gift')+' · '+document.getElementById('g-fund').value,price:amt,recurring:monthly,fund:document.getElementById('g-fund').value});});
   })();
   show();
 })();
