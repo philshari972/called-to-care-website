@@ -428,6 +428,13 @@ select:focus-visible{outline:3px solid rgba(226,25,122,.25);outline-offset:2px}
 .cd b{font-family:var(--serif);font-weight:400;font-size:clamp(2rem,5vw,3.2rem);line-height:1;color:var(--white);font-variant-numeric:tabular-nums}
 .cd span{font-family:var(--mono);font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;color:var(--pink-light)}
 .soon-cd{display:block;margin-top:12px;font-family:var(--mono);font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--pink);font-variant-numeric:tabular-nums}
+.kidlist{display:grid;gap:10px}
+.kidrow{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) auto;gap:10px;align-items:center}
+.kidrow button{border:0;background:none;color:var(--muted);font-weight:700;cursor:pointer;padding:8px;font-size:1.3rem;line-height:1}
+.kidrow button:hover{color:var(--pink)}
+.kid-add{justify-self:start;border:1.5px dashed var(--sky);background:var(--white);color:var(--teal);font-weight:700;border-radius:999px;padding:10px 18px;cursor:pointer;font:inherit;font-weight:700}
+@media (max-width:560px){.kidrow{grid-template-columns:1fr auto}.kidrow select{grid-column:1}.kidrow button{grid-row:1/3;grid-column:2}}
+select.one{background-image:none!important;pointer-events:none;padding-right:18px!important}
 html:not(.tickets-on) .tix-on{display:none!important}
 html.tickets-on .tix-off{display:none!important}
 #tickets .early{grid-column:1/-1;display:grid;gap:12px}
@@ -1173,7 +1180,7 @@ html.tickets-on .tix-off{display:none!important}
         </div>
         <div class="q" data-group="family_type"><span class="lbl">Your <span class="nw">Family<span class="req">*</span></span></span>
           <div class="choices inline"><label class="choice" for="sn-t1"><input type="radio" id="sn-t1" name="family_type" value="Foster"> Foster</label><label class="choice" for="sn-t2"><input type="radio" id="sn-t2" name="family_type" value="Adoptive"> Adoptive</label><label class="choice" for="sn-t3"><input type="radio" id="sn-t3" name="family_type" value="Kinship"> Kinship</label><label class="choice" for="sn-t4"><input type="radio" id="sn-t4" name="family_type" value="Considering foster care"> Considering</label></div></div>
-        <label class="q" for="sn-kids"><span class="lbl">Children Coming With You</span><span class="hint">First names and ages, so we can plan childcare. Leave blank if none.</span><input id="sn-kids" name="children_text" placeholder="e.g. Mia 4, Leo 7"></label>
+        <div class="q"><span class="lbl">Children Coming With You</span><span class="hint">We provide childcare. Add each child so we can plan enough helpers. Leave empty if none.</span><div class="kidlist" id="snKids"></div></div>
         <label class="q" for="sn-notes"><span class="lbl">Anything We Should Know?</span><span class="hint">Allergies, first time coming, questions.</span><textarea id="sn-notes" name="comments"></textarea></label>
       </fieldset>
       <div class="submit-row"><button class="pill p-hot" type="submit">Register</button><span class="hint" id="snErr" role="alert"></span></div>
@@ -1188,6 +1195,27 @@ html.tickets-on .tix-off{display:none!important}
   </section>
 </div>
 
+<div class="page" data-page="rsvp" hidden>
+  <div class="ph b-sky"><div class="wrap">
+    <span class="label c-navy">Support Night</span>
+    <h1 class="d1 c-navy" style="font-size:clamp(2.6rem,6.5vw,5rem)">Your <em class="it c-pink">RSVP</em></h1>
+    <p class="lede" id="rvLede">Loading your registration…</p>
+  </div></div>
+  <section class="b-skypale" style="padding-block:64px 96px"><div class="wrap">
+    <form class="apply" id="rvForm" novalidate hidden style="max-width:760px">
+      <fieldset class="fs">
+        <legend><span class="n">1</span><span class="t">Which Night</span></legend>
+        <label class="q" for="rv-event"><span class="lbl">Support Night</span><select id="rv-event"></select></label>
+      </fieldset>
+      <fieldset class="fs">
+        <legend><span class="n">2</span><span class="t">Children Coming With You</span></legend>
+        <div class="q"><span class="hint">Add or remove children so we can plan childcare.</span><div class="kidlist" id="rvKids"></div></div>
+      </fieldset>
+      <div class="submit-row"><button class="pill p-hot" type="submit">Save Changes</button><button class="pill p-line c-navy" type="button" id="rvCancel">I Can't Make It</button><span class="hint" id="rvErr" role="alert"></span></div>
+    </form>
+    <div class="done-card" id="rvDone" hidden><span class="label" style="color:var(--pink)" id="rvDoneEye">All set</span><h2 class="d2 c-navy" id="rvDoneH">Thank you!</h2><p id="rvDoneMsg"></p><a class="pill p-navy" href="#foster-parents">Back to Foster Parents</a></div>
+  </div></section>
+</div>
 <div class="page" data-page="camp-followup" hidden>
   <div class="ph b-sky"><div class="wrap">
     <span class="label c-navy">Camp scholarship follow-up</span>
@@ -1567,8 +1595,8 @@ html.tickets-on .tix-off{display:none!important}
   document.getElementById('scrim').addEventListener('click',()=>closeMenu(true));
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu(true)});
   drawer.addEventListener('click',e=>{if(e.target.closest('a'))closeMenu(false)});
-  const parentOf={'charity-dinner':'events','lemonade':'get-involved','careers':'get-involved','camp':'foster-parents','camp-apply':'foster-parents','camp-followup':'foster-parents','volunteer-apply':'get-involved','christmas':'events','support-register':'foster-parents','placement-request':'foster-parents'};
-  const titles={home:'We Are Called to Care','foster-parents':'Foster Parents','therapy':'Therapy','get-involved':'Get Involved','events':'Events','donate':'Donate','about':'About Us','contact':'Contact','careers':'Careers','lemonade':'Lemonade Stand','camp':'Camp Scholarships','camp-apply':'Camp Scholarship Application','volunteer-apply':'Volunteer Application','christmas':'Christmas Gifts 2026','support-register':'Support Night Registration','placement-request':'Care Package Request','camp-followup':'Camp Follow-Up','charity-dinner':'Charity Dinner & Auction'};
+  const parentOf={'charity-dinner':'events','lemonade':'get-involved','careers':'get-involved','camp':'foster-parents','camp-apply':'foster-parents','camp-followup':'foster-parents','rsvp':'foster-parents','volunteer-apply':'get-involved','christmas':'events','support-register':'foster-parents','placement-request':'foster-parents'};
+  const titles={home:'We Are Called to Care','foster-parents':'Foster Parents','therapy':'Therapy','get-involved':'Get Involved','events':'Events','donate':'Donate','about':'About Us','contact':'Contact','careers':'Careers','lemonade':'Lemonade Stand','camp':'Camp Scholarships','camp-apply':'Camp Scholarship Application','volunteer-apply':'Volunteer Application','christmas':'Christmas Gifts 2026','support-register':'Support Night Registration','placement-request':'Care Package Request','camp-followup':'Camp Follow-Up','rsvp':'Support Night RSVP','charity-dinner':'Charity Dinner & Auction'};
   let pendingAnchor=null;
   function show(){
     let h=(location.hash||'#home').slice(1);
@@ -1615,6 +1643,17 @@ html.tickets-on .tix-off{display:none!important}
     return out;
   };
   C2C.send=(form,data)=>C2C.api('submit',{form,data,t:C2C.t,website:(document.querySelector('form#'+(data&&data.__form)+' .hp')||{}).value||''});
+  // ---- Children list (first name + age group) ----
+  C2C.kidList=function(box,initial,max){max=max||8;const AG=[['Newborn-2 years','Newborn–2 years'],['3 years-5 years','3–5 years'],['1st Grade - 5th Grade','1st–5th grade']];let n=0;
+    const row=k=>{n++;return `<div class="kidrow"><input aria-label="Child's first name" placeholder="Child's first name" value="${(k&&k.first||'').replace(/"/g,'&quot;')}" data-k="first"><select aria-label="Age" data-k="age"><option value="">Age…</option>${AG.map(([v,l])=>`<option value="${v}" ${k&&k.age_group===v?'selected':''}>${l}</option>`).join('')}</select><button type="button" data-rm aria-label="Remove child">×</button></div>`};
+    box.innerHTML=`<div class="rows">${(initial||[]).map(row).join('')}</div><button type="button" class="kid-add">+ Add a Child</button>`;
+    const rows=box.querySelector('.rows'),add=box.querySelector('.kid-add');rows.style.display='grid';rows.style.gap='10px';
+    const sync=()=>{const c=rows.children.length;add.hidden=c>=max;add.textContent=c?'+ Add Another Child':'+ Add a Child'};
+    add.addEventListener('click',()=>{rows.insertAdjacentHTML('beforeend',row());sync();rows.lastElementChild.querySelector('input').focus()});
+    rows.addEventListener('click',e=>{const b=e.target.closest('[data-rm]');if(b){b.closest('.kidrow').remove();sync()}});sync();
+    return{get:()=>[...rows.children].map(r=>({first:r.querySelector('[data-k=first]').value.trim(),age_group:r.querySelector('[data-k=age]').value})).filter(k=>k.first||k.age_group),
+      check(){let bad=null;[...rows.children].forEach(r=>{const f=r.querySelector('[data-k=first]'),a=r.querySelector('[data-k=age]');const has=f.value.trim()||a.value;[f,a].forEach(x=>x.style.borderColor='');if(has&&!f.value.trim()){f.style.borderColor='var(--pink)';bad=bad||f}if(has&&!a.value){a.style.borderColor='var(--pink)';bad=bad||a}});return bad}}};
+  C2C.oneOption=sel=>sel.classList.toggle('one',sel.options.length<=1);
   C2C.busy=(btn,on,txt)=>{if(!btn)return;if(on){btn.dataset.txt=btn.textContent;btn.textContent=txt||'Sending…';btn.disabled=true}else{btn.textContent=btn.dataset.txt||btn.textContent;btn.disabled=false}};
   C2C.ready=fetch('/.netlify/functions/config').then(r=>r.ok?r.json():{}).catch(()=>({})).then(c=>{C2C.cfg=c||{};if(c&&c.ticketsOn)document.documentElement.classList.add('tickets-on');return C2C.cfg;});
   // honeypot field on every form (people never see it; bots fill it in)
@@ -1843,11 +1882,12 @@ html.tickets-on .tix-off{display:none!important}
     ['input','change'].forEach(t=>f.addEventListener(t,e=>{const q=e.target.closest('.q');if(q)clearQ(q)}));
     const fallback=()=>{const o=[];let d=new Date();for(let i=0;o.length<3&&i<4;i++){const x=firstThu(d.getFullYear(),d.getMonth()+i);if(x>new Date(Date.now()-3*3600e3))o.push({id:'',starts_at:x.toISOString()})}return o};
     C2C.ready.then(c=>{const list=(c.supportNights&&c.supportNights.length)?c.supportNights:fallback();
-      sel.innerHTML=list.map(e=>{const d=new Date(e.starts_at);const l=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+' · '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});return `<option value="${e.id||''}" data-label="${l}">${l}</option>`}).join('');});
+      sel.innerHTML=list.map(e=>{const d=new Date(e.starts_at);const l=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+' · '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});return `<option value="${e.id||''}" data-label="${l}">${l}</option>`}).join('');C2C.oneOption(sel);});
+    const kidsW=C2C.kidList(document.getElementById('snKids'),[]);
     f.addEventListener('submit',async e=>{e.preventDefault();const err=document.getElementById('snErr');
-      const first=checkForm(f)||radioReq(f,['family_type']); if(first) return showFirst(first,err); err.textContent='';
+      const first=checkForm(f)||radioReq(f,['family_type'])||kidsW.check(); if(first) return showFirst(first,err); err.textContent='';
       const fd=new FormData(f),opt=sel.selectedOptions[0];
-      const data={first_name:fd.get('first_name'),last_name:fd.get('last_name'),email:fd.get('email'),phone:fd.get('phone'),family_type:fd.get('family_type'),event_id:sel.value||null,event_label:opt?opt.dataset.label:'',children_text:fd.get('children_text'),comments:fd.get('comments')};
+      const data={first_name:fd.get('first_name'),last_name:fd.get('last_name'),email:fd.get('email'),phone:fd.get('phone'),family_type:fd.get('family_type'),event_id:sel.value||null,event_label:opt?opt.dataset.label:'',children:kidsW.get(),comments:fd.get('comments')};
       const b=f.querySelector('[type=submit]');C2C.busy(b,true);
       try{await C2C.api('submit',{form:'support',data,t:C2C.t,website:hp(f)});}catch(x){err.textContent=x.message;C2C.busy(b,false);return}
       document.getElementById('snDoneMsg').textContent=`Thanks, ${data.first_name}! You're registered for ${data.event_label}. A confirmation is on its way to ${data.email}.`;
@@ -1883,6 +1923,27 @@ html.tickets-on .tix-off{display:none!important}
       f.hidden=true;const d=document.getElementById('plDone');d.hidden=false;d.scrollIntoView({block:'center'});C2C.busy(b,false);});
   })();
 
+
+
+
+
+  // ---- Support Night RSVP: change or cancel ----
+  (function(){const f=document.getElementById('rvForm');if(!f)return;const ref=new URLSearchParams(location.search).get('r');let kidsW=null,loaded=false;
+    const lede=document.getElementById('rvLede'),err=document.getElementById('rvErr'),sel=document.getElementById('rv-event');
+    const done=(eye,h,msg)=>{f.hidden=true;document.getElementById('rvDoneEye').textContent=eye;document.getElementById('rvDoneH').textContent=h;document.getElementById('rvDoneMsg').textContent=msg;document.getElementById('rvDone').hidden=false};
+    async function load(){if(loaded)return;loaded=true;if(!ref){lede.textContent='Use the link in your reminder email to change your RSVP.';return}
+      try{const r=await fetch('/.netlify/functions/rsvp?ref='+encodeURIComponent(ref));const a=await r.json();if(!a.ok)throw new Error(a.error);
+        lede.textContent=a.status==='Cancelled'?`Hi ${a.first}! Your RSVP was cancelled. Want to come after all? Pick a night and save.`:`Hi ${a.first}! Change your night or the children coming with you, or let us know if you can't make it.`;
+        sel.innerHTML=a.nights.map(n=>`<option value="${n.id}" ${n.id===a.event_id?'selected':''}>${n.label}</option>`).join('');C2C.oneOption(sel);
+        kidsW=C2C.kidList(document.getElementById('rvKids'),a.children);f.hidden=false;document.getElementById('rvCancel').hidden=a.status==='Cancelled';
+      }catch(x){lede.textContent=x.message||'This link has expired. Please contact us to change your RSVP.'}}
+    window.addEventListener('hashchange',()=>{if(location.hash==='#rsvp')load()});if(location.hash==='#rsvp')load();
+    const send=async body=>{const r=await fetch('/.netlify/functions/rsvp',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({ref,...body})});const o=await r.json().catch(()=>({}));if(!r.ok||!o.ok)throw new Error(o.error||'Something went wrong. Please try again.');return o};
+    f.addEventListener('submit',async e=>{e.preventDefault();const bad=kidsW.check();if(bad){err.textContent='Add a first name and age for each child.';bad.focus();return}err.textContent='';const b=f.querySelector('[type=submit]');C2C.busy(b,true);
+      try{const o=await send({action:'update',event_id:sel.value,children:kidsW.get()});done('Updated','Your RSVP is updated.',`See you ${o.label}!`)}catch(x){err.textContent=x.message}finally{C2C.busy(b,false)}});
+    const cb=document.getElementById('rvCancel');cb.addEventListener('click',async()=>{if(!cb.dataset.sure){cb.dataset.sure='1';cb.textContent='Tap Again to Cancel';return}C2C.busy(cb,true);
+      try{await send({action:'cancel'});done('Cancelled','We\'ll miss you!','Your RSVP is cancelled. We hope to see you at the next Support Night.')}catch(x){err.textContent=x.message;C2C.busy(cb,false)}});
+  })();
 
   // ---- Camp follow-up (recap + photos) ----
   (function(){

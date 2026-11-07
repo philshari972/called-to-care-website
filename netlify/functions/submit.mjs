@@ -2,6 +2,7 @@
 // Saves any website form, tags the person, emails them a confirmation, and alerts staff.
 import crypto from 'node:crypto';
 import { campEnd, newToken, savePhoto, patchAdmin } from './_camp.mjs';
+import { cleanKids, ageLabel } from './_support.mjs';
 import { db, upsertContact, sendEmail, alertStaff, emailShell, p, btn, box, json, fail, clean, isEmail, fmtPhone, esc, looksLikeBot, SITE_URL } from './_lib.mjs';
 
 const year = () => new Date().getFullYear();
@@ -20,8 +21,11 @@ const FORMS = {
     required: ['first_name', 'last_name', 'email'],
     contact: (d) => ({ first: d.first_name, last: d.last_name, email: d.email, phone: d.phone }),
     tags: (d) => ['Support Night', ...(d.family_type ? [clean(d.family_type, 40)] : [])],
+    admin: () => ({ manage_token: newToken() }),
     confirm: (d) => ({ subject: "You're registered for Support Night", heading: `See you soon, ${esc(d.first_name)}!`,
-      body: p(`You're registered for Support Night${d.event_label ? ` on <b>${esc(d.event_label)}</b>` : ''}. We'll send a reminder the day before.`) + p('Come as you are. If something comes up, just reply to this email.') }),
+      body: p(`You're registered for Support Night${d.event_label ? ` on <b>${esc(d.event_label)}</b>` : ''}.`)
+        + ((d.children || []).length ? box([['Children in childcare', esc(cleanKids(d.children).map((k) => `${k.first} (${ageLabel(k.age_group)})`).join(', '))]]) : '')
+        + p("We'll send a reminder two days before, with a link to change or cancel your RSVP.") + p('Come as you are. If something comes up, just reply to this email.') }),
     alert: (d) => [`${d.first_name} ${d.last_name} registered for Support Night${d.event_label ? ' (' + d.event_label + ')' : ''}.`, `Children coming: ${(d.children || []).length || 'none'}`],
     section: 'support',
   },
@@ -101,6 +105,7 @@ export default async (req) => {
   if (!spec) return fail('Unknown form');
   const d = cleanDeep(body.data || {});
   const photos = Array.isArray(body.photos) ? body.photos.slice(0, 5) : [];
+  if (body.form === 'support') { d.children = cleanKids(d.children); d.children_text = d.children.map((k) => `${k.first} (${ageLabel(k.age_group)})`).join(', '); }
   const missing = spec.required.filter((k) => !clean(d[k]));
   if (missing.length) return fail('Please fill in: ' + missing.join(', '));
   const c = spec.contact(d);
