@@ -348,6 +348,7 @@ footer p{color:var(--sky);font-size:.95rem}
 .co .scrim{opacity:1}
 .co-panel{position:relative;background:var(--white);width:min(560px,100%);height:100%;overflow-y:auto;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);animation:slidein .35s cubic-bezier(.22,.7,.18,1)}
 @keyframes slidein{from{transform:translateX(100%)}}
+.co-panel > .fs{padding:36px clamp(20px,5vw,56px) 40px;display:grid;gap:22px;min-width:0}
 .co-x{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:16px;border:0;background:none;font-size:2rem;line-height:1;color:var(--navy);cursor:pointer;z-index:2;padding:6px 10px}
 .co-line,.co-total{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:16px 0;border-bottom:1px solid var(--line)}
 .co-line .price{font-size:1.6rem}
@@ -1641,7 +1642,7 @@ html.tickets-on .tix-off{display:none!important}
     function done(note){
       const what=cur.kind==='donation'?`gift of ${fmt(total())}${cur.recurring?' each month':''}`:`${cur.name.toLowerCase()} (${fmt(total())})`;
       $('coDoneMsg').textContent=`Thank you, ${f.first_name.value}! Your ${what} is complete. A receipt is on its way to ${f.email.value}.`;
-      $('coDoneNote').textContent=note||'Questions? Email shari@wearecalledtocare.com.'; step('done');
+      $('coDoneNote').textContent=note||'Questions? Email donations@wearecalledtocare.com.'; step('done');
     }
     // Step 1 -> Step 2 (Stripe Payment Element: card, Apple Pay, Google Pay, bank)
     f.addEventListener('submit',async e=>{e.preventDefault(); if(!valid()) return;

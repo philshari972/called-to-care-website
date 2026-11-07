@@ -123,7 +123,9 @@ export default async (req) => {
       await db('subscriptions', { method: 'POST', body: { contact_id: contactId, provider: 'stripe', provider_id: sub.id, amount: item.amount, status: 'incomplete', designation: item.designation } });
       return json({ ok: true, provider: 'stripe', clientSecret: pi.client_secret, paymentId: pay.id });
     }
-    const pi = await stripe('payment_intents', { amount: cents, currency: 'usd', description: item.description, metadata, automatic_payment_methods: { enabled: 'true' } });
+    const pi = await stripe('payment_intents', { amount: cents, currency: 'usd', description: item.description, metadata, automatic_payment_methods: { enabled: 'true' },
+      // Until our own receipt emails are on (RESEND_API_KEY), let Stripe email the donor its receipt.
+      ...(env('RESEND_API_KEY') ? {} : { receipt_email: email }) });
     await db(`payments?id=eq.${pay.id}`, { method: 'PATCH', body: { provider_id: pi.id } });
     return json({ ok: true, provider: 'stripe', clientSecret: pi.client_secret, paymentId: pay.id, amount: money(item.amount) });
   } catch (e) {
