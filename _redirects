@@ -1,3 +1,7 @@
+# Auction lives at auction.wearecalledtocare.com (files in /auction)
+https://auction.wearecalledtocare.com/config.js  /.netlify/functions/auction-config  200!
+https://auction.wearecalledtocare.com/*  /auction/:splat  200!
+/auction/config.js  /.netlify/functions/auction-config  200!
 /admin  /admin/  301
 # Old Amazon wish list address
 /amazon  https://www.amazon.com/hz/wishlist/ls/38RK52RW3Q2M9  301
