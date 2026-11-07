@@ -1553,7 +1553,7 @@ html.tickets-on .tix-off{display:none!important}
           <div class="q" id="coHowWrap" hidden><span class="lbl">How Would You Like to <span class="nw">Pay?</span></span>
             <div class="choices inline"><label class="choice" for="co-how1"><input type="radio" id="co-how1" name="how" value="online" checked> Pay online now</label><label class="choice" for="co-how2"><input type="radio" id="co-how2" name="how" value="check"> Mail a check</label></div>
             <div class="check-note" id="coCheckNote" hidden><b>Make your check payable to We Are Called to Care, NFP</b> and mail it to:<br>201 E Veterans Pkwy, Suite 13<br>Yorkville, IL 60560<br><span class="hint">We'll reserve your sponsorship now and email these details to you.</span></div></div>
-          <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <input class="hp" name="c2c_hp_x7" tabindex="-1" autocomplete="off" data-lpignore="true" data-1p-ignore aria-hidden="true">
           <div class="co-pay">
             <button class="pill p-hot" type="submit" id="coNext">Continue to Payment</button>
           </div>
@@ -1631,7 +1631,9 @@ html.tickets-on .tix-off{display:none!important}
   document.getElementById('yr').textContent=now.getFullYear();
 
   // ---- Connection to the server (forms + payments) ----
-  const C2C=window.C2C={t:Date.now(),cfg:{}};
+  const C2C=window.C2C={cfg:{}};
+  // Time on page (negative = milliseconds since load), so a fast phone clock can't trip the spam check
+  Object.defineProperty(C2C,'t',{get:()=>-Math.max(1,Math.round(performance.now()))});
   const LIVE_HOST=/(^|\.)wearecalledtocare\.com$|netlify\.app$|^localhost$|^127\.0\.0\.1$/.test(location.hostname);
   C2C.api=async function(fn,body){
     let r;
@@ -1657,7 +1659,7 @@ html.tickets-on .tix-off{display:none!important}
   C2C.busy=(btn,on,txt)=>{if(!btn)return;if(on){btn.dataset.txt=btn.textContent;btn.textContent=txt||'Sending…';btn.disabled=true}else{btn.textContent=btn.dataset.txt||btn.textContent;btn.disabled=false}};
   C2C.ready=fetch('/.netlify/functions/config').then(r=>r.ok?r.json():{}).catch(()=>({})).then(c=>{C2C.cfg=c||{};if(c&&c.ticketsOn)document.documentElement.classList.add('tickets-on');return C2C.cfg;});
   // honeypot field on every form (people never see it; bots fill it in)
-  document.querySelectorAll('form').forEach(f=>{if(!f.querySelector('.hp'))f.insertAdjacentHTML('beforeend','<input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">')});
+  document.querySelectorAll('form').forEach(f=>{if(!f.querySelector('.hp'))f.insertAdjacentHTML('beforeend','<input class="hp" name="c2c_hp_x7" tabindex="-1" autocomplete="off" data-lpignore="true" data-1p-ignore aria-hidden="true">')});
   const hp=f=>(f.querySelector('.hp')||{}).value||'';
   const phoneFmt=i=>i&&i.addEventListener('input',()=>{const d=i.value.replace(/\D/g,'').slice(0,10);i.value=d.length>6?`(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`:d.length>3?`(${d.slice(0,3)}) ${d.slice(3)}`:d;});
   const markQ=(q,msg)=>{q.classList.add('invalid');let e=q.querySelector('.err');if(!e){e=document.createElement('span');e.className='err';q.appendChild(e)}e.textContent=msg};

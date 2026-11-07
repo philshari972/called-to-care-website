@@ -54,7 +54,8 @@ export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&a
 export function looksLikeBot(body) {
   if (body?.website) return true;                         // hidden honeypot field
   const t = Number(body?.t || 0);
-  return t > 0 && Date.now() - t < 2500;                  // submitted < 2.5s after page load
+  if (t < 0) return -t < 2000;                            // newer pages send time on page (no clock needed)
+  return t > 0 && Date.now() - t < 2500 && Date.now() - t > -60000;   // older pages: submitted < 2.5s after load
 }
 
 // ---------- contacts: one person per email, tags added (never removed) ----------
