@@ -615,7 +615,7 @@ function listPage(k){const cfg=CFG[k];if(!cfg)return'';const lv=PERMS[k],rows=ro
  const access=lv==='notes'?`<span class="readonly">Read-only · you can add review notes</span>`:lv==='view'?`<span class="readonly">View only</span>`:'';
  const tagSel=k==='emaillist'?(()=>{const tags=[...new Set(all.flatMap(r=>r.tags))].sort();return`<select class="sel" id="tagf" aria-label="Tag"><option value="">All tags</option>${tags.map(t=>`<option ${t===Q?'selected':''}>${esc(t)}</option>`).join('')}</select>`})():'';
  return`<div class="ph"><div><span class="label">${SECTIONS[k].group}</span><h1>${SECTIONS[k].title}</h1><p>${cfg.sub}</p></div>
-  <div class="actions">${access}<button class="btn primary" data-act="csv">${ic('down')}Download CSV</button></div></div>
+  <div class="actions">${access}${k==='donations'?`<button class="btn" data-act="letters">Thank-You Letters</button>`:''}<button class="btn primary" data-act="csv">${ic('down')}Download CSV</button></div></div>
   ${summary}
   <div class="toolbar"><label class="search" for="q">${ic('search')}<input id="q" placeholder="Search ${SECTIONS[k].title.toLowerCase()}" value="${esc(Q)}"></label>${tagSel}
   ${cfg.month&&months.length?`<select class="sel" id="month" aria-label="Month"><option value="all">${cfg.monthLabel?'All support nights':'All months'}</option>${months.map(m=>`<option value="${m}" ${m===MONTH?'selected':''}>${monthName(m)}</option>`).join('')}</select>`:''}
@@ -632,7 +632,7 @@ function openRecord(k,id){const r=(DATA[k]||[]).find(x=>x.id===id);if(!r)return;
   <button class="x" data-close aria-label="Close">×</button>
   <div><span class="label" style="color:var(--pink)">${SECTIONS[k].title}</span><h2>${esc(r.display||r.youth||r.name)}</h2><p class="note">Received ${fmtDT(r.created)}</p></div>
   <div class="statusrow">${canStatus?`<label class="field" for="st" style="grid-template-columns:auto auto;align-items:center;gap:10px">Status<select id="st" data-rec="${k}:${r.id}">${[...new Set([...opts,r.status])].map(o=>`<option ${o===r.status?'selected':''}>${esc(o)}</option>`).join('')}</select></label>`:pill(r.status)}</div>
-  ${k==='camp'?campPanel(r,lv):''}
+  ${k==='camp'?campPanel(r,lv):''}${k==='donations'?letterPanel(r,lv):''}
   ${k==='camp'?'<span class="label" style="color:var(--muted)">Application</span>':''}<dl class="fields">${fields.map(([a,b])=>`<dt>${esc(a)}</dt><dd>${/^https?:\/\//.test(b)?b.split(/\s+/).map((u,i)=>`<a href="${esc(u)}" target="_blank" rel="noopener">${/jotform/.test(u)?'Open on JotForm ↗':'Open ↗'}</a>`).join('<br>'):esc(b)}</dd>`).join('')}</dl>
   ${r.data&&r.data.signature_png?`<div><span class="label" style="color:var(--muted)">Signature</span><img src="${esc(r.data.signature_png)}" alt="Signature" style="max-width:320px;background:#fff;border:1px solid var(--line);border-radius:8px;margin-top:6px"></div>`:''}
   ${canNote?`<div class="notebox"><label class="field" for="nt">Add a note<textarea id="nt" placeholder="${k==='camp'?'Review notes for the committee':'Only staff can see notes'}"></textarea></label><button class="btn primary" style="justify-self:start" data-note="${k}:${r.id}">Save note</button></div>`:''}
@@ -746,6 +746,46 @@ function openUser(id){const u=id?STAFF.find(x=>x.id===id):{id:'',name:'',email:'
  </form></div>`)}
 
 /* ---------------- settings ---------------- */
+/* ---------------- thank-you letters ---------------- */
+const LT_DEFAULT={emails:['shari@wearecalledtocare.com'],signer:{name:'Shari Chapman',title:'Executive Director'},updates:[]};
+let LT=null;
+const letterRecips=()=>[].concat(SETTINGS.letter_emails||LT_DEFAULT.emails).flatMap(x=>String(x).split(',')).map(x=>x.trim()).filter(Boolean);
+const canEditLetters=()=>(ME.roles||[]).includes('owner')||PERMS.donations==='edit';
+async function letterFn(body){const {data:{session}}=await SB.auth.getSession();return fetch('/.netlify/functions/letter',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+(session&&session.access_token)},body:JSON.stringify(body)})}
+async function openLetterPdf(body){const w=window.open('','_blank');if(w)w.document.write('<p style="font:16px system-ui;padding:24px;color:#1D4766">Making the letter…</p>');
+ try{const res=await letterFn(body);if(!res.ok){const j=await res.json().catch(()=>({}));throw new Error(j.error||'Could not make the letter')}
+  const url=URL.createObjectURL(await res.blob());if(w)w.location.href=url;else{const a=document.createElement('a');a.href=url;a.download='Thank-you letter.pdf';document.body.appendChild(a);a.click();a.remove()}}
+ catch(err){if(w)w.close();toast(err.message,true)}}
+function letterPanel(r,lv){const c=CONTACTS.get((DIN.payments||[]).find(p=>p.id===r.id)?.contact_id)||{};const hasAddr=c.street&&c.city&&c.zip;
+ return`<div class="panel" style="padding:16px 18px;display:grid;gap:10px"><span class="label" style="color:var(--muted)">Thank-you letter</span>
+  <p class="note" style="margin:0">${hasAddr?`Mails to ${esc(c.street)}, ${esc(c.city)}, ${esc(c.state)} ${esc(c.zip)}.`:'No mailing address on file yet. Add it to the contact, then print the letter.'}</p>
+  <div style="display:flex;flex-wrap:wrap;gap:8px"><button class="btn primary" type="button" data-act="letter-pdf" data-id="${r.id}">Print Letter (PDF)</button>${lv==='edit'?`<button class="btn" type="button" data-act="letter-email" data-id="${r.id}">Email It to ${esc(letterRecips().length>1?'Letter Recipients':'Shari')} Again</button>`:''}</div></div>`}
+function readLetterForm(){const f=$('#letterForm');if(!f)return LT;
+ return{emails:$('#lt-emails').value.split(',').map(x=>x.trim().toLowerCase()).filter(Boolean),signer:{name:$('#lt-name').value.trim(),title:$('#lt-title').value.trim()},
+  updates:[...f.querySelectorAll('.lt-item')].map(el=>({title:el.querySelector('[data-f=title]').value.trim(),text:el.querySelector('[data-f=text]').value,on:el.querySelector('[data-f=on]').checked,until:el.querySelector('[data-f=until]').value||''}))}}
+function letterDrawer(keep){const edit=canEditLetters();
+ if(!keep)LT={emails:letterRecips(),signer:{...LT_DEFAULT.signer,...(SETTINGS.letter_signer||{})},updates:JSON.parse(JSON.stringify(SETTINGS.letter_updates||[]))};
+ const ro=edit?'':'readonly',dis=edit?'':'disabled';const today=new Date().toISOString().slice(0,10);
+ layer(`<div class="drawer"><button class="scrim" data-close aria-label="Close"></button><form class="sheet" id="letterForm" role="dialog" aria-modal="true" aria-label="Thank-you letters" novalidate>
+  <button class="x" type="button" data-close aria-label="Close">×</button>
+  <div><span class="label" style="color:var(--pink)">Donations</span><h2>Thank-You Letters</h2><p class="note">When someone gives, a letter on letterhead is emailed as a PDF to print, sign, and mail in a #10 window envelope. Monthly partners get one with their first gift, then every 2 to 5 months.</p></div>
+  <label class="field" for="lt-emails">Send letters to (separate with commas)<input id="lt-emails" value="${esc(LT.emails.join(', '))}" ${ro}></label>
+  <div class="formgrid"><label class="field" for="lt-name">Signed by<input id="lt-name" value="${esc(LT.signer.name)}" ${ro}></label><label class="field" for="lt-title">Title<input id="lt-title" value="${esc(LT.signer.title)}" ${ro}></label></div>
+  <div style="display:grid;gap:6px"><span class="field">What's happening at Called to Care</span><span class="note">Up to four of these print on each letter, in this order. Type <b>{next_support_night}</b> or <b>{dinner_date}</b> to fill in the date from Events.</span></div>
+  ${LT.updates.map((u,i)=>`<div class="lt-item panel" style="padding:14px;display:grid;gap:10px">
+    <label class="field">Heading<input data-f="title" value="${esc(u.title||'')}" placeholder="Support Night" ${ro}></label>
+    <label class="field">Update<textarea data-f="text" rows="3" ${ro}>${esc(u.text||'')}</textarea></label>
+    <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:end;justify-content:space-between">
+     <label class="toggle"><input type="checkbox" data-f="on" ${u.on!==false?'checked':''} ${dis}>Show on letters${u.until&&u.until<today?' <span class="note">(ended)</span>':''}</label>
+     <label class="field" style="min-width:170px">Stop showing after<input type="date" data-f="until" value="${esc(u.until||'')}" ${ro}></label></div>
+    ${edit?`<div style="display:flex;gap:8px">${i?`<button class="btn" type="button" data-act="lt-up" data-i="${i}">Move Up</button>`:''}<button class="btn" type="button" data-act="lt-del" data-i="${i}">Remove</button></div>`:''}
+   </div>`).join('')||'<p class="note">No updates yet. The letter will just say thank you.</p>'}
+  ${edit?'<button class="btn" type="button" data-act="lt-add" style="justify-self:start">+ Add an Update</button>':''}
+  <p class="err" id="lt-err" role="alert"></p>
+  <div style="display:flex;flex-wrap:wrap;gap:8px">${edit?'<button class="btn primary" type="submit">Save</button>':''}<button class="btn" type="button" data-act="lt-preview">Preview Sample Letter</button><button class="btn" type="button" data-close>${edit?'Cancel':'Close'}</button></div>
+  ${edit?'':'<p class="note">Ask an Owner, or someone with edit access to Donations, to change these.</p>'}
+ </form></div>`)}
+
 function settingsPage(){const owner=(ME.roles||[]).includes('owner');const org=SETTINGS.org||{};const alerts=[].concat(SETTINGS.staff_alert_email||[]).join(', ');
  const con=[['Database','Supabase','Connected'],['Card, Apple Pay, Google Pay, bank','Stripe','Connected'],['PayPal button','PayPal','Connected'],['Receipts and confirmations','Resend email','Connected'],['Therapy requests','JotForm (HIPAA)','Stays on JotForm']];
  return`<div class="ph"><div><span class="label">Admin</span><h1>Settings</h1><p>Website switches, staff alerts, and organization details.</p></div></div>
@@ -756,6 +796,7 @@ function settingsPage(){const owner=(ME.roles||[]).includes('owner');const org=S
   <label class="field" for="set-alerts">Staff alert emails (separate with commas)<input id="set-alerts" value="${esc(alerts)}" ${owner?'':'readonly'}></label>
   ${owner?'<button class="btn primary" type="submit" style="justify-self:start">Save Settings</button>':'<p class="note">Only an Owner can change these.</p>'}
  </form>
+ <div class="panel" style="padding:20px 22px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between"><div><h2 style="margin:0 0 4px;font-family:var(--serif);font-weight:400;color:var(--navy)">Thank-you letters</h2><p class="note" style="margin:0">Each new gift emails a printable, signable letter to ${esc(letterRecips().join(', ')||'no one yet')}.</p></div><button class="btn" type="button" data-act="letters">Edit Letter &amp; Updates</button></div>
  <div class="cards">${con.map(([d,n,s])=>`<div class="card"><span class="label" style="color:var(--muted)">${d}</span><h3>${n}</h3>${pill(s==='Connected'?'Active':s)}</div>`).join('')}</div>
  <div class="panel"><header><h2>Organization</h2></header><div style="padding:18px"><dl class="fields"><dt>Legal name</dt><dd>${esc(org.legal_name||'We Are Called to Care, NFP')}</dd><dt>EIN</dt><dd>${esc(org.ein||'86-2900453')}</dd><dt>Office</dt><dd>1111 W South St, Plano, IL 60545</dd><dt>Mailing address</dt><dd>${esc(org.address||'Called to Care, 15450 State Route 47, Newark, IL 60541')}</dd><dt>Phone</dt><dd>${esc(org.phone||'815-200-9086')}</dd></dl></div></div>`}
 
@@ -915,6 +956,12 @@ document.addEventListener('submit',async e=>{const fm=e.target;
   const row={kind:$('#ef-kind').value,title:t,starts_at:when.toISOString(),location:$('#ef-loc').value.trim(),capacity:$('#ef-cap').value?Number($('#ef-cap').value):null,registration_open:$('#ef-open').checked};
   busy(fm,true);const r=fm.dataset.eid?await SB.from('events').update(row).eq('id',fm.dataset.eid):await SB.from('events').insert(row);busy(fm,false);
   if(r.error){err.textContent=r.error.message;return}await loadAll();closeLayer();render();toast('Event saved');return}
+ if(fm.id==='letterForm'){e.preventDefault();const err=$('#lt-err');const f=readLetterForm();
+  if(!f.emails.length||f.emails.some(x=>!/^\S+@\S+\.\S+$/.test(x))){err.textContent='Check the letter emails.';return}
+  if(!f.signer.name){err.textContent='Enter who signs the letter.';return}
+  const ups=f.updates.filter(u=>u.text.trim());
+  busy(fm,true);const r=await SB.from('settings').upsert([{key:'letter_emails',value:f.emails},{key:'letter_signer',value:f.signer},{key:'letter_updates',value:ups}]);busy(fm,false);
+  if(r.error){err.textContent='Not saved: '+r.error.message;return}await loadAll();closeLayer();render();toast('Letter settings saved');return}
  if(fm.id==='setForm'){e.preventDefault();const emails=$('#set-alerts').value.split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
   if(!emails.length||emails.some(x=>!/^\S+@\S+\.\S+$/.test(x))){toast('Check the staff alert emails',true);return}
   busy(fm,true);const ratios=[0,1,2].map(i=>Math.max(1,parseInt($('#set-r'+i).value,10)||1));const r=await SB.from('settings').upsert([{key:'staff_alert_email',value:emails},{key:'tickets_on',value:$('#set-tix').checked},{key:'childcare_ratios',value:ratios}]);busy(fm,false);
@@ -942,6 +989,13 @@ document.addEventListener('click',async e=>{
   if(act==='csv')exportCSV(VIEW);
   if(act==='invite')openUser(null);
   if(act==='newevent')eventForm(null);
+  if(act==='letters')letterDrawer();
+  if(act==='lt-add'){LT=readLetterForm();LT.updates.push({title:'',text:'',on:true,until:''});letterDrawer(true);setTimeout(()=>{const t=document.querySelectorAll('.lt-item');const last=t[t.length-1];if(last)last.querySelector('input').focus()},40)}
+  if(act==='lt-del'){LT=readLetterForm();LT.updates.splice(Number(a.dataset.i),1);letterDrawer(true)}
+  if(act==='lt-up'){LT=readLetterForm();const i=Number(a.dataset.i);if(i>0){const x=LT.updates.splice(i,1)[0];LT.updates.splice(i-1,0,x)}letterDrawer(true)}
+  if(act==='lt-preview'){const f=readLetterForm();openLetterPdf({action:'sample',updates:f.updates,signer:f.signer})}
+  if(act==='letter-pdf')openLetterPdf({action:'pdf',payment_id:a.dataset.id});
+  if(act==='letter-email'){a.disabled=true;const old=a.textContent;a.textContent='Sending…';try{const res=await letterFn({action:'email',payment_id:a.dataset.id});const j=await res.json();if(!res.ok||!j.ok)throw new Error(j.error||'Not sent');toast('Letter emailed to '+j.to.join(', '))}catch(err){toast(err.message,true)}a.disabled=false;a.textContent=old}
   return}
  const nb=e.target.closest('[data-note]');if(nb){const[k,id]=nb.dataset.note.split(':');const t=$('#nt').value.trim();if(!t){$('#nt').focus();return}nb.disabled=true;await saveNote(k,id,t);return}
 });

@@ -42,6 +42,17 @@ export async function db(path, { method = 'GET', body, prefer, schema = 'site' }
 }
 export const rpc = (fn, args = {}) => db(`rpc/${fn}`, { method: 'POST', body: args });
 
+// Access level (0 none, 1 view, 2 notes, 3 edit) of the signed-in staff member calling a function from the admin.
+export async function staffLevel(req, section) {
+  const token = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+  if (!token || !env('SUPABASE_URL')) return 0;
+  const r = await fetch(`${env('SUPABASE_URL').replace(/\/$/, '')}/rest/v1/rpc/level_for`, {
+    method: 'POST', headers: { apikey: env('SUPABASE_PUBLISHABLE_KEY') || env('SUPABASE_SERVICE_ROLE_KEY'), authorization: `Bearer ${token}`, 'content-profile': 'site', 'accept-profile': 'site', 'content-type': 'application/json' },
+    body: JSON.stringify({ p_section: section }) }).catch(() => null);
+  if (!r?.ok) return 0;
+  return Number(await r.json()) || 0;
+}
+
 // ---------- input cleanup ----------
 export const clean = (v, max = 500) => String(v ?? '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').trim().slice(0, max);
 export const isEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
@@ -82,14 +93,14 @@ export async function setting(key, fallback) {
 }
 
 // ---------- email (Resend) ----------
-export async function sendEmail({ to, subject, html, template, contactId, replyTo }) {
+export async function sendEmail({ to, subject, html, template, contactId, replyTo, attachments }) {
   const key = env('RESEND_API_KEY');
   const from = env('EMAIL_FROM', 'We Are Called to Care <hello@wearecalledtocare.com>');
   if (!key) { console.log('[email skipped: no RESEND_API_KEY]', template, to); return null; }
   const r = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ from, to: [to], subject, html, reply_to: replyTo || env('EMAIL_REPLY_TO', 'shari@wearecalledtocare.com') }),
+    body: JSON.stringify({ from, to: [to], subject, html, reply_to: replyTo || env('EMAIL_REPLY_TO', 'shari@wearecalledtocare.com'), ...(attachments?.length ? { attachments } : {}) }),
   });
   const out = await r.json().catch(() => ({}));
   try { await db('email_log', { method: 'POST', body: { to_email: to, template, subject, contact_id: contactId || null, provider_id: out.id || null, status: r.ok ? 'sent' : 'failed' } }); } catch {}
@@ -173,5 +184,6 @@ export async function finalizePayment(payment, { method } = {}) {
     await sendEmail({ to: c.email, subject: 'Your receipt from We Are Called to Care', html, template: `receipt-${payment.purpose}`, contactId: payment.contact_id });
     await db(`payments?id=eq.${payment.id}`, { method: 'PATCH', body: { receipt_sent_at: new Date().toISOString() } });
   }
+  if (payment.purpose === 'donation') await (await import('./_letter.mjs')).donorLetterOnGift({ ...payment, status: 'succeeded', receipt_no: receipt, paid_at: new Date().toISOString() });
   await alertStaff(`New ${payment.purpose}: ${money(payment.amount)}`, [esc(payment.description), `From: ${esc(c?.email || '')}`], `${SITE_URL()}/admin/#payments`).catch(() => {});
 }

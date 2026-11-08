@@ -9,7 +9,7 @@ Object.assign(process.env, {
 });
 
 // ---- tiny in-memory PostgREST ----
-const T = { contacts: [], submissions: [], payments: [], sponsorships: [], attendance: [], subscriptions: [], email_log: [], events: [], settings: [{ key: 'tickets_on', value: false }, { key: 'staff_alert_email', value: ['staff@example.org', 'boss@example.org'] }, { key: 'org', value: { legal_name: 'We Are Called to Care, NFP', ein: '86-2900453' } }] };
+const T = { donor_letters: [], contacts: [], submissions: [], payments: [], sponsorships: [], attendance: [], subscriptions: [], email_log: [], events: [], settings: [{ key: 'tickets_on', value: false }, { key: 'staff_alert_email', value: ['staff@example.org', 'boss@example.org'] }, { key: 'org', value: { legal_name: 'We Are Called to Care, NFP', ein: '86-2900453' } }] };
 let seq = 1001; const uid = () => crypto.randomUUID();
 function match(row, params) {
   for (const [k, v] of params) {
@@ -104,6 +104,11 @@ r = await webhook(new Request('https://x/', { method: 'POST', body: evt, headers
 ok(r.status === 200 && pay.status === 'succeeded' && pay.receipt_no?.startsWith('C2C-') && pay.method.includes('Apple Pay'), 'payment marked paid with receipt # and method');
 ok(T.sponsorships.length === 1 && T.sponsorships[0].level === 'Sapphire' && T.sponsorships[0].year === 2027 && T.sponsorships[0].source === 'Website', 'sponsorship added to sponsor list');
 ok(sent.some((e) => e.to[0] === 'bo@x.com' && /receipt/i.test(e.subject) && e.html.includes('86-2900453')), 'receipt emailed with EIN');
+{ const dp = T.payments.find((p) => p.purpose === 'donation' && !p.recurring); const de = JSON.stringify({ type: 'payment_intent.succeeded', data: { object: { id: dp.provider_id, metadata: { c2c_payment_id: dp.id } } } });
+  await webhook(new Request('https://x/', { method: 'POST', body: de, headers: { 'stripe-signature': sig(de) } }));
+  const L = sent.find((e) => e.to[0] === 'shari@wearecalledtocare.com' && /^New donation: Al Ma, \$25/.test(e.subject));
+  ok(L && L.attachments?.[0]?.filename.endsWith('.pdf') && Buffer.from(L.attachments[0].content, 'base64').subarray(0, 5).toString() === '%PDF-', 'thank-you letter PDF emailed to Shari');
+  ok(L.html.includes('9 Oak Ln') && !sent.some((e) => e.attachments && /Bo Ng/.test(e.subject)) && T.donor_letters.length === 1 && T.donor_letters[0].kind === 'one-time', 'letter email shows the mailing address; letter logged'); }
 const before = T.sponsorships.length + sent.length;
 await webhook(new Request('https://x/', { method: 'POST', body: evt, headers: { 'stripe-signature': sig(evt) } }));
 ok(T.sponsorships.length + sent.length === before, 'Stripe retry does not double-record or double-email');
@@ -116,6 +121,10 @@ ok(r.ok && T.subscriptions.length === 1 && T.contacts.find((c) => c.email === 'c
 const inv = JSON.stringify({ type: 'invoice.paid', data: { object: { id: 'in_2', billing_reason: 'subscription_cycle', parent: { subscription_details: { subscription: 'sub_1' } }, amount_paid: 5000 } } });
 await webhook(new Request('https://x/', { method: 'POST', body: inv, headers: { 'stripe-signature': sig(inv) } }));
 ok(T.payments.some((p) => p.provider_id === 'pi_month2' && p.status === 'succeeded' && p.amount === 50), 'second month recorded and receipted (new Stripe event format)');
+{ const ml = T.donor_letters.find((l) => l.recurring); const { letterKind } = await import('../functions/_letter.mjs');
+  const months = (new Date(ml.next_after) - new Date()) / (30.4 * 864e5);
+  ok(ml && ml.kind === 'monthly-first' && months > 1.8 && months < 5.2, 'monthly partner gets a letter, next one 2-5 months out');
+  ok(await letterKind({ recurring: true, contact_id: ml.contact_id }) === null, 'no letter for the next monthly gift'); }
 
 console.log('paypal');
 r = await (await post(checkout, { kind: 'sponsorship', item: 'sapphire', provider: 'paypal', contact: { first: 'Di', last: 'Ko', email: 'di@x.com', street: '1 Main St', city: 'Plano', state: 'IL', zip: '60545' } })).json();
