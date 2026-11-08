@@ -104,10 +104,12 @@ r = await webhook(new Request('https://x/', { method: 'POST', body: evt, headers
 ok(r.status === 200 && pay.status === 'succeeded' && pay.receipt_no?.startsWith('C2C-') && pay.method.includes('Apple Pay'), 'payment marked paid with receipt # and method');
 ok(T.sponsorships.length === 1 && T.sponsorships[0].level === 'Sapphire' && T.sponsorships[0].year === 2027 && T.sponsorships[0].source === 'Website', 'sponsorship added to sponsor list');
 ok(sent.some((e) => e.to[0] === 'bo@x.com' && /receipt/i.test(e.subject) && e.html.includes('86-2900453')), 'receipt emailed with EIN');
-{ const dp = T.payments.find((p) => p.purpose === 'donation' && !p.recurring); const de = JSON.stringify({ type: 'payment_intent.succeeded', data: { object: { id: dp.provider_id, metadata: { c2c_payment_id: dp.id } } } });
+{ T.settings.find((x) => x.key === 'staff_alert_email').value.push('shari@wearecalledtocare.com');
+  const dp = T.payments.find((p) => p.purpose === 'donation' && !p.recurring); const de = JSON.stringify({ type: 'payment_intent.succeeded', data: { object: { id: dp.provider_id, metadata: { c2c_payment_id: dp.id } } } });
   await webhook(new Request('https://x/', { method: 'POST', body: de, headers: { 'stripe-signature': sig(de) } }));
   const L = sent.find((e) => e.to[0] === 'shari@wearecalledtocare.com' && /^New donation: Al Ma, \$25/.test(e.subject));
   ok(L && L.attachments?.[0]?.filename.endsWith('.pdf') && Buffer.from(L.attachments[0].content, 'base64').subarray(0, 5).toString() === '%PDF-', 'thank-you letter PDF emailed to Shari');
+  ok(!sent.some((e) => e.to[0] === 'shari@wearecalledtocare.com' && /^\[Website\] New donation/.test(e.subject)) && sent.some((e) => e.to[0] === 'staff@example.org' && /^\[Website\] New donation/.test(e.subject)), 'letter recipients skip the plain donation alert; other staff still get it');
   ok(L.html.includes('9 Oak Ln') && !sent.some((e) => e.attachments && /Bo Ng/.test(e.subject)) && T.donor_letters.length === 1 && T.donor_letters[0].kind === 'one-time', 'letter email shows the mailing address; letter logged'); }
 const before = T.sponsorships.length + sent.length;
 await webhook(new Request('https://x/', { method: 'POST', body: evt, headers: { 'stripe-signature': sig(evt) } }));
