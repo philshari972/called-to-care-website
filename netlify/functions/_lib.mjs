@@ -136,11 +136,12 @@ export const btn = (t, href) => `<table role="presentation" cellpadding="0" cell
 export const box = (rows) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${LINE};border-radius:12px;margin:6px 0 18px;">${rows.map(([k, v]) => `<tr><td style="padding:9px 18px;font-family:${SANS};font-size:14px;color:${MUTED};">${esc(k)}</td><td align="right" style="padding:9px 18px;font-family:${SANS};font-size:14px;color:${NAVY};font-weight:600;">${v}</td></tr>`).join('')}</table>`;
 
 // Staff alert (plain and short).
-export async function alertStaff(subject, lines, link, { skip = [] } = {}) {
+export async function alertStaff(subject, lines, link, { skip = [], also = [] } = {}) {
   // One address, a comma-separated list, or a JSON list of addresses.
   const raw = await setting('staff_alert_email', 'shari@wearecalledtocare.com');
   const skipSet = new Set(skip.map((x) => String(x).trim().toLowerCase()));
   const list = [].concat(raw).flatMap((x) => String(x).split(',')).map((x) => x.trim()).filter(isEmail).filter((x) => !skipSet.has(x.toLowerCase()));
+  for (const x of [].concat(also || []).flatMap((y) => String(y).split(',')).map((y) => y.trim()).filter(isEmail)) if (!list.some((y) => y.toLowerCase() === x.toLowerCase())) list.push(x);
   const html = emailShell({ heading: esc(subject), bodyHtml: lines.map((l) => p(l)).join('') + (link ? btn('Open in admin', link) : ''), reason: 'Staff notification from the Called to Care website.' });
   for (const to of list) await sendEmail({ to, subject: `[Website] ${subject}`, html, template: 'staff-alert' });
 }

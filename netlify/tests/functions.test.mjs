@@ -159,6 +159,7 @@ console.log('camp scholarships');
 const camp = (await import('../functions/camp.mjs')).default;
 const reminders = await import('../functions/camp-reminders.mjs');
 r = await (await post(submit, { form: 'camp', data: { adult_first: 'Kim', adult_last: 'Fox', email: 'kim@x.com', youth_first: 'Eli', camp_name: 'Camp Hope', camp_dates: 'June 8-12, 2026' } })).json();
+ok(sent.some((e) => e.to[0] === "wendy@wearecalledtocare.com" && /New camp form/.test(e.subject)) && sent.some((e) => e.to[0] === "staff@example.org" && /New camp form/.test(e.subject)), "camp application alert also goes to Wendy");
 const app = T.submissions.find((x) => x.id === r.id);
 ok(app.admin.camp_end === '2026-06-12' && app.admin.followup_token, 'camp application gets end date + private follow-up link');
 r = await camp(new Request('https://x/', { method: 'POST', body: JSON.stringify({ action: 'send_followup', id: app.id }) }));
