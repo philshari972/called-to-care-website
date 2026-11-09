@@ -2444,8 +2444,9 @@ async function start(){
   // Private preview link: ?preview=CODE unlocks this device before the auction goes live
   const pv=new URLSearchParams(location.search).get("preview");
   if(pv){ try{ await sb.rpc("enter_preview",{p_code:pv}); }catch(e){} history.replaceState(null,"",location.pathname+location.hash); }
-  let acc=null; try{ acc=(await sb.rpc("my_access")).data; }catch(e){}
-  if(acc&&!acc.open&&!acc.admin&&!acc.tester) return comingSoon();
+  // If the access check fails for any reason, show the coming-soon page (never the auction).
+  let acc=null; for(let i=0;i<2&&!acc;i++){ try{ const r=await sb.rpc("my_access"); acc=r.error?null:r.data; }catch(e){} }
+  if(!acc||(!acc.open&&!acc.admin&&!acc.tester)) return comingSoon();
   document.body.classList.add("ok");
   try{ isAdmin=(await q("admins",t=>t.select("uid"))).length>0; }catch(e){}
   try{ await loadCatalog(); }
