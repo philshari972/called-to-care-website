@@ -786,7 +786,7 @@ function letterDrawer(keep){const edit=canEditLetters();
   ${edit?'':'<p class="note">Ask an Owner, or someone with edit access to Donations, to change these.</p>'}
  </form></div>`)}
 
-function settingsPage(){const owner=(ME.roles||[]).includes('owner');const org=SETTINGS.org||{};const alerts=[].concat(SETTINGS.staff_alert_email||[]).join(', ');const campAlerts=[].concat(SETTINGS.camp_alert_email??['wendy@wearecalledtocare.com']).join(', ');
+function settingsPage(){const owner=(ME.roles||[]).includes('owner');const org=SETTINGS.org||{};const alerts=[].concat(SETTINGS.staff_alert_email||[]).join(', ');const campAlerts=[].concat(SETTINGS.camp_alert_email??['wendy@wearecalledtocare.com']).join(', ');const placeAlerts=[].concat(SETTINGS.placement_alert_email??['jen@wearecalledtocare.com']).join(', ');
  const con=[['Database','Supabase','Connected'],['Card, Apple Pay, Google Pay, bank','Stripe','Connected'],['PayPal button','PayPal','Connected'],['Receipts and confirmations','Resend email','Connected'],['Therapy requests','JotForm (HIPAA)','Stays on JotForm']];
  return`<div class="ph"><div><span class="label">Admin</span><h1>Settings</h1><p>Website switches, staff alerts, and organization details.</p></div></div>
  <form class="panel" id="setForm" style="padding:22px;display:grid;gap:18px">
@@ -795,6 +795,7 @@ function settingsPage(){const owner=(ME.roles||[]).includes('owner');const org=S
   <div style="display:grid;gap:8px"><span class="field">Support Night childcare: one volunteer for every…</span><div class="formgrid" style="grid-template-columns:repeat(3,minmax(0,1fr))">${BANDS.map((b,i)=>`<label class="field" for="set-r${i}">${b}<input id="set-r${i}" inputmode="numeric" value="${RATIOS()[i]}" ${owner?'':'readonly'}></label>`).join('')}</div><span class="note">Children per volunteer. Partial volunteers round up.</span></div>
   <label class="field" for="set-alerts">Staff alert emails (separate with commas)<input id="set-alerts" value="${esc(alerts)}" ${owner?'':'readonly'}></label>
   <label class="field" for="set-camp-alerts">Camp scholarship alerts also go to (separate with commas)<input id="set-camp-alerts" value="${esc(campAlerts)}" ${owner?'':'readonly'}></label>
+  <label class="field" for="set-place-alerts">Care package (new placement) alerts also go to (separate with commas)<input id="set-place-alerts" value="${esc(placeAlerts)}" ${owner?'':'readonly'}></label>
   ${owner?'<button class="btn primary" type="submit" style="justify-self:start">Save Settings</button>':'<p class="note">Only an Owner can change these.</p>'}
  </form>
  <div class="panel" style="padding:20px 22px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between"><div><h2 style="margin:0 0 4px;font-family:var(--serif);font-weight:400;color:var(--navy)">Thank-you letters</h2><p class="note" style="margin:0">Each new gift emails a printable, signable letter to ${esc(letterRecips().join(', ')||'no one yet')}.</p></div><button class="btn" type="button" data-act="letters">Edit Letter &amp; Updates</button></div>
@@ -966,7 +967,8 @@ document.addEventListener('submit',async e=>{const fm=e.target;
  if(fm.id==='setForm'){e.preventDefault();const emails=$('#set-alerts').value.split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
   if(!emails.length||emails.some(x=>!/^\S+@\S+\.\S+$/.test(x))){toast('Check the staff alert emails',true);return}
   const campEmails=$('#set-camp-alerts').value.split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);if(campEmails.some(x=>!/^\S+@\S+\.\S+$/.test(x))){toast('Check the camp scholarship alert emails',true);return}
-  busy(fm,true);const ratios=[0,1,2].map(i=>Math.max(1,parseInt($('#set-r'+i).value,10)||1));const r=await SB.from('settings').upsert([{key:'staff_alert_email',value:emails},{key:'camp_alert_email',value:campEmails},{key:'tickets_on',value:$('#set-tix').checked},{key:'childcare_ratios',value:ratios}]);busy(fm,false);
+  const placeEmails=$('#set-place-alerts').value.split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);if(placeEmails.some(x=>!/^\S+@\S+\.\S+$/.test(x))){toast('Check the care package alert emails',true);return}
+  busy(fm,true);const ratios=[0,1,2].map(i=>Math.max(1,parseInt($('#set-r'+i).value,10)||1));const r=await SB.from('settings').upsert([{key:'staff_alert_email',value:emails},{key:'camp_alert_email',value:campEmails},{key:'placement_alert_email',value:placeEmails},{key:'tickets_on',value:$('#set-tix').checked},{key:'childcare_ratios',value:ratios}]);busy(fm,false);
   if(r.error){toast('Not saved: '+r.error.message,true);return}await loadAll();render();toast('Settings saved. The website picks this up within a minute.');return}
  if(fm.id==='userForm'){e.preventDefault();const err=$('#uf-err');const name=$('#uf-name').value.trim(),email=$('#uf-email').value.trim().toLowerCase();const roles=[...fm.querySelectorAll('.rolepick input:checked')].map(i=>i.value);
   if(!name||!/^\S+@\S+\.\S+$/.test(email)){err.textContent='Enter a name and a valid email.';return}

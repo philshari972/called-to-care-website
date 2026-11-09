@@ -5,6 +5,8 @@ import { campEnd, newToken, savePhoto, patchAdmin } from './_camp.mjs';
 import { cleanKids, ageLabel } from './_support.mjs';
 import { setting, db, upsertContact, sendEmail, alertStaff, emailShell, p, btn, box, json, fail, clean, isEmail, fmtPhone, esc, looksLikeBot, SITE_URL } from './_lib.mjs';
 
+// Extra people who get the staff alert for one kind of form (on top of the main staff alert list). Editable in admin Settings.
+const EXTRA_ALERTS = { camp: ['camp_alert_email', ['wendy@wearecalledtocare.com']], placements: ['placement_alert_email', ['jen@wearecalledtocare.com']] };
 const year = () => new Date().getFullYear();
 const cleanDeep = (v, depth = 0) => {
   if (depth > 4) return null;
@@ -128,7 +130,7 @@ export default async (req) => {
     await sendEmail({ to: clean(c.email).toLowerCase(), subject: m.subject, html: emailShell({ preheader: m.subject, heading: m.heading, bodyHtml: m.body,
       reason: `You're receiving this because you filled out a form on wearecalledtocare.com.` }), template: `confirm-${body.form}`, contactId });
     if (spec.alert) await alertStaff(`${spec.section === 'messages' ? 'New message' : 'New ' + body.form + ' form'}: ${c.first || ''} ${c.last || ''}`.trim(), spec.alert(d).map(esc), `${SITE_URL()}/admin/#${spec.section}`,
-      { also: spec.section === 'camp' ? await setting('camp_alert_email', ['wendy@wearecalledtocare.com']) : [] });
+      { also: EXTRA_ALERTS[spec.section] ? await setting(EXTRA_ALERTS[spec.section][0], EXTRA_ALERTS[spec.section][1]) : [] });
     return json({ ok: true, id: sub.id });
   } catch (e) {
     console.error('submit failed', body.form, e.message);

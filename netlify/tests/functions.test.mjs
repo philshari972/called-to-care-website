@@ -75,6 +75,7 @@ let pass = 0; const ok = (c, m) => { assert.ok(c, m); pass++; console.log('  ✓
 
 console.log('forms');
 let r = await (await post(submit, { form: 'placement', data: { first_name: 'Ann', last_name: 'Lee', email: 'Ann@Example.com', phone: '6305551234', placement_date: '2026-11-04', city: 'Plano', children: [{ first: 'Mia', age: '4' }] } })).json();
+ok(sent.some((e) => e.to[0] === "jen@wearecalledtocare.com" && /New placement form/.test(e.subject)) && sent.some((e) => e.to[0] === "staff@example.org" && /New placement form/.test(e.subject)), "care package alert also goes to Jen");
 ok(r.ok, 'placement saved');
 ok(T.contacts[0].email === 'ann@example.com' && T.contacts[0].tags.includes('Foster/Kinship Family') && T.contacts[0].phone === '(630) 555-1234', 'contact created, tagged, phone formatted');
 ok(sent.some((e) => e.to[0] === 'ann@example.com' && /care package/i.test(e.subject)) && sent.some((e) => e.to[0] === 'staff@example.org') && sent.some((e) => e.to[0] === 'boss@example.org'), 'family confirmation + staff alert emailed to every staff address');
