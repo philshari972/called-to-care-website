@@ -33,6 +33,12 @@ h1,h2,h3{margin:0;font-weight:400;text-wrap:balance}
 p{margin:0;max-width:62ch;text-wrap:pretty}
 img{max-width:100%}
 :focus-visible{outline:3px solid var(--pink);outline-offset:3px;border-radius:4px}
+/* accessibility (WCAG 2.1 AA): text colors that meet contrast on teal and light blocks; skip link */
+.b-teal{--sky:#C4DAE4}
+.b-sky,.b-pink,.b-skypale{--pink:#CC1569}
+.skip{position:fixed;left:16px;top:-90px;z-index:1000;background:var(--navy);color:#fff;padding:12px 22px;border-radius:999px;font-weight:600;text-decoration:none;box-shadow:0 6px 20px rgba(0,0,0,.25);transition:top .15s}
+.skip:focus{top:calc(14px + env(safe-area-inset-top,0px))}
+main:focus,[tabindex="-1"]:focus{outline:none}
 .wrap{max-width:var(--max);margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
 
 /* type roles */
@@ -292,7 +298,7 @@ footer ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 footer a{text-decoration:none;font-size:.95rem}
 footer a:hover{text-decoration:underline}
 footer p{color:var(--sky);font-size:.95rem}
-.handle{font-family:var(--cond);font-size:clamp(2.4rem,7vw,5.5rem);text-transform:uppercase;letter-spacing:.01em;line-height:1;color:var(--teal);margin-top:56px;word-break:break-word}
+.handle{font-family:var(--cond);font-size:clamp(2.4rem,7vw,5.5rem);text-transform:uppercase;letter-spacing:.01em;line-height:1;color:var(--pink-light);margin-top:56px;word-break:break-word}
 .legal{margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,.15);display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font-size:.82rem;color:var(--sky)}
 @media (max-width:900px){.fgrid{grid-template-columns:1fr 1fr}}
 @media (max-width:480px){.fgrid{grid-template-columns:1fr}}
@@ -460,6 +466,7 @@ html.tickets-on .tix-off{display:none!important}
 <style>[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
 </head>
 <body>
+<a class="skip" href="#main" id="skipLink">Skip to main content</a>
 
 <div class="promo"><div class="wrap">
   <span class="label" style="font-size:.7rem">Foster &amp; adoptive moms</span>
@@ -526,7 +533,7 @@ html.tickets-on .tix-off{display:none!important}
   </div>
 </div>
 
-<main>
+<main id="main" tabindex="-1">
 
 <!-- ======================= HOME ======================= -->
 <div class="page" data-page="home">
@@ -1426,7 +1433,7 @@ html.tickets-on .tix-off{display:none!important}
 <div class="page" data-page="about" hidden>
   <div class="ph b-navy center"><div class="wrap vstack" style="align-items:center;gap:18px">
     <span class="label c-pinkl">About us</span>
-    <img src="assets/logo-white.png" alt="We Are Called to Care" width="778" height="189" style="width:min(720px,100%);height:auto">
+    <h1 style="margin:0;line-height:0"><img src="assets/logo-white.png" alt="About We Are Called to Care" width="778" height="189" style="width:min(720px,100%);height:auto"></h1>
     <p class="statement" style="font-size:clamp(1.5rem,3.2vw,2.4rem);max-width:30ch;color:var(--sky)">Our mission is to mobilize churches and individuals to actively care for <span class="c-pinkl">children and families</span> in the foster care system.</p>
     <nav class="subnav c-pinkl" style="justify-content:center" aria-label="On this page"><a href="#about" data-anchor="founder">From our founder</a><a href="#about" data-anchor="staff">Staff</a><a href="#about" data-anchor="whatwedo">What we do</a></nav>
   </div></div>
@@ -1617,7 +1624,14 @@ html.tickets-on .tix-off{display:none!important}
     pendingAnchor=a.dataset.anchor;
     if(a.getAttribute('href')===(location.hash||'#home')){e.preventDefault();show();}
   });
-  window.addEventListener('hashchange',show);
+  window.addEventListener('hashchange',()=>{show();
+    const pg=pages.find(x=>!x.hidden); const h=pg&&pg.querySelector('h1');
+    if(h&&!document.querySelector('#checkout:not([hidden])')){h.setAttribute('tabindex','-1');h.focus({preventScroll:true});}});
+  document.getElementById('skipLink').addEventListener('click',e=>{e.preventDefault();const pg=pages.find(x=>!x.hidden);const h=(pg&&pg.querySelector('h1'))||document.getElementById('main');h.setAttribute('tabindex','-1');h.focus();});
+  // Form errors: tell screen readers which field is wrong and why
+  const syncQ=q=>{const bad=q.classList.contains('invalid');const e=q.querySelector('.err');
+    q.querySelectorAll('input,select,textarea').forEach(i=>{if(bad){i.setAttribute('aria-invalid','true');if(e){e.id=e.id||'err-'+Math.random().toString(36).slice(2,9);i.setAttribute('aria-describedby',e.id);}}else{i.removeAttribute('aria-invalid');i.removeAttribute('aria-describedby');}});};
+  new MutationObserver(ms=>{const seen=new Set();for(const m of ms){const q=m.target.closest&&m.target.closest('.q');if(q&&!seen.has(q)){seen.add(q);syncQ(q);}}}).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class'],childList:true});
 
   // Next support night = first Thursday of the month at 6:30 PM
   function firstThu(y,m){const d=new Date(y,m,1);return new Date(y,m,1+((4-d.getDay()+7)%7),18,30);}
