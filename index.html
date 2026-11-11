@@ -387,6 +387,16 @@ section{padding-block:96px}
 .g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
 .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
 @media (max-width:900px){.g2,.g3{grid-template-columns:1fr}}
+.mv-card{background:var(--sky-pale);border-radius:22px;padding:34px 36px}
+.mv-card .label{color:var(--pink);display:block;margin-bottom:14px}
+.mv-card p{font-family:var(--serif);font-size:clamp(1.15rem,1.7vw,1.4rem);line-height:1.45;color:var(--navy);margin:0}
+.mv-vals{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px 36px}
+.mv-vals li{border-top:2px solid var(--line);padding-top:20px}
+.mv-n{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--navy);color:var(--white);font-family:var(--serif);font-size:1.25rem;margin-bottom:14px}
+.mv-vals h4{font-family:var(--serif);font-size:1.45rem;line-height:1.15;color:var(--navy);margin:0 0 10px}
+.mv-vals p{margin:0;color:var(--ink)}
+@media (max-width:900px){.mv-vals{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:600px){.mv-vals{grid-template-columns:1fr;gap:30px}.mv-card{padding:26px 22px}}
 
 /* list rows (blog-style) */
 .rows{display:grid}
@@ -1620,9 +1630,28 @@ html.tickets-on .tix-off{display:none!important}
   <div class="ph b-navy center"><div class="wrap vstack" style="align-items:center;gap:18px">
     <span class="label c-pinkl">About us</span>
     <h1 style="margin:0;line-height:0"><img src="assets/logo-white.png" alt="About We Are Called to Care" width="778" height="189" style="width:min(720px,100%);height:auto"></h1>
-    <p class="statement" style="font-size:clamp(1.5rem,3.2vw,2.4rem);max-width:30ch;color:var(--sky)">Our mission is to mobilize churches and individuals to actively care for <span class="c-pinkl">children and families</span> in the foster care system.</p>
-    <nav class="subnav c-pinkl" style="justify-content:center" aria-label="On this page"><a href="#about" data-anchor="founder">From our founder</a><a href="#about" data-anchor="staff">Staff</a><a href="#about" data-anchor="whatwedo">What we do</a></nav>
+    <p class="statement" style="font-size:clamp(1.5rem,3.2vw,2.4rem);max-width:30ch;color:var(--sky)">We exist to provide <span class="c-pinkl">safety, healing, and hope</span> to vulnerable children.</p>
+    <nav class="subnav c-pinkl" style="justify-content:center" aria-label="On this page"><a href="#about" data-anchor="mission">Mission &amp; values</a><a href="#about" data-anchor="founder">From our founder</a><a href="#about" data-anchor="staff">Staff</a><a href="#about" data-anchor="whatwedo">What we do</a></nav>
   </div></div>
+
+  <section class="b-white mv" id="mission">
+    <div class="wrap center vstack" style="gap:14px;margin-bottom:44px"><span class="label" style="color:var(--teal)">Who we are</span><h2 class="d2 c-navy">Our mission, vision <em class="it c-pink">&amp; core values</em></h2></div>
+    <div class="wrap">
+      <div class="g2 mv-pair">
+        <div class="mv-card"><span class="label">Our mission</span><p>We Are Called to Care exists to provide safety, healing, and hope to vulnerable children through compassionate, trauma-informed, Christ-centered care and services that restore dignity, promote well-being, and demonstrate the love of Jesus Christ.</p></div>
+        <div class="mv-card"><span class="label">Our vision</span><p>We envision a future where every child is safe, valued, and nurtured, especially those who have experienced abuse, neglect, or trauma. Guided by our faith in Jesus Christ, we strive to create opportunities for healing, strengthen families, and empower children to experience hope, stability, and a brighter future.</p></div>
+      </div>
+      <h3 class="d3 c-navy center" style="margin:64px 0 28px">Our core values</h3>
+      <ol class="mv-vals">
+        <li><span class="mv-n" aria-hidden="true">1</span><h4>Christ-Centered Compassion</h4><p>Our faith in Jesus Christ is the foundation of everything we do. We seek to reflect His unconditional love through compassionate service, treating every child and family with dignity, kindness, and respect.</p></li>
+        <li><span class="mv-n" aria-hidden="true">2</span><h4>Safety &amp; Protection</h4><p>Every child deserves to feel safe and secure. We are committed to creating environments that prioritize physical, emotional, and psychological safety while protecting the dignity and well-being of those entrusted to our care.</p></li>
+        <li><span class="mv-n" aria-hidden="true">3</span><h4>Healing &amp; Restoration</h4><p>We believe healing is possible, even in the midst of profound adversity. Through trauma-informed care, meaningful relationships, and individualized support, we help children find hope, build resilience, and move toward restoration.</p></li>
+        <li><span class="mv-n" aria-hidden="true">4</span><h4>Excellence &amp; Integrity</h4><p>We are committed to providing high-quality, professional services with honesty, accountability, and responsible stewardship of the resources entrusted to us. We strive for excellence in every aspect of our work.</p></li>
+        <li><span class="mv-n" aria-hidden="true">5</span><h4>Relationships &amp; Belonging</h4><p>We believe meaningful relationships are essential to healing. We intentionally cultivate environments where children and families feel seen, heard, valued, and supported, fostering trust, connection, and a sense of belonging.</p></li>
+        <li><span class="mv-n" aria-hidden="true">6</span><h4>Hope &amp; Purpose</h4><p>We believe every child is uniquely created by God, possesses immeasurable worth, and has a future filled with possibility. We are committed to helping children recognize their value, discover their strengths, and embrace opportunities for a brighter tomorrow.</p></li>
+      </ol>
+    </div>
+  </section>
 
   <section class="b-pink" id="founder">
     <div class="wrap center vstack" style="gap:14px;margin-bottom:44px">
