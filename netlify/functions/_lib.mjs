@@ -22,6 +22,13 @@ export const TICKET_PRICE = 100, TABLE_PRICE = 1000;
 // Regular dinner tickets open on their own at noon (Chicago) on Dec 15, 2026. Turning tickets on in the admin opens them sooner.
 export const TICKETS_OPEN_AT = Date.parse('2026-12-15T18:00:00Z');
 export const ticketsOpen = async (now = Date.now()) => now >= TICKETS_OPEN_AT || !!(await setting('tickets_on', false));
+// Donor baskets can be claimed (the donor fills it) through the end of the deadline day, Chicago time.
+export function claimsOpen(cl) {
+  if (!cl || cl.on === false || !/^\d{4}-\d{2}-\d{2}$/.test(cl.deadline || '')) return false;
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
+  return today <= cl.deadline;
+}
+export const longDate = (iso) => new Date(`${iso}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 export const CHECK_ADDRESS = ['Called to Care', '15450 State Route 47', 'Newark, IL 60541'];
 
 // ---------- responses ----------
@@ -168,7 +175,7 @@ export async function finalizePayment(payment, { method } = {}) {
   }
   if (meta.basket_id) {   // a donor basket: mark it given on the Charity Dinner page
     await db(`baskets?id=eq.${meta.basket_id}`, { method: 'PATCH', body: { claimed_at: new Date().toISOString(), claimed_payment: payment.id,
-      claimed_contact: payment.contact_id, claimed_name: meta.display_name || '', held_until: null, updated_at: new Date().toISOString() } }).catch((e) => console.error('basket', e.message));
+      claimed_contact: payment.contact_id, claimed_name: meta.display_name || '', claim_kind: 'paid', held_until: null, updated_at: new Date().toISOString() } }).catch((e) => console.error('basket', e.message));
   }
   const c = payment.contact_id ? (await db(`contacts?id=eq.${payment.contact_id}&select=email,first_name`))[0] : null;
   if (c?.email) {

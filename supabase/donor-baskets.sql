@@ -1,6 +1,7 @@
 -- Donor baskets: the committee adds baskets in the Auction Admin (Baskets tab); the ones turned on show on the
 -- Charity Dinner page, where a donor claims one by paying its cost. Paid baskets are marked "Given" automatically.
 -- Run once in Supabase: SQL Editor -> New query -> paste -> Run. Safe to run again.
+-- If you run this again, run baskets-buynow-raffles.sql after it (it has the newer basket actions).
 
 create table if not exists site.baskets (
   id uuid primary key default gen_random_uuid(),

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Raffle Winner · We Are Called to Care</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap">
+<style>
+:root{--onyx:#0E0D0C;--velvet:#1A1918;--ivory:#F3ECDD;--pewter:#B9B1A2;--gold:#DDB65A;--gold-hi:#F0D58C;--line:rgba(221,182,90,.45)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--onyx);color:var(--ivory);overflow:hidden}
+body{font-family:'Cormorant Garamond',Georgia,serif;cursor:default}
+body.idle{cursor:none}
+.stage{position:fixed;inset:0;display:grid;place-items:center;
+  background:radial-gradient(ellipse 70% 60% at 50% 45%,#22201D 0%,#151413 55%,var(--onyx) 100%)}
+.frame{position:absolute;inset:2.2vmin;border:1px solid var(--line);box-shadow:inset 0 0 0 .8vmin var(--onyx),inset 0 0 0 calc(.8vmin + 1px) rgba(221,182,90,.28);pointer-events:none}
+.cn{position:absolute;width:13vmin;height:13vmin;filter:drop-shadow(2px 3px 2px rgba(0,0,0,.9))}
+.cn.tl{left:3.2vmin;top:3.2vmin}.cn.tr{right:3.2vmin;top:3.2vmin}.cn.bl{left:3.2vmin;bottom:3.2vmin}.cn.br{right:3.2vmin;bottom:3.2vmin}
+canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+.wrap{position:relative;z-index:1;width:min(1500px,88vw);display:flex;flex-direction:column;align-items:center;text-align:center}
+.eyebrow{margin:0;font-family:Cinzel,serif;font-size:clamp(14px,1.5vw,24px);letter-spacing:.42em;text-transform:uppercase;color:var(--pewter)}
+.prize{margin:1.6vh 0 0;font-family:Cinzel,serif;font-weight:500;font-size:clamp(34px,5.4vw,96px);line-height:1.08;letter-spacing:.05em;color:var(--gold);
+  text-shadow:-1px -1px 0 rgba(255,240,210,.15),3px 4px 6px rgba(0,0,0,.9);max-width:100%}
+.kind{margin:1.2vh 0 0;font-style:italic;font-size:clamp(20px,2.2vw,38px);color:var(--pewter)}
+.div{width:clamp(180px,20vw,360px);margin:3.4vh 0 3vh}
+.label{margin:0 0 2.4vh;font-family:Cinzel,serif;font-size:clamp(14px,1.45vw,24px);letter-spacing:.5em;text-transform:uppercase;color:var(--ivory)}
+.label.wait{animation:breathe 2.4s ease-in-out infinite}
+@keyframes breathe{50%{opacity:.45}}
+.digits{display:flex;gap:clamp(8px,1.2vw,22px);justify-content:center}
+.slot{position:relative;width:clamp(64px,9.4vw,170px);height:clamp(96px,14vw,250px);display:grid;place-items:center;
+  background:linear-gradient(180deg,#121110,#1C1A18 50%,#121110);border:1px solid rgba(221,182,90,.3);
+  box-shadow:inset 0 0 0 5px #121110,inset 0 0 0 6px rgba(221,182,90,.16),0 18px 40px -18px #000;
+  font-family:Cinzel,serif;font-weight:600;font-size:clamp(56px,8.6vw,158px);line-height:1;color:rgba(243,236,221,.42);
+  font-variant-numeric:tabular-nums;overflow:hidden;transition:border-color .5s,box-shadow .5s}
+.slot::before,.slot::after{content:"";position:absolute;left:0;right:0;height:28%;pointer-events:none}
+.slot::before{top:0;background:linear-gradient(#121110,transparent)}
+.slot::after{bottom:0;background:linear-gradient(transparent,#121110)}
+.slot span{display:block;filter:blur(.6px)}
+.slot.lock{border-color:var(--gold);color:var(--gold-hi);box-shadow:inset 0 0 0 5px #121110,inset 0 0 0 6px rgba(221,182,90,.6),0 0 60px -10px rgba(240,213,140,.55),0 18px 40px -18px #000}
+.slot.lock span{filter:none;animation:land .7s cubic-bezier(.2,1.6,.4,1) both;text-shadow:0 0 28px rgba(240,213,140,.65),3px 4px 6px rgba(0,0,0,.9)}
+.slot.lock::before,.slot.lock::after{opacity:0}
+.slot.flash{animation:flash .9s ease-out}
+@keyframes land{0%{transform:translateY(-30%) scale(1.25);opacity:.2}100%{transform:none;opacity:1}}
+@keyframes flash{0%{background:#4A3B16}100%{background:linear-gradient(180deg,#121110,#1C1A18 50%,#121110)}}
+.winner{min-height:clamp(90px,13vh,180px);margin-top:4.2vh;display:flex;flex-direction:column;align-items:center;gap:1vh}
+.congrats{margin:0;font-family:Cinzel,serif;font-size:clamp(14px,1.45vw,24px);letter-spacing:.5em;text-transform:uppercase;color:var(--gold);opacity:0;transition:opacity 1s}
+.congrats.on{opacity:1}
+.name{margin:0;font-family:Cinzel,serif;font-weight:500;font-size:clamp(36px,5vw,92px);letter-spacing:.06em;line-height:1.1;color:var(--ivory);white-space:pre;
+  text-shadow:3px 4px 6px rgba(0,0,0,.9)}
+.name .s{color:rgba(221,182,90,.55)}
+.foot{position:fixed;left:0;right:0;bottom:5.4vmin;z-index:1;text-align:center;font-family:Cinzel,serif;font-size:clamp(11px,1vw,16px);letter-spacing:.36em;text-transform:uppercase;color:rgba(185,177,162,.7)}
+.hint{position:fixed;right:5vmin;top:5vmin;z-index:2;font:13px/1.4 system-ui,sans-serif;color:var(--pewter);background:rgba(14,13,12,.8);border:1px solid rgba(221,182,90,.3);padding:10px 14px;transition:opacity .6s}
+body.idle .hint{opacity:0}
+.pick{display:grid;gap:10px;margin-top:3vh;min-width:min(560px,80vw)}
+.pick a{display:block;padding:16px 22px;border:1px solid var(--line);color:var(--ivory);text-decoration:none;font-family:Cinzel,serif;letter-spacing:.08em;font-size:clamp(16px,1.6vw,24px)}
+.pick a:hover,.pick a:focus-visible{border-color:var(--gold);color:var(--gold-hi);outline:none}
+.pick small{display:block;font-family:'Cormorant Garamond',serif;font-style:italic;letter-spacing:0;color:var(--pewter);font-size:.8em}
+.msg{font-size:clamp(20px,2vw,30px);color:var(--pewter);font-style:italic}
+@media (prefers-reduced-motion:reduce){.slot.lock span,.slot.flash{animation:none}.label.wait{animation:none}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="frame"></div>
+  <img class="cn tl" src="masq/corner-tl.svg" alt="">
+  <img class="cn tr" src="masq/corner-tr.svg" alt="">
+  <img class="cn bl" src="masq/corner-bl.svg" alt="">
+  <img class="cn br" src="masq/corner-br.svg" alt="">
+  <canvas id="fx"></canvas>
+  <main class="wrap" id="app" aria-live="polite"><p class="msg">Loading…</p></main>
+</div>
+<p class="foot">We Are Called to Care · Charity Dinner &amp; Auction</p>
+<div class="hint" id="hint">Click for full screen · R to replay</div>
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id), app=$("app");
+const esc=v=>String(v??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const KINDS={raffle:"Raffle drawing",golden:"Golden Ticket drawing",bucket:"Bucket drawing"};
+const still=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const id=new URLSearchParams(location.search).get("d");
+let sb=null, draw=null, shown=null, timers=[], scramble=null, running=false;
+
+// ---------- idle cursor, full screen, replay ----------
+let idleT; const wake=()=>{ document.body.classList.remove("idle"); clearTimeout(idleT); idleT=setTimeout(()=>document.body.classList.add("idle"),2500); };
+["mousemove","keydown","click"].forEach(e=>addEventListener(e,wake)); wake();
+addEventListener("click",e=>{ if(e.target.closest("a")) return; if(!document.fullscreenElement&&document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{}); });
+addEventListener("keydown",e=>{ if(e.key==="r"||e.key==="R"){ if(draw&&draw.data.winner){ shown=null; play(); } }
+  if(e.key==="f"||e.key==="F"){ if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{}); } });
+
+// ---------- gold sparks ----------
+const cv=$("fx"), ctx=cv.getContext("2d"); let parts=[], raf=0;
+function size(){ cv.width=innerWidth*devicePixelRatio; cv.height=innerHeight*devicePixelRatio; } size(); addEventListener("resize",size);
+function burst(x,y,n,spread){ if(still) return; for(let i=0;i<n;i++){ const a=Math.random()*Math.PI*2, v=(Math.random()*.9+.2)*spread;
+    parts.push({x:x*devicePixelRatio,y:y*devicePixelRatio,vx:Math.cos(a)*v,vy:Math.sin(a)*v-spread*.35,life:1,r:(Math.random()*2+1)*devicePixelRatio}); }
+  if(!raf) raf=requestAnimationFrame(tick); }
+function tick(){ ctx.clearRect(0,0,cv.width,cv.height);
+  parts=parts.filter(p=>p.life>0); parts.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=.06*devicePixelRatio; p.vx*=.985; p.life-=.012;
+    ctx.globalAlpha=Math.max(p.life,0); ctx.fillStyle=p.life>.6?"#F0D58C":"#DDB65A"; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,7); ctx.fill(); });
+  ctx.globalAlpha=1; raf=parts.length?requestAnimationFrame(tick):0; }
+
+// ---------- screens ----------
+function header(d){ return `<p class="eyebrow">${esc(KINDS[d.kind]||"Drawing")}</p>
+  <h1 class="prize">${esc(d.prize||d.name)}</h1>${d.prize&&d.name&&d.name!==d.prize?`<p class="kind">${esc(d.name)}</p>`:""}
+  <img class="div" src="masq/divider.svg" alt="">`; }
+function slotsHTML(n){ return `<div class="digits" id="digits">${Array.from({length:n},()=>`<div class="slot"><span>0</span></div>`).join("")}</div>`; }
+function clear(){ timers.forEach(clearTimeout); timers=[]; clearInterval(scramble); scramble=null; }
+const later=(ms,fn)=>timers.push(setTimeout(fn,ms));
+function startScramble(){ clearInterval(scramble);
+  scramble=setInterval(()=>{ document.querySelectorAll(".slot:not(.lock) span").forEach(s=>{ s.textContent=Math.floor(Math.random()*10); }); },still?400:55); }
+function waiting(d){ clear(); running=false; shown=null;
+  app.innerHTML=`${header(d)}<p class="label wait">Drawing the winning ticket</p>${slotsHTML(4)}<div class="winner"></div>`; startScramble(); }
+function play(){ const d=draw.data, w=d.winner; clear(); running=true;
+  const digits=String(w.ticket).replace(/\D/g,"").split(""); shown=JSON.stringify(w);
+  app.innerHTML=`${header(d)}<p class="label">Winning ticket</p>${slotsHTML(digits.length||1)}
+    <div class="winner"><p class="congrats" id="cg">Congratulations</p><p class="name" id="nm" aria-label="${esc(w.name||"")}"></p></div>`;
+  startScramble();
+  const slots=[...document.querySelectorAll(".slot")];
+  // The digits land one at a time; the last one keeps everyone waiting a little longer.
+  let t=still?300:2600;
+  slots.forEach((el,i)=>{ const last=i===slots.length-1; t+=still?200:(last?2100:1150+i*120);
+    later(t,()=>{ el.querySelector("span").textContent=digits[i]; el.classList.add("lock","flash");
+      const r=el.getBoundingClientRect(); burst(r.left+r.width/2,r.top+r.height/2,last?90:26,last?7:4); }); });
+  later(t+(still?100:700),()=>{ clearInterval(scramble); $("cg").classList.add("on");
+    const r=$("digits").getBoundingClientRect(); burst(r.left+r.width*.2,r.top,60,8); burst(r.left+r.width*.8,r.top,60,8);
+    if(w.name) decodeName(String(w.name)); else running=false; });
+}
+function decodeName(name){ const el=$("nm"), A="ABCDEFGHIJKLMNOPQRSTUVWXYZ", up=name.toUpperCase(); let locked=0;
+  const step=still?1:Math.max(1,Math.round(name.length/18));
+  const iv=setInterval(()=>{ locked=Math.min(name.length,locked+(Math.random()<.55?step:0));
+    el.innerHTML=esc(name.slice(0,locked))+[...up.slice(locked)].map(ch=>/\s/.test(ch)?ch:`<span class="s">${A[Math.floor(Math.random()*26)]}</span>`).join("");
+    if(locked>=name.length){ clearInterval(iv); el.textContent=name; running=false; } },still?20:60);
+  timers.push(setTimeout(()=>clearInterval(iv),20000)); }
+function pickList(list){ clear();
+  app.innerHTML=`<p class="eyebrow">Charity Dinner &amp; Auction</p><h1 class="prize">Winner reveal</h1><img class="div" src="masq/divider.svg" alt="">
+    ${list.length?`<p class="msg" style="margin:0">Choose a drawing to put on the screen.</p><div class="pick">${list.map(x=>`<a href="?d=${encodeURIComponent(x.id)}">${esc(x.data.prize||x.data.name)}<small>${esc(KINDS[x.data.kind]||"")}${x.data.name&&x.data.prize?` · ${esc(x.data.name)}`:""}${x.data.winner?" · winner recorded":""}</small></a>`).join("")}</div>`
+      :`<p class="msg">No drawings yet. Add them in the auction admin, under Raffles.</p>`}`; }
+function stop(msg){ clear(); app.innerHTML=`<p class="eyebrow">Charity Dinner &amp; Auction</p><p class="msg">${msg}</p>`; }
+
+// ---------- data ----------
+function apply(row){
+  if(!row){ return stop("This drawing was removed. Ask the auction team for a new link."); }
+  const prev=draw; draw=row; const w=row.data.winner;
+  if(!w||!w.ticket){ if(!prev||prev.data.winner||!document.getElementById("digits")) waiting(row.data); else { /* keep the waiting screen running */ } return; }
+  if(JSON.stringify(w)!==shown) play();
+}
+async function load(){ const {data,error}=await sb.from("drawings").select("*").eq("id",id).maybeSingle(); if(error) throw error; return data; }
+async function start(){
+  const cfg=window.AUCTION_CONFIG||{};
+  if(!cfg.supabaseUrl||!window.supabase) return stop("This screen couldn't connect. Check the internet connection and reload.");
+  sb=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey);
+  let s=null; try{ s=(await sb.auth.getSession()).data.session; }catch(e){}
+  if(!s){ const r=await sb.auth.signInAnonymously(); if(r.error) return stop("This screen couldn't sign in. Ask the auction team to check the setup."); }
+  if(!id){ try{ const {data}=await sb.from("drawings").select("*"); const l=(data||[]).sort((a,b)=>(a.data.no||0)-(b.data.no||0)); return pickList(l); }catch(e){ return stop("This screen couldn't load the drawings. Reload to try again."); } }
+  try{ apply(await load()); }catch(e){ return stop("This screen couldn't load the drawing. Reload to try again."); }
+  // Watch for the winner being recorded (or changed): a quick check every two seconds.
+  setInterval(async()=>{ if(running) return; try{ apply(await load()); }catch(e){} },2000);
+}
+start();
+})();
+</script>
+</body>
+</html>

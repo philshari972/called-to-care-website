@@ -142,6 +142,32 @@ console.log('donor baskets');
   ok(cfg2.baskets[0].given && cfg2.baskets[0].givenBy === 'The Ver Family', 'dinner page shows the basket as given');
   bk.held_until = null; r = await (await post(checkout, { kind: 'basket', item: bk.id, provider: 'stripe', contact: who })).json(); ok(!r.ok && /just gave/.test(r.error), 'a given basket cannot be bought again'); }
 
+console.log('basket claims and links');
+{ const bk = T.baskets[0]; ok(bk.claim_kind === 'paid', 'a basket paid online is recorded as paid');
+  const b2 = { id: uid(), title: 'Spa Day', description: 'Robe\nCandles\nGift card', cost: 400, active: true, sort: 3, claimed_at: null, held_until: null };
+  const b3 = { id: uid(), title: 'Private Chef', description: '', cost: 900, active: true, unlisted: true, sort: 4, claimed_at: null, held_until: null };
+  T.baskets.push(b2, b3);
+  let cfg = await (await (await import('../functions/config.mjs')).default()).json();
+  ok(cfg.basketClaims.open && cfg.basketClaims.deadline === '2027-02-01', 'claims are open until Feb 1, 2027 by default');
+  ok(cfg.baskets.find((x) => x.id === b3.id)?.unlisted === true, 'a link-only basket is sent to the page marked unlisted (so its link works)');
+  const who = { first: 'Cl', last: 'Aim', email: 'claim@x.com', street: '1 Main St', city: 'Plano', state: 'IL', zip: '60545' };
+  r = await (await post(checkout, { action: 'claim', kind: 'basket', item: b2.id, contact: who })).json(); ok(!r.ok && /phone/.test(r.error), 'claiming needs a phone number');
+  const n0 = stripeCalls.length, m0 = sent.length;
+  r = await (await post(checkout, { action: 'claim', kind: 'basket', item: b2.id, display_name: 'The Aims', contact: { ...who, phone: '(630) 555-0100' } })).json();
+  ok(r.ok && /February 1, 2027/.test(r.deadline) && b2.claimed_at && b2.claim_kind === 'fill' && b2.claimed_name === 'The Aims' && stripeCalls.length === n0, 'claim holds the basket with no payment');
+  const mail = sent.slice(m0); ok(mail.some((e) => e.to[0] === 'claim@x.com' && /Spa Day/.test(e.subject) && /Candles/.test(e.html) && /February 1, 2027/.test(e.html)), 'claimer gets the list and the fill-by date');
+  ok(mail.some((e) => /Basket claimed/.test(e.subject)), 'staff are told about the claim');
+  r = await (await post(checkout, { action: 'claim', kind: 'basket', item: b2.id, contact: { ...who, email: 'b@x.com', phone: '6305550101' } })).json(); ok(!r.ok && /claimed/.test(r.error), 'a claimed basket cannot be claimed again');
+  r = await (await post(checkout, { kind: 'basket', item: b2.id, provider: 'stripe', contact: who })).json(); ok(!r.ok, 'a claimed basket cannot be paid for');
+  cfg = await (await (await import('../functions/config.mjs')).default()).json();
+  const c2 = cfg.baskets.find((x) => x.id === b2.id); ok(c2.given && c2.claimed && c2.givenBy === 'The Aims', 'dinner page shows it as claimed');
+  T.settings.push({ key: 'basket_claims', value: { on: true, deadline: '2026-01-31', dropoff: '' } });
+  r = await (await post(checkout, { action: 'claim', kind: 'basket', item: b3.id, contact: { ...who, phone: '6305550100' } })).json(); ok(!r.ok && /closed/.test(r.error) && !b3.claimed_at, 'no claims after the deadline');
+  cfg = await (await (await import('../functions/config.mjs')).default()).json(); ok(!cfg.basketClaims.open, 'dinner page hides claiming after the deadline');
+  T.settings.find((x) => x.key === 'basket_claims').value = { on: false, deadline: '2027-02-01' };
+  cfg = await (await (await import('../functions/config.mjs')).default()).json(); ok(!cfg.basketClaims.open, 'claiming can be turned off');
+  T.settings = T.settings.filter((x) => x.key !== 'basket_claims'); }
+
 console.log('monthly gift');
 r = await (await post(checkout, { kind: 'donation', amount: 50, recurring: true, provider: 'stripe', contact: { first: 'Cy', last: 'Ro', email: 'cy@x.com', street: '1 Main St', city: 'Plano', state: 'IL', zip: '60545' } })).json();
 ok(r.ok && T.subscriptions.length === 1 && T.contacts.find((c) => c.email === 'cy@x.com').tags.includes('Monthly Partner'), 'monthly gift creates subscription + Monthly Partner tag');

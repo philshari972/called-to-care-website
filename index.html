@@ -131,9 +131,16 @@ img{max-width:100%}
 .bkd .bkd-info li:first-child{border-top:0}
 .bkd .bkd-give{margin-top:auto;background:#DDB65A;color:#141315;border:1px solid #DDB65A;font-family:Cinzel,Georgia,serif;font-weight:600;letter-spacing:.16em;font-size:.8rem;padding:16px 20px;cursor:pointer;width:100%}
 .bkd .bkd-give:hover{background:#E9C978}
+.bkd .bkd-acts{margin-top:auto;display:grid;gap:10px}
+.bkd .bkd-acts .bkd-give{margin-top:0}
+.bkd .bkd-claim{background:none;border:1px solid rgba(221,182,90,.6);color:#F3ECDD;font-family:Cinzel,Georgia,serif;font-weight:500;letter-spacing:.14em;font-size:.74rem;padding:13px 16px;cursor:pointer;width:100%;line-height:1.5}
+.bkd .bkd-claim:hover{border-color:#DDB65A;color:#F0D58C}
+.bkd .bkd-claim small{display:block;font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;letter-spacing:0;font-size:1rem;color:#B9B1A2;text-transform:none}
+#baskets .bk-claim{font-family:var(--book);font-style:italic;font-size:1.05rem;color:var(--ivory);background:none;border:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(221,182,90,.6);padding:4px 2px;margin-top:4px}
+#baskets .bk-claim:hover{color:var(--gold)}
 .bkd .bkd-x{position:absolute;right:12px;top:10px;width:44px;height:44px;background:none;border:0;color:#DDB65A;font-size:30px;cursor:pointer;z-index:2}
 .bkd :focus-visible{outline:2px solid #DDB65A;outline-offset:3px}
-@media (max-width:760px){.bkd{padding:0;place-items:stretch}.bkd .bkd-panel{grid-template-columns:1fr;max-height:100vh;height:100%}.bkd .bkd-gal{padding:56px 16px 0}.bkd .bkd-info{padding:20px 20px 0}.bkd .bkd-give{position:sticky;bottom:0;box-shadow:0 -14px 0 #1A1918,0 14px 0 #1A1918}.bkd .bkd-info>.given-tag{margin-bottom:20px}}
+@media (max-width:760px){.bkd{padding:0;place-items:stretch}.bkd .bkd-panel{grid-template-columns:1fr;max-height:100vh;height:100%}.bkd .bkd-gal{padding:56px 16px 0}.bkd .bkd-info{padding:20px 20px 0}.bkd .bkd-give{position:sticky;bottom:0;box-shadow:0 -14px 0 #1A1918,0 14px 0 #1A1918}.bkd .bkd-acts{position:sticky;bottom:0;background:#1A1918;padding:14px 0;box-shadow:0 14px 0 #1A1918}.bkd .bkd-acts .bkd-give{position:static;box-shadow:none}.bkd .bkd-info>.given-tag{margin-bottom:20px}}
 #baskets .given-tag b{display:block;font-family:var(--book);font-style:italic;letter-spacing:0;font-size:1.05rem;font-weight:500;color:var(--ivory);margin-top:4px;text-transform:none}
 .masq .hint{font-family:var(--book);font-style:italic;font-size:1.05rem}
 .masq .pill.p-hot,.masq .pill.p-navy,.masq .pill.p-pink{background:var(--gold);color:#141315;border-color:var(--gold)}
@@ -1104,7 +1111,7 @@ html.tickets-on .tix-off{display:none!important}
   </section>
 
   <section id="baskets" hidden>
-    <div class="wrap center vstack" style="gap:14px;margin-bottom:44px"><img class="mq-div" src="masq/divider.svg" alt="" aria-hidden="true"><span class="label">Donor baskets</span><h2 class="d2 c-navy">Give an auction basket.</h2><p style="max-width:640px;margin-inline:auto">Choose a basket and cover its cost. We put it together for the auction, and every dollar it raises goes to foster and adoptive families. You'll get a receipt for your gift.</p></div>
+    <div class="wrap center vstack" style="gap:14px;margin-bottom:44px"><img class="mq-div" src="masq/divider.svg" alt="" aria-hidden="true"><span class="label">Donor baskets</span><h2 class="d2 c-navy">Give an auction basket.</h2><p style="max-width:640px;margin-inline:auto">Choose a basket and cover its cost<span id="bkClaimIntro">, or claim one and fill it yourself</span>. Every dollar it raises at the auction goes to foster and adoptive families.</p></div>
     <div class="wrap tiers" id="basketGrid"></div>
   </section>
   <div class="bkd" id="bkDetail" hidden role="dialog" aria-modal="true" aria-labelledby="bkdTitle"><button class="bkd-scrim" type="button" data-bkd-close aria-label="Close"></button><div class="bkd-panel" id="bkdPanel"></div></div>
@@ -1759,6 +1766,9 @@ html.tickets-on .tix-off{display:none!important}
           <div class="q" id="coAmtWrap" hidden><span class="lbl">Monthly Amount</span>
             <div class="co-amts" role="group" aria-label="Monthly amount"><button type="button" data-coamt="50">$50</button><button type="button" data-coamt="100">$100</button><button type="button" data-coamt="250">$250</button><span class="money"><span>$</span><input id="co-amt" inputmode="decimal" placeholder="Other" aria-label="Other monthly amount"></span></div>
             <span class="hint">Give $50 or more a month for 6 months or longer to get early access to Charity Dinner tickets.</span></div>
+          <div class="q" id="coBkWrap" hidden><span class="lbl">How Would You Like to Give <span class="nw">This Basket?</span></span>
+            <div class="choices"><label class="choice" for="co-bk1"><input type="radio" id="co-bk1" name="bkhow" value="pay" checked> Pay its cost online now</label><label class="choice" for="co-bk2"><input type="radio" id="co-bk2" name="bkhow" value="fill"> Claim it and fill it myself</label></div>
+            <div class="check-note" id="coClaimNote" hidden></div></div>
           <label class="q" for="co-qty" id="coQtyWrap" hidden><span class="lbl">Number of <span class="nw">Tickets<span class="req">*</span></span></span><input id="co-qty" name="qty" type="number" min="1" max="20" value="1" inputmode="numeric"></label>
           <label class="q" for="co-display" id="coDisplayWrap"><span class="lbl">Name as It Should Appear on <span class="nw">Signage<span class="req">*</span></span></span><input id="co-display" name="display_name" placeholder="Company, family, or individual"></label>
           <div class="c2">
@@ -1968,6 +1978,9 @@ html.tickets-on .tix-off{display:none!important}
     const esc=v=>String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     const fmt=n=>'$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2});
     const total=()=>cur.kind==='donation'?cur.price:cur.price*(cur.qty?Math.max(1,+$('co-qty').value||1):1);
+    const longDay=d=>/^\d{4}-\d{2}-\d{2}$/.test(d||'')?new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}):'';
+    const claimsOn=()=>!!(C2C.cfg&&C2C.cfg.basketClaims&&C2C.cfg.basketClaims.open);
+    const claimBy=()=>longDay(C2C.cfg&&C2C.cfg.basketClaims&&C2C.cfg.basketClaims.deadline);
     const upd=()=>{$('coTotal').textContent=fmt(total())+(cur.recurring?' / month':'');};
     const loadScript=src=>new Promise((res,rej)=>{if(document.querySelector(`script[src="${src}"]`))return res();const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('Could not load the payment form. Please refresh and try again.'));document.head.appendChild(s)});
     function step(which){f.hidden=which!=='form';$('coPayStep').hidden=which!=='pay';$('coDone').hidden=which!=='done';}
@@ -1983,7 +1996,10 @@ html.tickets-on .tix-off{display:none!important}
       const dl=$('coDisplayWrap').querySelector('.lbl'); dl.dataset.orig=dl.dataset.orig||dl.innerHTML;
       dl.innerHTML=isBasket?'Name to Show on the <span class="nw">Basket (optional)</span>':dl.dataset.orig; $('co-display').placeholder=isBasket?'Leave blank to give quietly':'Company, family, or individual';
       $('coGuestsWrap').hidden=!(isTicket||isTable||['legacy','gold','platinum','diamond'].includes(o.item));
-      const isSp=o.kind==='sponsorship'; $('coHowWrap').hidden=!isSp; $('co-how1').checked=true; howUpd();
+      const isSp=o.kind==='sponsorship'; $('coHowWrap').hidden=!isSp; $('co-how1').checked=true;
+      $('coBkWrap').hidden=!(isBasket&&claimsOn()); $(o.claim&&isBasket&&claimsOn()?'co-bk2':'co-bk1').checked=true;
+      if(isBasket) $('coClaimNote').innerHTML=`<b>We'll hold this basket for you.</b> Fill it with what's on its list and bring or send it in by <b>${esc(claimBy())}</b>. We'll email you the list and drop-off details. Nothing is charged.`;
+      howUpd();
       $('coErr').textContent=''; $('coErr2').textContent=''; step('form'); upd();
       $('coPaypal').hidden=!!o.recurring; renderPayPal();
       co.hidden=false; document.body.classList.add('locked'); setTimeout(()=>$('co-first').focus(),60);
@@ -1991,16 +2007,17 @@ html.tickets-on .tix-off{display:none!important}
     document.querySelectorAll('.pick').forEach(b=>b.addEventListener('click',()=>C2C.openCheckout({kind:b.dataset.item==='ticket'?'tickets':b.dataset.item==='table'?'table':'sponsorship',item:b.dataset.item,name:b.dataset.name,price:+b.dataset.price,qty:!!b.dataset.qty})));
     $('co-qty').addEventListener('input',upd);
     // Donor baskets (added by the committee in the Auction Admin)
-    C2C.renderBaskets=function(){const list=(C2C.cfg&&C2C.cfg.baskets)||[], sec=$('baskets'), nav=$('basketNav'); if(!sec) return;
-      sec.hidden=!list.length; if(nav) nav.hidden=!list.length; if(!list.length) return;
+    const givenTag=(b,style)=>`<span class="given-tag"${style||''}>${b.claimed?'CLAIMED':'GIVEN'}${b.givenBy?`<b>Thank you, ${esc(b.givenBy)}</b>`:'<b>Thank you!</b>'}</span>`;
+    C2C.renderBaskets=function(){const list=((C2C.cfg&&C2C.cfg.baskets)||[]).filter(b=>!b.unlisted), sec=$('baskets'), nav=$('basketNav'); if(!sec) return;
+      sec.hidden=!list.length; if(nav) nav.hidden=!list.length; if(!list.length) return; $('bkClaimIntro').hidden=!claimsOn();
       $('basketGrid').innerHTML=list.map(b=>{const lines=String(b.description||'').split(/\n+/).map(x=>x.trim()).filter(Boolean);
         const pics=(b.photos&&b.photos.length?b.photos:b.photo?[b.photo]:[]), more=lines.length>3||pics.length>1;
         return `<div class="lab tier${b.given?' given':''}"><button type="button" class="bk-open" data-bkd="${esc(b.id)}" aria-label="See details for ${esc(b.title)}" style="position:relative">${pics.length?`<img class="bk-photo" src="${esc(pics[0])}" alt="${esc(b.title)}" loading="lazy">${pics.length>1?`<span class="bk-count">${pics.length} PHOTOS</span>`:''}`:'<div class="bk-photo none" aria-hidden="true">BASKET</div>'}</button>
         <div class="tier-top"><span class="label">${esc(b.title)}</span><span class="price">${fmt(b.cost)}</span></div>
         ${lines.length?`<ul class="perks">${lines.slice(0,3).map(l=>`<li>${esc(l)}</li>`).join('')}</ul>`:''}
         ${more||lines.length?`<button type="button" class="bk-more" data-bkd="${esc(b.id)}">See details${lines.length>3?` (${lines.length-3} more)`:''}</button>`:''}
-        ${b.given?`<span class="given-tag">GIVEN${b.givenBy?`<b>Thank you, ${esc(b.givenBy)}</b>`:'<b>Thank you!</b>'}</span>`
-          :`<button type="button" class="pill p-navy pick-basket" data-basket="${esc(b.id)}" style="width:100%;margin-top:auto">Give This Basket</button>`}</div>`}).join('');};
+        ${b.given?givenTag(b)
+          :`<button type="button" class="pill p-navy pick-basket" data-basket="${esc(b.id)}" style="width:100%;margin-top:auto">Give This Basket</button>${claimsOn()?`<button type="button" class="bk-claim" data-claim="${esc(b.id)}">or claim it and fill it yourself</button>`:''}`}</div>`}).join('');};
     C2C.ready.then(()=>C2C.renderBaskets());
     // Basket details: every photo and the full description
     let bkd=null, bkdN=0, bkdFrom=null;
@@ -2010,8 +2027,8 @@ html.tickets-on .tix-off{display:none!important}
         ${pics.length>1?`<div class="bkd-thumbs">${pics.map((u,i)=>`<button type="button" data-bkd-pic="${i}" aria-label="Photo ${i+1}" aria-current="${i===bkdN}"><img src="${esc(u)}" alt=""></button>`).join('')}</div>`:''}`:'<div class="bkd-main" aria-hidden="true" style="color:#DDB65A;font-family:Cinzel,serif;letter-spacing:.2em">BASKET</div>'}</div>
        <div class="bkd-info"><span class="bkd-lbl">Donor basket</span><h2 id="bkdTitle">${esc(b.title)}</h2><span class="bkd-price">${fmt(b.cost)}</span>
         ${lines.length?`<ul>${lines.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>`:''}
-        ${b.given?`<span class="given-tag" style="font-family:Cinzel,serif;letter-spacing:.16em;font-size:.8rem;color:#DDB65A;border:1px solid rgba(221,182,90,.5);padding:14px;text-align:center;margin-top:auto">GIVEN<b style="display:block;font-family:'Cormorant Garamond',serif;font-style:italic;letter-spacing:0;font-size:1.1rem;font-weight:500;color:#F3ECDD;margin-top:4px">${b.givenBy?`Thank you, ${esc(b.givenBy)}`:'Thank you!'}</b></span>`
-          :`<button class="bkd-give" type="button" data-bkd-give>Give This Basket</button>`}</div>`;}
+        ${b.given?`<span class="given-tag" style="font-family:Cinzel,serif;letter-spacing:.16em;font-size:.8rem;color:#DDB65A;border:1px solid rgba(221,182,90,.5);padding:14px;text-align:center;margin-top:auto">${b.claimed?'CLAIMED':'GIVEN'}<b style="display:block;font-family:'Cormorant Garamond',serif;font-style:italic;letter-spacing:0;font-size:1.1rem;font-weight:500;color:#F3ECDD;margin-top:4px">${b.givenBy?`Thank you, ${esc(b.givenBy)}`:'Thank you!'}</b></span>`
+          :`<div class="bkd-acts"><button class="bkd-give" type="button" data-bkd-give>Give This Basket · ${fmt(b.cost)}</button>${claimsOn()?`<button class="bkd-claim" type="button" data-bkd-claim>Claim It and Fill It Yourself<small>Bring it in filled by ${esc(claimBy())}</small></button>`:''}</div>`}</div>`;}
     function openDetail(id,from){bkd=(C2C.cfg.baskets||[]).find(x=>x.id===id); if(!bkd) return; if($('bkDetail').parentNode!==document.body) document.body.appendChild($('bkDetail')); bkdN=0; bkdFrom=from; drawDetail(); $('bkDetail').hidden=false; document.body.classList.add('locked'); setTimeout(()=>$('bkdPanel').querySelector('.bkd-x').focus(),30);}
     function closeDetail(){ $('bkDetail').hidden=true; document.body.classList.remove('locked'); if(bkdFrom&&bkdFrom.isConnected) bkdFrom.focus(); }
     document.addEventListener('click',e=>{
@@ -2020,15 +2037,19 @@ html.tickets-on .tix-off{display:none!important}
       if(e.target.closest('[data-bkd-close]')){ closeDetail(); return; }
       const st=e.target.closest('[data-bkd-step]'); if(st){ const n=(bkd.photos||[]).length||1; bkdN=(bkdN+(+st.dataset.bkdStep)+n)%n; drawDetail(); $('bkdPanel').querySelector('[data-bkd-step="'+st.dataset.bkdStep+'"]').focus(); return; }
       const pc=e.target.closest('[data-bkd-pic]'); if(pc){ bkdN=+pc.dataset.bkdPic; drawDetail(); $('bkdPanel').querySelector('[data-bkd-pic="'+bkdN+'"]').focus(); return; }
-      if(e.target.closest('[data-bkd-give]')){ const b=bkd; closeDetail(); C2C.openCheckout({kind:'basket',item:b.id,name:b.title,price:b.cost,title:'Give a Basket',eyebrow:'<span class="nw">Charity Dinner &amp; Auction</span><span style="display:block">Donor Baskets</span>'}); }
+      const gv=e.target.closest('[data-bkd-give],[data-bkd-claim]'); if(gv){ const b=bkd; closeDetail(); C2C.openCheckout({kind:'basket',item:b.id,name:b.title,price:b.cost,claim:gv.hasAttribute('data-bkd-claim'),title:'Give a Basket',eyebrow:'<span class="nw">Charity Dinner &amp; Auction</span><span style="display:block">Donor Baskets</span>'}); }
     });
     document.addEventListener('keydown',e=>{ if($('bkDetail').hidden) return;
       if(e.key==='Escape'){ closeDetail(); }
       else if((e.key==='ArrowRight'||e.key==='ArrowLeft')&&(bkd.photos||[]).length>1){ const n=bkd.photos.length; bkdN=(bkdN+(e.key==='ArrowRight'?1:-1)+n)%n; drawDetail(); }
       else if(e.key==='Tab'){ const f=[...$('bkdPanel').querySelectorAll('button')]; if(!f.length) return; const first=f[0], last=f[f.length-1];
         if(e.shiftKey&&document.activeElement===first){ e.preventDefault(); last.focus(); } else if(!e.shiftKey&&document.activeElement===last){ e.preventDefault(); first.focus(); } } });
-    document.addEventListener('click',e=>{const a=e.target.closest('[data-basket]'); if(!a) return; const b=(C2C.cfg.baskets||[]).find(x=>x.id===a.dataset.basket); if(!b||b.given) return;
-      C2C.openCheckout({kind:'basket',item:b.id,name:b.title,price:b.cost,title:'Give a Basket',eyebrow:'<span class="nw">Charity Dinner &amp; Auction</span><span style="display:block">Donor Baskets</span>'});});
+    document.addEventListener('click',e=>{const a=e.target.closest('[data-basket],[data-claim]'); if(!a) return; const b=(C2C.cfg.baskets||[]).find(x=>x.id===(a.dataset.basket||a.dataset.claim)); if(!b||b.given) return;
+      C2C.openCheckout({kind:'basket',item:b.id,name:b.title,price:b.cost,claim:!!a.dataset.claim,title:'Give a Basket',eyebrow:'<span class="nw">Charity Dinner &amp; Auction</span><span style="display:block">Donor Baskets</span>'});});
+    // A link to one basket (?basket=1a2b3c4d#charity-dinner) opens its details, even for baskets shared only by link.
+    C2C.ready.then(()=>{const q=new URLSearchParams(location.search).get('basket'); if(!q) return;
+      const b=(C2C.cfg.baskets||[]).find(x=>x.id.startsWith(q.toLowerCase())); history.replaceState(null,'',location.pathname+location.hash);
+      setTimeout(()=>{ const sec=$('baskets'); if(sec&&!sec.hidden) sec.scrollIntoView({block:'start'}); if(b) openDetail(b.id,null); },250);});
     // Monthly amount chooser (Charity Dinner monthly partners)
     const setAmt=v=>{cur.price=v;$('coPrice').textContent=fmt(v)+'/mo';upd();};
     document.querySelectorAll('[data-coamt]').forEach(b=>b.addEventListener('click',()=>{$('co-amt').value='';document.querySelectorAll('[data-coamt]').forEach(x=>x.classList.toggle('on',x===b));setAmt(+b.dataset.coamt);}));
@@ -2037,8 +2058,12 @@ html.tickets-on .tix-off{display:none!important}
       C2C.openCheckout({kind:'donation',item:'donation',name:'Monthly Partner',title:'Become a Monthly Partner',price:50,recurring:true,fund:'Where needed most',choose:true,min:50,
         eyebrow:'<span class="nw">Charity Dinner &amp; Auction</span><span style="display:block">Monthly Partners</span>'});});
     const byCheck=()=>cur&&cur.kind==='sponsorship'&&$('co-how2').checked;
-    function howUpd(){const c=byCheck();$('coCheckNote').hidden=!c;$('coNext').textContent=c?'Reserve My Sponsorship':'Continue to Payment';$('coPaypal').style.display=c?'none':'';}
-    ['co-how1','co-how2'].forEach(id=>$(id).addEventListener('change',howUpd));
+    const claiming=()=>cur&&cur.kind==='basket'&&!$('coBkWrap').hidden&&$('co-bk2').checked;
+    function howUpd(){const c=byCheck(), k=claiming();$('coCheckNote').hidden=!c;$('coClaimNote').hidden=!k;
+      $('coNext').textContent=c?'Reserve My Sponsorship':k?'Claim This Basket':'Continue to Payment';$('coPaypal').style.display=c||k?'none':'';
+      document.querySelector('#checkout .co-total').style.display=k?'none':'';
+      if(cur&&cur.kind==='basket'){$('coTitle').textContent=k?'Claim a Basket':'Give a Basket';$('coPrice').textContent=k?'Fill it yourself':fmt(cur.price);}}
+    ['co-how1','co-how2','co-bk1','co-bk2'].forEach(id=>$(id).addEventListener('change',howUpd));
     co.addEventListener('click',e=>{if(e.target.closest('[data-close]'))close();});
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!co.hidden)close();});
     phoneFmt($('co-phone'));
@@ -2058,6 +2083,12 @@ html.tickets-on .tix-off{display:none!important}
     }
     // Step 1 -> Step 2 (Stripe Payment Element: card, Apple Pay, Google Pay, bank)
     f.addEventListener('submit',async e=>{e.preventDefault(); if(!valid()) return;
+      if(claiming()){const b=$('coNext');C2C.busy(b,true,'Claiming…');
+        try{const r=await C2C.api('checkout',{...payload('claim'),action:'claim'});
+          const bk=(C2C.cfg.baskets||[]).find(x=>x.id===cur.item); if(bk){bk.given=true;bk.claimed=true;bk.givenBy=f.display_name.value.trim();} C2C.renderBaskets&&C2C.renderBaskets();
+          $('coDoneMsg').innerHTML=`Thank you, ${esc(f.first_name.value)}! The <b>${esc(cur.name)}</b> basket is yours to fill.`;
+          $('coDoneNote').innerHTML=`<span class="check-note" style="display:block"><b>Please bring or send it in, filled, by ${esc(r.deadline||claimBy())}.</b> ${esc(r.dropoff||"We'll email you where to drop it off.")}</span><br>We emailed the list of what goes inside to ${esc(f.email.value)}. Questions? donations@wearecalledtocare.com`;
+          step('done');}catch(x){$('coErr').textContent=x.message}finally{C2C.busy(b,false);howUpd()}return}
       if(byCheck()){const b=$('coNext');C2C.busy(b,true,'Reserving…');
         try{const r=await C2C.api('checkout',{...payload('check'),action:'pledge'});
           $('coDoneMsg').innerHTML=`Thank you, ${esc(f.first_name.value)}! Your <b>${esc(cur.name)}</b> (${fmt(cur.price)}) is reserved.`;

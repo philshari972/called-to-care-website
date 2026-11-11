@@ -4,7 +4,7 @@
 //   -> Stripe: { clientSecret, paymentId }  |  PayPal: { orderID, paymentId }
 //   { action:'capture', orderID }  (PayPal, after the buyer approves)
 // Prices are decided here on the server, never by the browser.
-import { ticketsOpen, CHECK_ADDRESS, sendEmail, emailShell, p, box, alertStaff, money as fmtMoney, esc, SITE_URL } from './_lib.mjs';
+import { ticketsOpen, claimsOpen, longDate, CHECK_ADDRESS, sendEmail, emailShell, p, box, alertStaff, money as fmtMoney, esc, SITE_URL } from './_lib.mjs';
 import { db, setting, upsertContact, finalizePayment, json, fail, clean, isEmail, looksLikeBot, env, money,
   SPONSOR_LEVELS, TICKET_PRICE, TABLE_PRICE, DINNER_YEAR } from './_lib.mjs';
 
@@ -101,6 +101,7 @@ export default async (req) => {
   // ----- start a payment -----
   if (looksLikeBot(b)) return fail('Please try again.');
   if (b.action === 'pledge') return pledge(b);
+  if (b.action === 'claim') return claimBasket(b);
   const c = b.contact || {};
   const email = clean(c.email, 200).toLowerCase();
   if (!clean(c.first) || !clean(c.last) || !isEmail(email)) return fail('Please enter your first name, last name, and a valid email.');
@@ -177,4 +178,37 @@ async function pledge(b) {
     await alertStaff(`New sponsor (paying by check): ${display}`, [`${lv.name} · ${fmtMoney(item.amount)} · check is coming by mail.`, `Contact: ${clean(c.first)} ${clean(c.last)} · ${email} · ${clean(c.phone)}`], `${SITE_URL()}/admin/#sponsors`);
     return json({ ok: true, check: CHECK_ADDRESS });
   } catch (e) { console.error('pledge', e.message); return fail('Sorry, something went wrong. Please try again or email donations@wearecalledtocare.com.', 500); }
+}
+
+// Claim a donor basket: the donor fills it themselves and brings it in by the deadline. No payment.
+async function claimBasket(b) {
+  if (b.kind !== 'basket' || !/^[0-9a-f-]{36}$/.test(String(b.item || ''))) return fail('Unknown basket.');
+  const c = b.contact || {}; const email = clean(c.email, 200).toLowerCase();
+  if (!clean(c.first) || !clean(c.last) || !isEmail(email)) return fail('Please enter your first name, last name, and a valid email.');
+  if (String(clean(c.phone)).replace(/\D/g, '').length < 10) return fail('Please enter a phone number so we can reach you about your basket.');
+  const cl = await setting('basket_claims', { on: true, deadline: '2027-02-01', dropoff: '' });
+  if (!claimsOpen(cl)) return fail('Claiming baskets has closed. You can still give this basket by paying its cost online.');
+  try {
+    const [bk] = await db(`baskets?id=eq.${b.item}&select=id,title,cost,description,active,claimed_at,held_until`);
+    if (!bk || !bk.active) return fail('This basket is no longer available. Please choose another.');
+    if (bk.claimed_at) return fail('Someone just claimed this basket. Thank you for thinking of it! Please choose another.');
+    const contactId = await upsertContact({ first: c.first, last: c.last, email, phone: c.phone, street: c.street, city: c.city, state: c.state, zip: c.zip, tags: ['Basket Donor'], source: 'Website basket claim' });
+    const now = new Date().toISOString(); const display = clean(b.display_name, 120);
+    const got = await db(`baskets?id=eq.${bk.id}&active=eq.true&claimed_at=is.null&or=(held_until.is.null,held_until.lt.${now})`, { method: 'PATCH', prefer: 'return=representation',
+      body: { claimed_at: now, claimed_contact: contactId, claimed_name: display, claim_kind: 'fill', updated_at: now } });
+    if (!got.length) return fail('Someone is giving this basket right now. Please choose another, or try again in a few minutes.');
+    const due = longDate(cl.deadline);
+    const lines = String(bk.description || '').split(/\n+/).map((x) => x.trim()).filter(Boolean);
+    const html = emailShell({ preheader: `You claimed the ${bk.title} basket. Please bring it in filled by ${due}.`, heading: `Thank you, ${esc(clean(c.first))}!`,
+      bodyHtml: p(`You claimed the <b>${esc(bk.title)}</b> basket for the ${DINNER_YEAR} Charity Dinner &amp; Auction. We're holding it for you, so no one else can take it.`)
+        + box([['Basket', esc(bk.title)], ['Fill it by', esc(due)], ...(display ? [['Name on the basket', esc(display)]] : [])])
+        + (lines.length ? p('<b>What goes inside:</b>') + `<ul style="margin:0 0 16px;padding-left:20px;">${lines.map((l) => `<li style="margin:0 0 4px;">${esc(l)}</li>`).join('')}</ul>` : '')
+        + p(`<b>Please bring or send the filled basket by ${esc(due)}.</b> ${esc(cl.dropoff || "We'll email you where to drop it off.")}`)
+        + p('Questions, or need to change your plans? Email donations@wearecalledtocare.com.'),
+      reason: "You're receiving this because you claimed a donor basket on wearecalledtocare.com." });
+    await sendEmail({ to: email, subject: `You claimed the ${bk.title} basket`, html, template: 'basket-claim', contactId });
+    await alertStaff(`Basket claimed: ${bk.title}`, [`${clean(c.first)} ${clean(c.last)} will fill the ${bk.title} basket and bring it in by ${due}.`,
+      `Contact: ${email} · ${clean(c.phone)}`, display ? `Name to show: ${display}` : 'Name to show: (none, giving quietly)'], `${SITE_URL()}/auction/#admin`);
+    return json({ ok: true, deadline: due, dropoff: cl.dropoff || '' });
+  } catch (e) { console.error('claim', e.message); return fail('Sorry, something went wrong. Please try again or email donations@wearecalledtocare.com.', 500); }
 }

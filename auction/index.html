@@ -1129,7 +1129,7 @@ const API={
     <form id="admform" class="row" style="gap:8px"><input id="admcode" type="password" autocomplete="off" placeholder="Admin code" aria-label="Admin code" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:16px;background:var(--bg)"><button class="btn primary" type="submit">Unlock</button></form>
     ${ui.admErr?`<div class="err" role="alert">${esc(ui.admErr)}</div>`:""}</section>${peopleSec()}`; },
   async saveItem(c){
-    const r=await rpc("admin_upsert_item",{p:{id:c.id,no:c.no,title:c.title,cat:c.cat,value:c.value,start:c.start,reserve:c.reserve,bin:c.bin,featured:!!c.featured,mode:c.mode||"silent",descr:c.desc||"",donor:c.donor||"",pickup:c.pickup||""}});
+    const r=await rpc("admin_upsert_item",{p:{id:c.id,no:c.no,title:c.title,cat:c.cat,value:c.value,start:c.start,reserve:c.reserve,bin:c.bin,premium:!!c.premium,featured:!!c.featured,mode:c.mode||"silent",descr:c.desc||"",donor:c.donor||"",pickup:c.pickup||""}});
     if(!r.err){ await loadCatalog(); await refreshItems(); } return r;
   },
   async deleteItem(id){ const r=await rpc("admin_delete_item",{p_item:id}); if(!r.err){ await loadCatalog(); await refreshItems(); } return r; },
@@ -1174,10 +1174,10 @@ const API={
 /* =====================================================================
    Catalog, settings and gifts
    ===================================================================== */
-const DISP=["no","title","cat","value","reserve","bin","featured","desc","donor"];
+const DISP=["no","title","cat","value","reserve","featured","desc","donor"];
 function withCat(it){
   const c=S.catalog&&S.catalog[it.id]; if(!c) return it;
-  const o=Object.assign({},it); DISP.forEach(k=>{ if(c[k]!==undefined) o[k]=c[k]; }); o.pickupText=c.pickup||""; return o;
+  const o=Object.assign({},it); DISP.forEach(k=>{ if(c[k]!==undefined) o[k]=c[k]; }); o.bin=c.premium?c.bin:null; o.premium=!!c.premium; o.pickupText=c.pickup||""; return o;
 }
 function catList(){ const l=Object.values(S.catalog||{}); return (l.length?l:CATALOG).slice().sort((a,b)=>a.no-b.no); }
 function catOf(id){ return (S.catalog&&S.catalog[id])||CATALOG.find(c=>c.id===id); }
@@ -1185,7 +1185,7 @@ const CFG_DEFAULT={
   org:{name:"Called To Care",ein:"",address:"",signer:"",title:"",thanks:"Thank you for supporting Called To Care. Your generosity makes our work possible."},
   fan:{on:false,title:"Support Called To Care",blurb:"Every gift supports foster and adoptive families. Gifts are 100% tax-deductible.",goal:5000,levels:[100,250,500,1000]},
   siteUrl:"https://auction.wearecalledtocare.com"};
-function cfg(){ const c=S.config||{}; return {org:{...CFG_DEFAULT.org,...(c.org||{})},fan:{...CFG_DEFAULT.fan,...(c.fan||{})},siteUrl:c.siteUrl||CFG_DEFAULT.siteUrl}; }
+function cfg(){ const c=S.config||{}; return {org:{...CFG_DEFAULT.org,...(c.org||{})},fan:{...CFG_DEFAULT.fan,...(c.fan||{})},siteUrl:c.siteUrl||CFG_DEFAULT.siteUrl,premiumMax:Number(c.premiumMax)>0?Number(c.premiumMax):3}; }
 const runDons=()=>Object.values(S.donations||{}).filter(d=>d.run===run());
 function bidderIdsOf(it){ return it.bidderIds||it.maxes.map(m=>m.u); }
 function historyAll(){ return S.allHist||items().flatMap(it=>(it.history||[]).map(h=>({...h,item:it.id}))); }
@@ -1372,7 +1372,10 @@ function renderEdit(){
       ${f("e-value","Fair market value ($)",c.value,"money","used on tax receipts")}
       ${f("e-start","Starting bid ($)",c.start,"money",locked?"locked: item has bids":"")}
       ${f("e-reserve","Reserve ($)",c.reserve,"money","optional, kept private")}
-      ${f("e-bin","Buy It Now ($)",c.bin,"money","optional")}
+      <div class="field full" style="display:grid;gap:8px;padding:12px 14px;border:1px solid var(--line);border-radius:12px">
+        <label class="check"><input type="checkbox" id="e-prem" ${c.premium?"checked":""} ${!c.premium&&premiumCount(c.id)>=cfg().premiumMax?"disabled":""}><span><b>Premium item: allow Buy It Now</b><br><span class="small muted">Off by default. ${premiumCount(c.id)} of ${cfg().premiumMax} premium spots used${!c.premium&&premiumCount(c.id)>=cfg().premiumMax?"; turn one off first, or raise the limit on the Items tab":""}. Silent items only.</span></span></label>
+        ${f("e-bin","Buy It Now price ($)",c.bin,"money","guests can buy it outright at this price")}
+      </div>
       ${f("e-pickup","Pickup or delivery",c.pickup,"","","full")}
       <label class="check full"><input type="checkbox" id="e-feat" ${c.featured?"checked":""}><span>Featured item (shows a Featured badge)</span></label>
     </div>
@@ -1384,6 +1387,7 @@ function renderEdit(){
   </div></div>`;
 }
 const num=v=>{ if(v===null||v===undefined) return NaN; const s=String(v).replace(/[$,\s]/g,""); return s===""?NaN:Number(s); };
+const premiumCount=exceptId=>catList().filter(x=>x.premium&&x.id!==exceptId).length;
 function validateItem(c,existing){
   if(!c.title) return "Give the item a title.";
   if(!(c.no>0)||!Number.isInteger(c.no)) return "Item # must be a whole number.";
@@ -1392,13 +1396,16 @@ function validateItem(c,existing){
   if(!(c.start>0)) return "Enter a starting bid of at least $1.";
   if(c.reserve!=null&&c.reserve<c.start) return "The reserve must be at least the starting bid.";
   if(c.bin!=null&&c.bin<=c.start) return "Buy It Now must be higher than the starting bid.";
+  if(c.premium&&c.bin==null) return "Enter the Buy It Now price for this premium item.";
+  if(c.premium&&c.mode==="live") return "Buy It Now is for silent items. Live lots are sold by the auctioneer.";
+  if(c.premium&&!(existing.find(x=>x.id===c.id)||{}).premium&&premiumCount(c.id)>=cfg().premiumMax) return `Only ${cfg().premiumMax} premium items are allowed. Turn one off first, or raise the limit on the Items tab.`;
   return "";
 }
 async function saveEdit(){
   const e=ui.edit, g=id=>document.getElementById(id);
   const opt=v=>{ const n=num(v); return isNaN(n)||n===0?null:Math.round(n); };
   const c={...e.c,no:Math.round(num(g("e-no").value)),cat:g("e-cat").value,title:g("e-title").value.trim(),desc:g("e-desc").value.trim(),donor:g("e-donor").value.trim(),
-    value:Math.round(num(g("e-value").value)),start:Math.round(num(g("e-start").value)),reserve:opt(g("e-reserve").value),bin:opt(g("e-bin").value),pickup:g("e-pickup").value.trim(),featured:g("e-feat").checked,mode:g("e-mode").value};
+    value:Math.round(num(g("e-value").value)),start:Math.round(num(g("e-start").value)),reserve:opt(g("e-reserve").value),bin:opt(g("e-bin").value),premium:g("e-prem").checked,pickup:g("e-pickup").value.trim(),featured:g("e-feat").checked,mode:g("e-mode").value};
   e.c=c; e.err=validateItem(c,catList()); if(e.err) return renderEdit();
   e.busy=true; renderEdit();
   const r=await API.saveItem(c,e.isNew);
@@ -1414,7 +1421,7 @@ async function deleteEdit(){
 const IMPORT_COLS={no:["item #","item number","item no","number","no","#","lot","lot #"],title:["title","item","item name","name"],cat:["category","cat"],mode:["auction type","type","live or silent","live/silent","mode","auction"],
   value:["fair market value","value","fmv","retail value","estimated value","est value"],start:["starting bid","start","opening bid","minimum bid","min bid"],
   reserve:["reserve","reserve price"],bin:["buy it now","buy now","bin","buy it now price"],donor:["donor","donated by","donor name"],
-  desc:["description","details","desc"],pickup:["pickup","pickup instructions","delivery","pickup or delivery","pickup/delivery"],featured:["featured"]};
+  desc:["description","details","desc"],pickup:["pickup","pickup instructions","delivery","pickup or delivery","pickup/delivery"],featured:["featured"],premium:["premium","premium item","allow buy it now"]};
 const IMPORT_TEMPLATE='Item #,Title,Auction type,Category,Fair market value,Starting bid,Reserve,Buy it now,Donated by,Description,Pickup,Featured\n11,Wine Tasting for Eight,Silent,Dining,400,100,,,"Vine & Barrel","A private guided tasting of six wines with cheese pairings.",Certificate emailed after checkout.,no\n12,Week at a Florida Beach House,Live,Travel,3000,1000,,,The Morgans,Seven nights for up to eight guests.,Certificate emailed after checkout.,no\n';
 function parseCSV(text){
   const rows=[]; let row=[], f="", q=false;
@@ -1450,7 +1457,7 @@ function importRows(text){
     const opt=k=>{ const v=num(get(k)); return isNaN(v)||v===0?null:Math.round(v); };
     const c={id:byNo?byNo.id:"i"+Date.now().toString(36)+idx,no:isNaN(n)?next++:Math.round(n),title:get("title"),cat:catFromText(get("cat")||get("title")),
       value:Math.round(num(get("value"))),start:Math.round(num(get("start"))),reserve:opt("reserve"),bin:opt("bin"),donor:get("donor"),desc:get("desc"),
-      pickup:get("pickup")||"Certificate emailed after checkout.",featured:/^(y|yes|true|1|x)$/i.test(get("featured")),mode:/live/i.test(get("mode"))?"live":byNo&&!get("mode")?(byNo.mode||"silent"):"silent"};
+      pickup:get("pickup")||"Certificate emailed after checkout.",featured:/^(y|yes|true|1|x)$/i.test(get("featured")),premium:/^(y|yes|true|1|x)$/i.test(get("premium"))||(!!byNo&&!!byNo.premium&&map.premium===undefined),mode:/live/i.test(get("mode"))?"live":byNo&&!get("mode")?(byNo.mode||"silent"):"silent"};
     if(isNaN(c.value)) c.value=0;
     return {c,update:!!byNo,err:""};
   });
@@ -1564,11 +1571,13 @@ function admItems(){
   const list=catList();
   return `<section class="sec">
     <div class="row"><h2>Items</h2><span class="muted num">${list.length}</span></div>
-    <div class="btnrow"><button class="btn small primary" type="button" data-act="edit">Add item</button><button class="btn small" type="button" data-act="import">Import spreadsheet</button></div>
+    <div class="btnrow"><button class="btn small primary" type="button" data-act="edit">Add item</button><button class="btn small" type="button" data-act="import">Import spreadsheet</button>${list.length?`<button class="btn small" type="button" data-act="shopen">Print bid sheets</button>`:""}</div>
+    <div class="row small" style="flex-wrap:wrap;gap:8px"><span class="muted">Buy It Now is off for every item unless you make it premium. <b>${list.filter(c=>c.premium).length} of ${cfg().premiumMax}</b> premium spots used.</span>
+      <label class="row" style="gap:6px">Limit<select id="premmax">${[1,2,3,4,5,6,8,10].map(n=>`<option value="${n}" ${cfg().premiumMax===n?"selected":""}>${n}</option>`).join("")}</select></label></div>
     <p class="small muted" style="margin:0">${list.filter(c=>photoCount(c.id)).length} of ${list.length} items have photos. Changes to titles, values and descriptions show up for everyone right away.</p>
     <div class="tbl"><table><thead><tr><th>#</th><th>Item</th><th>Value</th><th>Start</th><th>Now</th><th></th></tr></thead><tbody>
     ${list.map(c=>{ const i=item(c.id); const now_=!i?"Not in run":i.live&&!i.closed?"Live lot":i.closed?(i.how==="bin"?"Bought now":i.winner?"Sold "+money(i.final):"Unsold"):`${money(i.price)} · <span data-ends="${i.id}">${fmt(remaining(i))}</span>`;
-      return `<tr><td class="mono">${c.no}</td><td>${esc(c.title)}${c.mode==="live"?' <span class="pill win">Live</span>':""}${c.featured?' <span class="pill res">Featured</span>':""}${c.reserve?` <span class="pill res">Reserve ${money(c.reserve)}</span>`:""}${c.bin?` <span class="pill res">Buy now ${money(c.bin)}</span>`:""}</td><td class="num">${money(c.value)}</td><td class="num">${money(c.start)}</td><td class="num">${now_}</td>
+      return `<tr><td class="mono">${c.no}</td><td>${esc(c.title)}${c.mode==="live"?' <span class="pill win">Live</span>':""}${c.featured?' <span class="pill res">Featured</span>':""}${c.reserve?` <span class="pill res">Reserve ${money(c.reserve)}</span>`:""}${c.premium&&c.bin?` <span class="pill win">Premium · Buy now ${money(c.bin)}</span>`:""}</td><td class="num">${money(c.value)}</td><td class="num">${money(c.start)}</td><td class="num">${now_}</td>
       <td><div class="btnrow" style="flex-wrap:nowrap"><button class="btn small" type="button" data-act="edit" data-id="${c.id}">Edit</button><button class="btn small" type="button" data-act="pmopen" data-id="${c.id}">Photos${photoCount(c.id)?` (${photoCount(c.id)})`:""}</button>${i&&!i.closed&&!i.live?`<button class="btn small" type="button" data-act="closeone" data-id="${c.id}">Close</button>`:""}</div></td></tr>`; }).join("")}
     </tbody></table></div>
     ${items().length?`<p class="small muted" style="margin:0">Items added during a run join it right away. A new starting bid applies only to items without bids.</p>`:""}
@@ -1628,7 +1637,7 @@ function admSetup(){
   </section>`;
 }
 async function saveConfigPatch(patch,msg){
-  const c=cfg(), next={org:{...c.org,...(patch.org||{})},fan:{...c.fan,...(patch.fan||{})},siteUrl:patch.siteUrl||c.siteUrl};
+  const c=cfg(), next={org:{...c.org,...(patch.org||{})},fan:{...c.fan,...(patch.fan||{})},siteUrl:patch.siteUrl||c.siteUrl,premiumMax:patch.premiumMax||c.premiumMax};
   const r=await API.saveConfig(next); toast(r.err||msg,r.err?"outbid":"info"); render();
 }
 
@@ -1967,6 +1976,7 @@ function drLookup(d){
 }
 function drPaddleLine(){ const p=String(ui.drPaddle||"").replace(/\D/g,""); if(!p) return ""; const u=byPaddle(p); return u?`<span class="okc">#${p} · ${esc(S.people[u].name)}</span>`:`<span class="muted">No bidder #${p} in the system yet.</span>`; }
 
+const revealUrl=d=>`${cfg().siteUrl.replace(/\/$/,"")}/reveal.html?d=${encodeURIComponent(d.id)}`;
 function admRaffles(){
   const l=drawList(), cur=currentDraw();
   const rs=poolStats("raffle"), gs=poolStats("golden");
@@ -1979,7 +1989,7 @@ function admRaffles(){
       <div class="row"><div><div class="eyebrow">${DRAW_KINDS[cur.kind]} drawing</div><h2>${esc(cur.name)}</h2></div><button class="btn small" type="button" data-act="dredit" data-id="${cur.id}">Edit</button></div>
       <div class="small"><b>Prize:</b> ${esc(cur.prize||"—")}${cur.value?` · value ${money(cur.value)}`:""}</div>
       ${w2g(cur)?`<div class="note small"><b>Tax form may be needed.</b> A prize worth ${money(cur.value)} may require IRS Form W-2G. Your treasurer will collect the winner's details privately; don't enter them here.</div>`:""}
-      ${w?`<div class="status win" style="font-size:16px">Winner: Ticket #${esc(w.ticket)} · ${esc(w.name)}${w.paddle?` (Bidder #${w.paddle})`:""}</div>
+      ${w?`<div class="status win" style="font-size:16px">Winner: Ticket #${esc(w.ticket)}${w.name?` · ${esc(w.name)}`:""}${w.paddle?` (Bidder #${w.paddle})`:""}</div>
         ${cur.kind==="golden"?(lot?`<div class="note">Chose <b>Lot ${lot.no} · ${esc(lot.title)}</b>. It's out of the live auction and marked as theirs.</div><button class="btn small" type="button" data-act="drunlot">Undo lot choice</button>`
           :!w.paddle?`<div class="note small">Add the winner's bidder # (Edit winner below) so their lot can be tracked for pickup.</div>`
           :openLots.length?`<label class="field">Which live lot did they choose?<select id="dr-lot">${openLots.map(x=>`<option value="${x.id}">Lot ${x.no} · ${esc(x.title)} (value ${money(x.value)})</option>`).join("")}</select></label>
@@ -1990,22 +2000,24 @@ function admRaffles(){
           :`<div class="btnrow">${(()=>{ const nx=l.find(x=>!x.winner&&x.id!==cur.id); return nx?`<button class="btn primary" type="button" data-act="drsel" data-id="${nx.id}" style="flex:1">Next: ${esc(nx.name)}</button>`:""; })()}<button class="btn" type="button" data-act="drundo">${cur.lot?"Remove winner":"Redraw"}</button></div>`}`
       :`<label class="field">Ticket # drawn<input id="dr-ticket" inputmode="numeric" autocomplete="off" placeholder="e.g. 1042" value="${esc(ui.drTicket||"")}" style="font-size:28px;font-weight:800;font-family:var(--f-display)"></label>
         <div id="dr-match" class="small" aria-live="polite">${m.html}</div>
-        <label class="field">Winner's name<input id="dr-name" autocomplete="off" placeholder="${m.row?esc(m.row.name):"Name on the ticket"}" value="${esc(ui.drName||"")}"></label>
+        <label class="field">Winner's name <span class="hint">optional; shows on the reveal screen</span><input id="dr-name" autocomplete="off" placeholder="${m.row?esc(m.row.name):"Name on the ticket"}" value="${esc(ui.drName||"")}"></label>
         <label class="field">Bidder # <span class="hint">${cur.kind==="golden"?"needed so their lot can be tracked":"optional, if they have one"}</span><input id="dr-paddle" inputmode="numeric" autocomplete="off" placeholder="${m.row&&m.row.paddle?m.row.paddle:""}" value="${esc(ui.drPaddle||"")}"></label>
         <div id="dr-pmatch" class="small">${drPaddleLine()}</div>
         ${ui.drErr?`<div class="err" role="alert">${esc(ui.drErr)}</div>`:""}
-        ${ui.drConfirm?`<div class="note"><b>Record ticket #${esc(ui.drConfirm.ticket)}, ${esc(ui.drConfirm.name)}${ui.drConfirm.paddle?` (Bidder #${ui.drConfirm.paddle})`:""}, as the winner of ${esc(cur.prize||cur.name)}?</b></div>
+        ${ui.drConfirm?`<div class="note"><b>Record ticket #${esc(ui.drConfirm.ticket)}${ui.drConfirm.name?`, ${esc(ui.drConfirm.name)}`:" (no name)"}${ui.drConfirm.paddle?` (Bidder #${ui.drConfirm.paddle})`:""}, as the winner of ${esc(cur.prize||cur.name)}?</b>${ui.drConfirm.name?"":`<br><span class="small">The reveal screen will show the ticket number only.</span>`}</div>
           <div class="btnrow"><button class="btn primary" type="button" data-act="drconfirm" style="flex:1" ${ui.busy?"disabled":""}>Confirm winner</button><button class="btn" type="button" data-act="drchange">Change</button></div>`
         :`<button class="btn primary block" type="button" data-act="drrecord">Record winner</button>`}`}
       <div class="row small"><span class="muted">${onScreen?"Showing on the big screen.":"Not on the big screen."}</span>
         <button class="btn small" type="button" data-act="${onScreen?"droff":"drsel"}" data-id="${cur.id}">${onScreen?"Hide from big screen":"Show on big screen"}</button></div>
+      <div class="note small" style="display:grid;gap:8px"><span><b>Winner reveal screen.</b> Send this link to your A/V person. When it opens, it plays the reveal for the winner you recorded; if no winner is recorded yet, it waits and plays as soon as you record one. Press R on that screen to replay.</span>
+        <div class="btnrow"><button class="btn small" type="button" data-act="drreveal" data-id="${cur.id}">Copy reveal link</button><a class="btn small" href="${esc(revealUrl(cur))}" target="_blank" rel="noopener">Open reveal screen</a></div></div>
     </section>`;
   }
   const group=k=>l.filter(d=>d.kind===k);
   return `${card}
   <section class="sec"><div class="row"><h2>Drawings</h2><span class="muted num small">${l.filter(d=>d.winner).length} of ${l.length} drawn</span></div>
     <div class="btnrow"><button class="btn small primary" type="button" data-act="dredit">Add drawing</button><button class="btn small" type="button" data-act="drbuckets">Add buckets from a list</button></div>
-    ${l.length?["golden","raffle","bucket"].filter(k=>group(k).length).map(k=>`<div class="eyebrow" style="margin-top:4px">${DRAW_KINDS[k]}${k==="bucket"?"s":""}</div><div class="rows">${group(k).map(d=>`<div class="row"><div><b>${esc(d.name)}</b><div class="small ${d.winner?"okc":"muted"}">${d.winner?`Ticket #${esc(d.winner.ticket)} · ${esc(d.winner.name)}`:esc(d.prize||"Not drawn yet")}</div></div>${cur&&d.id===cur.id?'<span class="pill win">Current</span>':`<button class="btn small" type="button" data-act="drsel" data-id="${d.id}">Select</button>`}</div>`).join("")}</div>`).join("")
+    ${l.length?["golden","raffle","bucket"].filter(k=>group(k).length).map(k=>`<div class="eyebrow" style="margin-top:4px">${DRAW_KINDS[k]}${k==="bucket"?"s":""}</div><div class="rows">${group(k).map(d=>`<div class="row"><div><b>${esc(d.name)}</b><div class="small ${d.winner?"okc":"muted"}">${d.winner?`Ticket #${esc(d.winner.ticket)}${d.winner.name?` · ${esc(d.winner.name)}`:""}`:esc(d.prize||"Not drawn yet")}</div></div>${cur&&d.id===cur.id?'<span class="pill win">Current</span>':`<button class="btn small" type="button" data-act="drsel" data-id="${d.id}">Select</button>`}</div>`).join("")}</div>`).join("")
       :`<p class="small muted" style="margin:0">Add your raffle, the Golden Ticket drawing, and each bucket prize. Then record winners here as tickets are pulled.</p>`}
   </section>
   <section class="sec"><h2>Ticket lists</h2>
@@ -2097,7 +2109,7 @@ function drawCard(){
   const d=S.meta&&S.meta.drawing&&(S.drawings||{})[S.meta.drawing]; if(!d) return "";
   return `<div class="scr-card scr-lot ${d.winner?"sold":""}"><div class="scr-lbl">${d.winner?"We have a winner!":"Now drawing · "+DRAW_KINDS[d.kind]}</div>
     <div class="t">${esc(d.name)}${d.prize?` · ${esc(d.prize)}`:""}</div>
-    ${d.winner?`<div class="soldto">Ticket #${esc(d.winner.ticket)} · ${esc(d.winner.name)}</div>`:`<div class="s">${d.value?"Value "+money(d.value):"Good luck!"}</div>`}</div>`;
+    ${d.winner?`<div class="soldto">Ticket #${esc(d.winner.ticket)}${d.winner.name?` · ${esc(d.winner.name)}`:""}</div>`:`<div class="s">${d.value?"Value "+money(d.value):"Good luck!"}</div>`}</div>`;
 }
 function onDrawings(before){
   const m=me(); if(!m) return;
@@ -2131,14 +2143,16 @@ document.addEventListener("click",async e=>{
       closeSheet(); toast(`${n} bucket${n===1?"":"s"} added.`,"info"); render(); break; }
     case "drrecord": { const d=currentDraw(), m=drLookup(d); const ticket=String(ui.drTicket||"").replace(/\D/g,"");
       const name=(ui.drName||"").trim()||(m.row?m.row.name:""); const paddle=Number(String(ui.drPaddle||"").replace(/\D/g,""))||(m.row&&m.row.paddle)||null;
-      ui.drErr=!ticket?"Enter the ticket number you drew.":!name?"Enter the winner's name.":d.kind==="golden"&&!paddle?"Enter the Golden Ticket winner's bidder #.":"";
+      ui.drErr=!ticket?"Enter the ticket number you drew.":d.kind==="golden"&&!paddle?"Enter the Golden Ticket winner's bidder #.":"";
       if(!ui.drErr) ui.drConfirm={ticket,name,paddle}; render(); break; }
     case "drchange": ui.drConfirm=null; render(); break;
+    case "drreveal": { const d=S.drawings[id]; if(!d) break; const url=revealUrl(d);
+      try{ await navigator.clipboard.writeText(url); el.textContent="Copied"; setTimeout(()=>{ el.textContent="Copy reveal link"; },1500); }catch(err){ prompt("Copy this link:",url); } break; }
     case "drconfirm": { const d=currentDraw(), c=ui.drConfirm; if(!c) break;
       const uid=c.paddle?byPaddle(c.paddle)||null:null;
       const r=await API.saveDrawing({...d,winner:{ticket:c.ticket,name:c.name,paddle:c.paddle,uid,t:now()}});
       if(r.err){ ui.drErr=r.err; ui.drConfirm=null; return render(); }
-      resetForm(); toast(`Winner recorded: ticket #${c.ticket}, ${c.name}.`,"win"); render(); break; }
+      resetForm(); toast(`Winner recorded: ticket #${c.ticket}${c.name?`, ${c.name}`:""}. The reveal screen is ready.`,"win"); render(); break; }
     case "drundo": ui.drUndo=currentDraw().id; render(); break;
     case "drundono": ui.drUndo=null; render(); break;
     case "drundoyes": { const d=currentDraw(); if(d.lot){ const r0=await API.unassignGolden(d.lot); if(r0.err){ toast(r0.err,"outbid"); break; } }
@@ -2233,12 +2247,139 @@ function renderNav(){
 }
 
 
+/* ---------- Printed bid sheets: one Letter page per item, with a QR code that opens the item ---------- */
+const QR_LIB="qr.js";   // bundled with the site, so printing never depends on another server
+function qrSvg(text){
+  const q=window.qrcode(0,"M"); q.addData(text); q.make(); const n=q.getModuleCount(); let d="";
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(q.isDark(r,c)) d+=`M${c} ${r}h1v1h-1z`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 ${n+8} ${n+8}" shape-rendering="crispEdges" role="img" aria-label="QR code"><rect x="-4" y="-4" width="${n+8}" height="${n+8}" fill="#fff"/><path d="${d}" fill="#121212"/></svg>`;
+}
+function openSheets(){ const l=catList(); ui.sh={sel:Object.fromEntries(l.map(c=>[c.id,true])),photo:true,start:true,err:""}; renderSheets(); }
+function renderSheets(){
+  const m=ui.sh, l=catList(), n=l.filter(c=>m.sel[c.id]).length;
+  document.getElementById("layer").innerHTML=`<div class="overlay" data-act="bgclose"><div class="modal" role="dialog" aria-modal="true" aria-label="Print bid sheets" style="max-width:640px">
+    <div class="row"><h2>Print bid sheets</h2><button class="btn small" type="button" data-act="close">Cancel</button></div>
+    <p class="small muted" style="margin:0">One letter-size page per item, with a QR code that opens the item on a guest's phone. The color stays inside a white border, so the printer doesn't need bleed.</p>
+    <div class="chips"><button class="chip" type="button" data-act="shpick" data-v="all">All</button><button class="chip" type="button" data-act="shpick" data-v="silent">Silent items</button><button class="chip" type="button" data-act="shpick" data-v="live">Live lots</button><button class="chip" type="button" data-act="shpick" data-v="none">None</button></div>
+    <div class="rows" style="max-height:300px;overflow:auto">${l.map(c=>`<label class="check" style="padding:6px 0"><input type="checkbox" data-shsel="${c.id}" ${m.sel[c.id]?"checked":""}><span><b>${c.no}</b> · ${esc(c.title)} <span class="small muted">${c.mode==="live"?"Live":"Silent"}${c.donor?` · ${esc(c.donor)}`:""}</span></span></label>`).join("")}</div>
+    <label class="check"><input type="checkbox" id="sh-photo" ${m.photo?"checked":""}><span>Include each item's main photo</span></label>
+    <label class="check"><input type="checkbox" id="sh-start" ${m.start?"checked":""}><span>Show the starting bid</span></label>
+    ${m.err?`<div class="err" role="alert">${esc(m.err)}</div>`:""}
+    <button class="btn primary block" type="button" data-act="shgo" ${n?"":"disabled"}>Open ${n} bid sheet${n===1?"":"s"}</button>
+    <p class="small muted" style="margin:0">They open in a new tab. Choose Print, then Save as PDF to send to your printer.</p>
+  </div></div>`;
+}
+function sheetsHTML(list,opt){
+  const site=cfg().siteUrl.replace(/\/$/,""), host=site.replace(/^https?:\/\//,""), O=opt.orn||{}, abs=u=>new URL(u,location.href).href;
+  const pages=list.map(c=>{
+    const ph=opt.photo?photos(c.id)[0]:null, live=c.mode==="live", url=`${site}/#item=${c.no}`;
+    const facts=[c.donor?["Donated by",esc(c.donor)]:null,c.value?["Value",money(c.value)]:null,opt.start&&!live?["Starting bid",money(c.start)]:null,
+      c.premium&&c.bin&&!live?["Buy it now",money(c.bin)]:null].filter(Boolean);
+    return `<section class="sheet${ph?" has-ph":""}">
+      <div class="frame">${["tl","tr","bl","br"].map(k=>O["corner-"+k]?`<img class="cn ${k}" src="${O["corner-"+k]}" alt="">`:"").join("")}
+        <header><p class="ev">Charity Dinner &amp; Auction</p><p class="no">${live?"Live Lot":"Item"} <b>${c.no}</b></p></header>
+        <h1 class="ti">${esc(c.title)}</h1>
+        ${O.divider?`<img class="dv" src="${O.divider}" alt="">`:`<div class="dv"></div>`}
+        ${ph?`<div class="ph"><img src="${esc(abs(blob(ph)))}" alt="" onerror="this.parentNode.remove()"></div>`:""}
+        <div class="desc"><p>${esc(c.desc||"").replace(/\n+/g,"</p><p>")}</p></div>
+        ${facts.length?`<dl class="facts">${facts.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl>`:""}
+        <div class="qr"><div class="code">${qrSvg(url)}</div><div class="how"><p class="big">${live?"Scan to see this lot":"Scan to bid"}</p>
+          <p>${live?"This lot is sold by the auctioneer during the live auction. Scan to see the details and photos on your phone.":"Point your phone's camera at the code to open this item and place your bid. No app to download."}</p>
+          <p class="url">${esc(host)} · ${live?"Lot":"Item"} ${c.no}</p></div></div>
+        <footer>Every bid supports foster and adoptive families</footer>
+      </div></section>`;}).join("");
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Bid sheets</title><base href="${esc(location.href)}">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap">
+<style>
+@page{size:letter;margin:0}
+*{box-sizing:border-box}
+html,body{margin:0;background:#E9E6E0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{font-family:'Cormorant Garamond',Georgia,serif;color:#1A1918}
+.bar{position:sticky;top:0;z-index:5;background:#121212;color:#F3ECDD;padding:12px 20px;display:flex;gap:16px;align-items:center;justify-content:space-between;font:15px/1.4 system-ui,sans-serif}
+.bar button{background:#DDB65A;color:#121212;border:0;padding:10px 18px;font:600 15px system-ui,sans-serif;border-radius:999px;cursor:pointer}
+.sheet{width:8.5in;height:11in;margin:24px auto;background:#fff;padding:.5in;page-break-after:always;break-after:page;box-shadow:0 6px 24px rgba(0,0,0,.18);overflow:hidden}
+.frame{position:relative;height:100%;border:1.5pt solid #A9822B;outline:.6pt solid #A9822B;outline-offset:-6pt;padding:.5in .55in .32in;display:flex;flex-direction:column;align-items:center;text-align:center}
+.cn{position:absolute;width:.95in;height:.95in}.cn.tl{left:6pt;top:6pt}.cn.tr{right:6pt;top:6pt}.cn.bl{left:6pt;bottom:6pt}.cn.br{right:6pt;bottom:6pt}
+header{display:grid;gap:4pt;justify-items:center}
+.ev{margin:0;font-family:Cinzel,serif;font-size:10pt;letter-spacing:.32em;text-transform:uppercase;color:#6B655B}
+.no{margin:0;font-family:Cinzel,serif;font-size:13pt;letter-spacing:.24em;text-transform:uppercase;color:#A9822B}
+.no b{font-size:30pt;letter-spacing:.04em;font-weight:600;margin-left:6pt;vertical-align:-4pt}
+.ti{margin:10pt 0 0;font-family:Cinzel,serif;font-weight:500;font-size:28pt;line-height:1.15;letter-spacing:.04em;color:#121212;max-width:6.2in}
+.dv{width:2.3in;margin:12pt 0 10pt}
+.ph{width:100%;height:3in;margin-bottom:12pt;display:flex;justify-content:center}
+.ph img{max-width:100%;height:100%;object-fit:contain;border:.6pt solid #D9CBA4;padding:4pt;background:#fff}
+.desc{flex:1 1 auto;min-height:0;overflow:hidden;width:100%;max-width:6.1in;font-size:15pt;line-height:1.38;color:#2A2723}
+.desc p{margin:0 0 7pt}
+.facts{margin:10pt 0 0;display:flex;flex-wrap:wrap;justify-content:center;gap:0;width:100%;border-top:.6pt solid #D9CBA4;border-bottom:.6pt solid #D9CBA4;padding:8pt 0}
+.facts div{padding:0 16pt;border-left:.6pt solid #D9CBA4}.facts div:first-child{border-left:0}
+.facts dt{font-family:Cinzel,serif;font-size:8pt;letter-spacing:.24em;text-transform:uppercase;color:#6B655B}
+.facts dd{margin:3pt 0 0;font-size:15pt;font-weight:600;color:#121212}
+.qr{margin-top:14pt;display:flex;gap:18pt;align-items:center;text-align:left;width:100%;max-width:5.6in}
+.qr .code{flex:none;width:1.75in;height:1.75in;padding:5pt;border:1pt solid #A9822B}
+.qr .code svg{display:block;width:100%;height:100%}
+.how p{margin:0 0 5pt;font-size:13.5pt;line-height:1.3;color:#2A2723}
+.how .big{font-family:Cinzel,serif;font-weight:600;font-size:19pt;letter-spacing:.08em;color:#121212;margin-bottom:6pt}
+.how .url{font-family:Cinzel,serif;font-size:8.5pt;letter-spacing:.16em;color:#A9822B;margin:6pt 0 0}
+footer{margin-top:12pt;max-width:5.2in;font-family:Cinzel,serif;font-size:7.5pt;letter-spacing:.24em;text-transform:uppercase;color:#6B655B}
+@media print{html,body{background:#fff}.bar{display:none}.sheet{margin:0;box-shadow:none}}
+</style></head><body>
+<div class="bar"><span>${list.length} bid sheet${list.length===1?"":"s"} · letter size, one per page. Print, then choose Save as PDF.</span><button type="button" onclick="print()">Print or save as PDF</button></div>
+${pages}
+<script>
+// Long descriptions get smaller type so everything fits on one page.
+function fit(){document.querySelectorAll('.sheet').forEach(function(s){var t=s.querySelector('.ti'),d=s.querySelector('.desc'),z=28;
+  while(t.scrollHeight>t.clientHeight+2&&z>18){z-=1;t.style.fontSize=z+'pt'} if(t.offsetHeight>130){z=Math.min(z,22);t.style.fontSize=z+'pt'}
+  var f=15;while(d.scrollHeight>d.clientHeight+1&&f>9.5){f-=.5;d.style.fontSize=f+'pt'}
+  if(d.scrollHeight>d.clientHeight+1){var ph=s.querySelector('.ph');if(ph){ph.style.height='1.6in';f=15;d.style.fontSize=f+'pt';while(d.scrollHeight>d.clientHeight+1&&f>9.5){f-=.5;d.style.fontSize=f+'pt'}}}});}
+var done=false;function once(){if(!done){done=true;fit()}}
+(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(function(){var imgs=[].slice.call(document.images).filter(function(i){return!i.complete});
+  Promise.all(imgs.map(function(i){return new Promise(function(r){i.addEventListener('load',r);i.addEventListener('error',r)})})).then(once)});
+setTimeout(once,4000);
+<\/script></body></html>`;
+}
+document.addEventListener("click",async e=>{
+  const el=e.target.closest("[data-act^='sh']"); if(!el||!isAdmin) return;
+  const a=el.dataset.act, v=el.dataset.v;
+  if(a==="shopen") return openSheets();
+  const m=ui.sh; if(!m) return;
+  const grab=()=>{ const g=id=>document.getElementById(id); if(g("sh-photo")){ m.photo=g("sh-photo").checked; m.start=g("sh-start").checked; } };
+  if(a==="shpick"){ grab(); catList().forEach(c=>m.sel[c.id]=v==="all"||(v==="live"?c.mode==="live":v==="silent"?c.mode!=="live":false)); renderSheets(); }
+  if(a==="shgo"){ grab(); const list=catList().filter(c=>m.sel[c.id]); if(!list.length) return;
+    const w=window.open("","_blank"); if(!w){ m.err="Your browser blocked the new tab. Allow pop-ups for this site and try again."; return renderSheets(); }
+    w.document.write('<p style="font:16px system-ui;padding:24px">Making your bid sheets…</p>');
+    try{ if(!window.qrcode) await loadScript(QR_LIB);
+      m.orn={}; await Promise.all(["corner-tl","corner-tr","corner-bl","corner-br","divider"].map(async n=>{ try{ const r=await fetch(`masq/${n}.svg`); if(r.ok) m.orn[n]="data:image/svg+xml;charset=utf-8,"+encodeURIComponent((await r.text()).replace(/#2F2B27|#DDB65A/gi,"#B8902F")); }catch(err){} }));
+      w.document.open(); w.document.write(sheetsHTML(list,m)); w.document.close(); closeSheet(); ui.sh=null; }
+    catch(err){ w.close(); m.err="The QR code maker didn't load. Check your connection and try again."; renderSheets(); } }
+});
+document.addEventListener("change",e=>{ const t=e.target; if(!ui.sh||!t.dataset||!t.dataset.shsel) return; ui.sh.sel[t.dataset.shsel]=t.checked;
+  const n=Object.values(ui.sh.sel).filter(Boolean).length, b=document.querySelector('[data-act="shgo"]'); if(b){ b.disabled=!n; b.textContent=`Open ${n} bid sheet${n===1?"":"s"}`; } });
+
 /* ---------- Donor baskets (shown on the Charity Dinner page; donors pay the cost to give one) ---------- */
-async function loadBaskets(){ const r=await rpc("admin_baskets"); ui.bsk=r.err?[]:(r.data||[]); ui.bskErr=r.err||""; if(ui.view==="admin"&&ui.adm==="baskets") render(); }
+async function loadBaskets(){ const [r,st]=await Promise.all([rpc("admin_baskets"),rpc("admin_basket_settings",{p:null})]); ui.bsk=r.err?[]:(r.data||[]); ui.bskErr=r.err||""; ui.bskSet=st.err?null:st; if(ui.view==="admin"&&ui.adm==="baskets") render(); }
+const bkLongDay=d=>/^\d{4}-\d{2}-\d{2}$/.test(d||"")?new Date(d+"T12:00:00").toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"}):"";
+const bkLink=b=>`https://wearecalledtocare.com/?basket=${String(b.id).slice(0,8)}#charity-dinner`;
 function bkStatus(b){
-  if(b.claimed_at) return `<span class="pill win">Given${b.donor||b.claimed_name?` · ${esc(b.donor||b.claimed_name)}`:""}</span>`;
+  const who=b.donor||b.claimed_name;
+  if(b.claimed_at&&b.claim_kind==="fill") return b.received_at?`<span class="pill win">Claimed and filled${who?` · ${esc(who)}`:""}</span>`
+    :`<span class="pill res">Claimed to fill${who?` · ${esc(who)}`:""} · due ${esc(bkLongDay(ui.bskSet&&ui.bskSet.deadline).replace(/^\w+, /,""))}</span>`;
+  if(b.claimed_at) return `<span class="pill win">Given${who?` · ${esc(who)}`:""}</span>`;
   if(b.held) return `<span class="pill res">Someone is paying now</span>`;
-  return b.active?`<span class="pill win">On the dinner page</span>`:`<span class="pill closed">Off</span>`;
+  return !b.active?`<span class="pill closed">Off</span>`:b.unlisted?`<span class="pill res">Link only</span>`:`<span class="pill win">On the dinner page</span>`;
+}
+function bkSettings(){
+  const st=ui.bskSet; if(!st) return "";
+  const open=st.on!==false&&st.deadline&&st.deadline>=new Date().toLocaleDateString("en-CA",{timeZone:"America/Chicago"});
+  return `<section class="sec"><div class="row"><h2>Claiming baskets</h2>${open?'<span class="pill win">Open</span>':'<span class="pill closed">Closed</span>'}</div>
+    <p class="small muted" style="margin:0">Donors can claim a basket and fill it themselves instead of paying for it. Claimed baskets show as Claimed on the dinner page. After the deadline, only paying online is offered.</p>
+    <label class="check"><input type="checkbox" id="bks-on" ${st.on!==false?"checked":""}><span>Let donors claim baskets</span></label>
+    <div class="formgrid">
+      <label class="field">Fill it by<input id="bks-deadline" type="date" value="${esc(st.deadline||"")}"><span class="hint">Claims close at the end of this day.</span></label>
+      <label class="field full">Drop-off details <span class="hint">sent in the email when someone claims a basket</span><textarea id="bks-dropoff" rows="2" placeholder="For example: Drop it off at 1111 W South St, Plano, Monday through Thursday, 9 to 3.">${esc(st.dropoff||"")}</textarea></label>
+    </div>
+    <div class="btnrow"><button class="btn small primary" type="button" data-act="bsksettings">Save claim settings</button></div>
+  </section>`;
 }
 function bkEditor(){
   const e=ui.bskEdit;
@@ -2255,36 +2396,41 @@ function bkEditor(){
       ${bskPhotos(e).length<10?`<label class="btn small" style="cursor:pointer;width:150px;height:112px;border-style:dashed;flex-direction:column">${bskPhotos(e).length?"Add more":"Add photos"}<span class="small muted" style="font-weight:400">pick one or several</span><input type="file" id="bsk-file" accept="image/*" multiple hidden></label>`:""}
       </div></div>
     ${ui.bskUp?`<p class="small muted" style="margin:0">${esc(ui.bskUp)}</p>`:""}
-    <label class="check"><input type="checkbox" id="bsk-active" ${e.active?"checked":""}><span>Show it on the Charity Dinner page</span></label>
+    <fieldset class="field full" style="border:0;padding:0;margin:0;display:grid;gap:6px"><legend style="font-weight:700;font-size:13px;margin-bottom:6px">Who can see it</legend>
+      <label class="check"><input type="radio" name="bsk-vis" id="bsk-active" value="on" ${e.active&&!e.unlisted?"checked":""}><span>Everyone: show it on the Charity Dinner page</span></label>
+      <label class="check"><input type="radio" name="bsk-vis" id="bsk-unlisted" value="link" ${e.active&&e.unlisted?"checked":""}><span>Only people I send its link to <span class="small muted">(it stays off the page)</span></span></label>
+      <label class="check"><input type="radio" name="bsk-vis" id="bsk-off" value="off" ${!e.active?"checked":""}><span>No one yet (save it as a draft)</span></label></fieldset>
     <p class="small" style="margin:0;color:var(--out)" role="alert">${esc(ui.bskMsg||"")}</p>
     <div class="btnrow"><button class="btn primary" type="button" data-act="bsksave" ${ui.bskUp?"disabled":""}>Save basket</button><button class="btn" type="button" data-act="bskcancel">Cancel</button></div>
   </section>`;
 }
 function admBaskets(){
   if(ui.bsk===undefined){ loadBaskets(); return `<section class="sec"><h2>Donor baskets</h2><p class="small muted" style="margin:0">Loading…</p></section>`; }
-  const list=ui.bsk, on=list.filter(b=>b.active).length, given=list.filter(b=>b.claimed_at), raised=given.reduce((a,b)=>a+Number(b.cost),0);
+  const list=ui.bsk, on=list.filter(b=>b.active&&!b.unlisted).length, given=list.filter(b=>b.claimed_at&&b.claim_kind!=="fill"), claimed=list.filter(b=>b.claimed_at&&b.claim_kind==="fill"), raised=given.reduce((a,b)=>a+Number(b.cost),0);
   return `${ui.bskEdit?bkEditor():""}<section class="sec">
     <div class="row"><h2>Donor baskets</h2><span class="muted num">${list.length}</span></div>
-    <p class="small muted" style="margin:0">Add a basket, give it a cost and a photo, and turn it on. It shows on the Charity Dinner page within a minute, where a donor gives it by paying the cost online. Given baskets are marked automatically, and the donor gets a receipt.</p>
+    <p class="small muted" style="margin:0">Add a basket, give it a cost and a photo, and turn it on. It shows on the Charity Dinner page within a minute, where a donor gives it by paying the cost online or claims it to fill it themselves. Use Copy link to send one basket straight to a donor.</p>
     ${ui.bskErr?`<p class="small" style="margin:0;color:var(--out)">${esc(ui.bskErr)}</p>`:""}
     <div class="btnrow"><button class="btn small primary" type="button" data-act="bsknew">Add basket</button>${list.length?`<button class="btn small" type="button" data-act="bskall" data-v="1">Turn all on</button><button class="btn small" type="button" data-act="bskall" data-v="0">Turn all off</button>`:""}<a class="btn small" href="https://wearecalledtocare.com/#charity-dinner" target="_blank" rel="noopener">See the dinner page</a></div>
-    ${list.length?`<p class="small muted" style="margin:0">${on} on the dinner page · ${given.length} given · ${money(raised)} raised</p>
+    ${list.length?`<p class="small muted" style="margin:0">${on} on the dinner page · ${given.length} given · ${money(raised)} raised · ${claimed.length} claimed to fill (${claimed.filter(b=>b.received_at).length} received)</p>
     <div class="rows">${list.map((b,i)=>`<div class="row" style="flex-wrap:wrap;gap:12px;align-items:center">
       <div class="mrow" style="flex:1 1 280px">${bskPhotos(b).length?`<img src="${esc(blob(bskPhotos(b)[0]))}" alt="" class="mthumb" style="object-fit:cover">`:`<div class="mthumb" style="display:grid;place-items:center;font-size:11px;color:var(--muted)">No photo</div>`}
-        <div><b>${esc(b.title)} · ${money(b.cost)}</b><div style="margin-top:4px">${bkStatus(b)}</div>${b.claimed_at&&b.donor_email?`<div class="small muted">${esc(b.donor_email)} · ${esc(b.via||"")}</div>`:b.claimed_at&&b.via?`<div class="small muted">${esc(b.via)}</div>`:""}</div></div>
+        <div><b>${esc(b.title)} · ${money(b.cost)}</b><div style="margin-top:4px">${bkStatus(b)}</div>${b.claimed_at&&b.donor_email?`<div class="small muted">${esc(b.donor_email)}${b.donor_phone?` · ${esc(b.donor_phone)}`:""} · ${esc(b.via||"")}</div>`:b.claimed_at&&b.via?`<div class="small muted">${esc(b.via)}</div>`:""}</div></div>
       <div class="btnrow" style="flex-wrap:wrap">
         <label class="check" style="align-items:center"><input type="checkbox" data-bkshow="${b.id}" ${b.active?"checked":""}><span>On page</span></label>
         <button class="btn small" type="button" data-act="bskedit" data-id="${b.id}">Edit</button>
         <button class="btn small" type="button" data-act="bskmove" data-id="${b.id}" data-v="-1" ${i?"":"disabled"} aria-label="Move up">↑</button><button class="btn small" type="button" data-act="bskmove" data-id="${b.id}" data-v="1" ${i<list.length-1?"":"disabled"} aria-label="Move down">↓</button>
-        ${b.claimed_at?(b.via==="Marked by hand"?`<button class="btn small" type="button" data-act="bskgiven" data-id="${b.id}" data-v="0">Undo given</button>`:"")
+        <button class="btn small" type="button" data-act="bsklink" data-id="${b.id}">Copy link</button>
+        ${b.claimed_at&&b.claim_kind==="fill"?`<button class="btn small" type="button" data-act="bskrecv" data-id="${b.id}" data-v="${b.received_at?0:1}">${b.received_at?"Undo received":"Mark received"}</button><button class="btn small" type="button" data-act="bskrelease" data-id="${b.id}">${ui.bskRel===b.id?"Tap again to release":"Release claim"}</button>`
+          :b.claimed_at?(b.via==="Marked by hand"?`<button class="btn small" type="button" data-act="bskgiven" data-id="${b.id}" data-v="0">Undo given</button>`:"")
           :`<button class="btn small" type="button" data-act="bskgiven" data-id="${b.id}" data-v="1">Paid by check</button>`}
         ${b.via==="Paid online"?"":`<button class="btn small" type="button" data-act="bskdel" data-id="${b.id}">${ui.bskDel===b.id?"Tap again to delete":"Delete"}</button>`}
       </div></div>`).join("")}</div>`:`<p class="small muted" style="margin:0">No baskets yet. Tap Add basket to make the first one.</p>`}
-  </section>`;
+  </section>${bkSettings()}`;
 }
 const bskPhotos=b=>b&&b.photos&&b.photos.length?b.photos:b&&b.photo?[b.photo]:[];
 function bkGrab(){ const g=id=>document.getElementById(id); if(!ui.bskEdit||!g("bsk-title")) return;
-  Object.assign(ui.bskEdit,{title:g("bsk-title").value,cost:g("bsk-cost").value,description:g("bsk-desc").value,active:g("bsk-active").checked}); }
+  Object.assign(ui.bskEdit,{title:g("bsk-title").value,cost:g("bsk-cost").value,description:g("bsk-desc").value,active:!g("bsk-off").checked,unlisted:g("bsk-unlisted").checked}); }
 async function bkDo(fn,args,msg){ const r=await rpc(fn,args); if(r.err){ toast(r.err,"outbid"); } else if(msg) toast(msg,"info"); await loadBaskets(); return r; }
 document.addEventListener("click",async e=>{
   const el=e.target.closest("[data-act^='bsk']"); if(!el||!isAdmin) return;
@@ -2298,9 +2444,18 @@ document.addEventListener("click",async e=>{
   if(a==="bsksave"){ bkGrab(); const x=ui.bskEdit, cost=num(String(x.cost||"").replace(/[$,]/g,""));
     if(!String(x.title||"").trim()){ ui.bskMsg="Give the basket a name."; render(); return; }
     if(!(cost>0)){ ui.bskMsg="Enter what the basket costs, like 250."; render(); return; }
-    el.disabled=true; const r=await rpc("admin_basket_save",{p:{id:x.id||"",title:x.title,cost,description:x.description||"",photos:bskPhotos(x),active:!!x.active}});
+    el.disabled=true; const r=await rpc("admin_basket_save",{p:{id:x.id||"",title:x.title,cost,description:x.description||"",photos:bskPhotos(x),active:!!x.active,unlisted:!!x.unlisted}});
     if(r.err){ ui.bskMsg=r.err; el.disabled=false; render(); return; }
-    ui.bskEdit=null; const f=document.getElementById("bskform"); if(f) f.remove(); toast(x.active?"Saved. It shows on the dinner page within a minute.":"Saved. It's off, so it won't show on the dinner page yet.","info"); await loadBaskets(); }
+    ui.bskEdit=null; const f=document.getElementById("bskform"); if(f) f.remove(); toast(!x.active?"Saved. It's off, so it won't show on the dinner page yet.":x.unlisted?"Saved. Use Copy link to send it to a donor.":"Saved. It shows on the dinner page within a minute.","info"); await loadBaskets(); }
+  if(a==="bsksettings"){ const g=i=>document.getElementById(i); el.disabled=true;
+    const r=await rpc("admin_basket_settings",{p:{on:g("bks-on").checked,deadline:g("bks-deadline").value,dropoff:g("bks-dropoff").value.trim()}});
+    el.disabled=false; if(r.err){ toast(r.err,"outbid"); return; } ui.bskSet=r; toast("Claim settings saved. The dinner page updates within a minute.","info"); render(); }
+  if(a==="bsklink"){ const b=ui.bsk.find(x=>x.id===id); if(!b) return; const url=bkLink(b);
+    if(!b.active){ toast("Turn this basket on (or set it to Only people I send its link to) so the link works.","outbid"); return; }
+    try{ await navigator.clipboard.writeText(url); el.textContent="Copied"; setTimeout(()=>{ el.textContent="Copy link"; },1500); }catch(err){ prompt("Copy this link:",url); } }
+  if(a==="bskrecv") bkDo("admin_basket_received",{p_id:id,p_on:v==="1"},v==="1"?"Marked as filled and received.":"Marked as not received yet.");
+  if(a==="bskrelease"){ if(ui.bskRel!==id){ ui.bskRel=id; render(); setTimeout(()=>{ if(ui.bskRel===id){ ui.bskRel=null; render(); } },4000); return; }
+    ui.bskRel=null; bkDo("admin_basket_given",{p_id:id,p_given:false,p_name:""},"Claim released. The basket is open again."); }
   if(a==="bskall") bkDo("admin_basket_show",{p_id:null,p_on:v==="1"},v==="1"?"All baskets are on the dinner page.":"All baskets are hidden.");
   if(a==="bskmove") bkDo("admin_basket_move",{p_id:id,p_dir:+v});
   if(a==="bskgiven"){ let name=""; if(v==="1"){ name=prompt("Who gave this basket? (Their name shows on the dinner page. Leave blank to keep it private.)",""); if(name===null) return; }
@@ -2416,6 +2571,7 @@ document.addEventListener("change",e=>{
   if(id==="switchme"){ L.acting=t.value; saveL(); closeSheet(); render(); toast(`Now bidding as ${person(me()).name}.`,"info"); }
   if(id==="dur"){ ui.lDur=+t.value; }
   if(id==="softwin") setMeta({softWin:+t.value});
+  if(id==="premmax") saveConfigPatch({premiumMax:+t.value},`Up to ${t.value} premium items can have Buy It Now.`);
   if(id==="softext") setMeta({softExt:+t.value});
   if(id==="botscb") setMeta({bots:t.checked});
   if(id==="aud"){ ui.aud=t.value; render(); }
@@ -2446,7 +2602,13 @@ async function register(name){
   const r=await rpc("join_auction",{p_name:name});
   if(r.err){ const er=document.getElementById("r-err"); if(er){ er.hidden=false; er.textContent=r.err; } return; }
   await loadPeople(); L.acting=myUid; saveL(); ui.view=ui.adminLink?"admin":"browse"; render();
-  toast(`Welcome, ${name}! You're bidder #${r.data}.`,"info");
+  toast(`Welcome, ${name}! You're bidder #${r.data}.`,"info"); openPending();
+}
+function openPending(){
+  if(!ui.pendingItem||!registered()) return;
+  const n=ui.pendingItem, c=catList().find(x=>x.no===n); ui.pendingItem=null;
+  if(c&&item(c.id)){ ui.view="browse"; render(); openSheet(c.id); }
+  else toast(`Item ${n} isn't open for bidding right now. Browse everything that is below.`,"info");
 }
 /* ---------- Loading data from Supabase ---------- */
 function loadL(){ L=Object.assign({acting:null,watch:{},inbox:[],seenAnn:{},reminded:{}},lsGet(LKEY())||{}); }
@@ -2454,7 +2616,7 @@ function loadL(){ L=Object.assign({acting:null,watch:{},inbox:[],seenAnn:{},remi
 async function q(table,build){ const out=[]; for(let from=0;;from+=1000){ const {data,error}=await build(sb.from(table)).range(from,from+999); if(error) throw error; out.push(...(data||[])); if(!data||data.length<1000) return out; } }
 function mapItem(row){
   const c=S.catalog[row.id]||{};
-  return {id:row.id,no:c.no,title:c.title||row.id,cat:c.cat||"exp",value:c.value||0,start:c.start||0,reserve:c.reserve,bin:c.bin,featured:c.featured,
+  return {id:row.id,no:c.no,title:c.title||row.id,cat:c.cat||"exp",value:c.value||0,start:c.start||0,reserve:c.reserve,bin:c.premium?c.bin:null,premium:!!c.premium,featured:c.featured,
     desc:c.desc||"",donor:c.donor||"",pickupText:c.pickup||"",
     run:row.run,price:row.price,leader:row.leader,endsAt:Number(row.ends_at),closed:row.closed,winner:row.winner,final:row.final,how:row.how,
     bidCount:row.bid_count,proxyCount:row.proxy_count,outbids:row.outbids,ext:row.ext,bidderIds:row.bidder_ids||[],pickup:row.pickup,live:row.live,
@@ -2483,7 +2645,7 @@ async function loadPeople(){ const d=await q("people",t=>t.select("*")); const n
 async function loadOrders(){ const d=await q("orders",t=>t.select("*")); const n={}; d.forEach(o=>n[o.id]={...o,u:o.uid,t:Number(o.t),don:Number(o.don),fee:Number(o.fee),total:Number(o.total),pledged:Number(o.pledged||0),dons:o.dons||[]}); S.orders=n; }
 async function loadCatalog(){
   const d=await q("catalog",t=>t.select("*").order("no")); const n={};
-  d.forEach(c=>n[c.id]={id:c.id,no:c.no,title:c.title,cat:c.cat,value:c.value,start:c.start,reserve:c.reserve,bin:c.bin,featured:c.featured,mode:c.mode||"silent",desc:c.descr||"",donor:c.donor||"",pickup:c.pickup||""});
+  d.forEach(c=>n[c.id]={id:c.id,no:c.no,title:c.title,cat:c.cat,value:c.value,start:c.start,reserve:c.reserve,bin:c.bin,premium:!!c.premium,featured:c.featured,mode:c.mode||"silent",desc:c.descr||"",donor:c.donor||"",pickup:c.pickup||""});
   S.catalog=n; CATALOG=Object.values(n);
 }
 async function loadDrawings(){ const before=S.drawings; const d=await q("drawings",t=>t.select("*")); const n={}; d.forEach(x=>n[x.id]={...x.data,id:x.id}); S.drawings=n; onDrawings(before); }
@@ -2555,6 +2717,8 @@ async function start(){
   // Private preview link: ?preview=CODE unlocks this device before the auction goes live
   const pv=new URLSearchParams(location.search).get("preview");
   if(pv){ try{ await sb.rpc("enter_preview",{p_code:pv}); }catch(e){} history.replaceState(null,"",location.pathname+location.hash); }
+  // QR code on a printed bid sheet: #item=12 opens item 12 (after the guest joins, if they haven't yet)
+  const im=location.hash.match(/^#item=(\d+)$/); if(im){ ui.pendingItem=+im[1]; history.replaceState(null,"",location.pathname); }
   // Admin link from the website admin: #admin=CODE unlocks admin on this device, then the code is removed from the address
   const am=location.hash.match(/^#admin(?:=(.+))?$/);
   let adminName="";
@@ -2572,6 +2736,7 @@ async function start(){
   await loadAll(); listen(); botLease();
   // Admins coming from the website admin skip the bidder sign-up and land on the admin screens (Items first when no test is running).
   if(ui.adminLink&&isAdmin){ if(!items().length) ui.adm="items"; if(!registered()) await register(adminName||"Auction Admin"); else { ui.view="admin"; render(); } }
+  openPending();
   setInterval(()=>{ refreshItems(); loadMeta().then(render).catch(()=>{}); },20000);  // safety net if live updates drop
 }
 start();

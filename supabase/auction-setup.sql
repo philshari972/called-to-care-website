@@ -117,6 +117,7 @@ alter table orders add column if not exists dons text[] not null default '{}';
 alter table orders add column if not exists pledged numeric not null default 0;
 -- live (auctioneer) lots
 alter table catalog add column if not exists mode text not null default 'silent';
+alter table catalog add column if not exists premium boolean not null default false;   -- Buy It Now only on premium items
 alter table items   add column if not exists live boolean not null default false;
 alter table history add column if not exists live boolean not null default false;
 alter table auction add column if not exists live_lot text;
@@ -270,7 +271,7 @@ begin
   select * into au from auction where id = 1;
   select * into it from items where id = p_item for update;
   select * into c from catalog where id = p_item;
-  if it.live or c.bin is null or it.closed or it.ends_at <= t or it.price >= c.bin or au.phase <> 'live' then
+  if it.live or not c.premium or c.bin is null or it.closed or it.ends_at <= t or it.price >= c.bin or au.phase <> 'live' then
     return jsonb_build_object('err', 'Buy It Now is no longer available for this item.'); end if;
   insert into history (item_id, run, uid, amt, t, bin) values (p_item, it.run, p_uid, c.bin, t, true);
   insert into maxes (item_id, run, uid, max, t) values (p_item, it.run, p_uid, c.bin, t)
@@ -431,6 +432,7 @@ create or replace function admin_upsert_item(p jsonb) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare v_id text := p->>'id'; v_no int; v_start int; v_res int; v_bin int; au auction%rowtype; t bigint := now_ms(); e bigint;
         v_mode text := case when p->>'mode' = 'live' then 'live' else 'silent' end;
+        v_prem boolean := coalesce((p->>'premium')::boolean, false);
 begin
   if not is_admin() then return jsonb_build_object('err', 'Only auction admins can do that.'); end if;
   v_no := (p->>'no')::int; v_start := (p->>'start')::int;
@@ -442,11 +444,14 @@ begin
   if v_start is null or v_start < 1 then return jsonb_build_object('err', 'Enter a starting bid of at least $1.'); end if;
   if v_res is not null and v_res < v_start then return jsonb_build_object('err', 'The reserve must be at least the starting bid.'); end if;
   if v_bin is not null and v_bin <= v_start then return jsonb_build_object('err', 'Buy It Now must be higher than the starting bid.'); end if;
-  insert into catalog (id, no, title, cat, value, start, reserve, bin, featured, descr, donor, pickup, mode)
+  if v_prem and v_bin is null then return jsonb_build_object('err', 'Enter the Buy It Now price for this premium item.'); end if;
+  if v_prem and v_mode = 'live' then return jsonb_build_object('err', 'Buy It Now is for silent items. Live lots are sold by the auctioneer.'); end if;
+  insert into catalog (id, no, title, cat, value, start, reserve, bin, featured, descr, donor, pickup, mode, premium)
   values (v_id, v_no, left(trim(p->>'title'), 120), coalesce(p->>'cat', 'exp'), greatest(coalesce((p->>'value')::int, 0), 0), v_start, v_res, v_bin,
-          coalesce((p->>'featured')::boolean, false), left(p->>'descr', 4000), left(p->>'donor', 200), left(p->>'pickup', 300), v_mode)
+          coalesce((p->>'featured')::boolean, false), left(p->>'descr', 4000), left(p->>'donor', 200), left(p->>'pickup', 300), v_mode, v_prem)
   on conflict (id) do update set no = excluded.no, title = excluded.title, cat = excluded.cat, value = excluded.value, start = excluded.start,
-    reserve = excluded.reserve, bin = excluded.bin, featured = excluded.featured, descr = excluded.descr, donor = excluded.donor, pickup = excluded.pickup, mode = excluded.mode;
+    reserve = excluded.reserve, bin = excluded.bin, featured = excluded.featured, descr = excluded.descr, donor = excluded.donor, pickup = excluded.pickup,
+    mode = excluded.mode, premium = excluded.premium;
   select * into au from auction where id = 1;
   if au.phase <> 'none' and exists (select 1 from items where run = au.run) then
     select coalesce(max(ends_at), t + au.dur * 60000) into e from items where not closed and not live and id <> v_id;
