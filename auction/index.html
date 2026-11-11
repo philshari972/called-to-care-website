@@ -1020,6 +1020,8 @@ function renderPM(){
       :`<div class="note small">Unlock Admin to add photos.</div>`}
   </div></div>`;
 }
+// Never wait forever on a photo step: give up after ms with a clear reason.
+const withTimeout=(p,ms,why)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error(why)),ms))]);
 async function compress(file){
   const url=URL.createObjectURL(file);
   try{
@@ -1038,10 +1040,10 @@ async function addPhotos(files){
   for(const f of files){
     ui.pmMsg=`Uploading ${done+failed+1} of ${files.length}…`; renderPM();
     try{
-      const b=await compress(f); if(!b) throw new Error("read");
+      const b=await withTimeout(compress(f),20000,"read"); if(!b) throw new Error("read");
       const path=`${id}/${Date.now()}-${rid()}.jpg`;
-      const {error}=await sb.storage.from("photos").upload(path,b,{contentType:"image/jpeg",cacheControl:"31536000"});
-      if(error) throw new Error("upload");
+      const {error}=await withTimeout(sb.storage.from("photos").upload(path,b,{contentType:"image/jpeg",cacheControl:"31536000"}),45000,"upload");
+      if(error){ console.error("item photo",error); throw new Error("upload"); }
       list.push(path); const s=await savePhotos(id,list); if(s.err) throw new Error("save");
       done++;
     }catch(e){ failed++; why=e.message==="read"?"A photo couldn't be read. Try a JPEG or PNG.":"The upload didn't finish. Check your connection and try again."; }
@@ -2162,12 +2164,12 @@ document.addEventListener("change",e=>{ if(e.target.id==="poolfile"&&e.target.fi
 
 /* ---------- Render ---------- */
 function capture(root){
-  const out={}; root.querySelectorAll("input[id],textarea[id]").forEach(el=>{ if(el.type!=="checkbox") out[el.id]=el.value; });
+  const out={}; root.querySelectorAll("input[id],textarea[id]").forEach(el=>{ if(el.type!=="checkbox"&&el.type!=="file"&&el.type!=="radio") out[el.id]=el.value; });
   const a=document.activeElement; if(a&&a.id&&root.contains(a)) out.__f={id:a.id,s:a.selectionStart,e:a.selectionEnd};
   return out;
 }
 function restore(root,st){
-  Object.keys(st).forEach(id=>{ if(id==="__f") return; const el=root.querySelector("#"+id); if(el) el.value=st[id]; });
+  Object.keys(st).forEach(id=>{ if(id==="__f") return; const el=root.querySelector("#"+id); if(el&&el.type!=="file") try{ el.value=st[id]; }catch(e){} });
   if(st.__f){ const el=root.querySelector("#"+st.__f.id); if(el){ el.focus(); try{ el.setSelectionRange(st.__f.s,st.__f.e); }catch(e){} } }
 }
 function render(){
@@ -2281,6 +2283,7 @@ async function bkDo(fn,args,msg){ const r=await rpc(fn,args); if(r.err){ toast(r
 document.addEventListener("click",async e=>{
   const el=e.target.closest("[data-act^='bsk']"); if(!el||!isAdmin) return;
   const a=el.dataset.act, id=el.dataset.id, v=el.dataset.v;
+  if(["bsknew","bskedit","bskcancel"].includes(a)){ const f=document.getElementById("bskform"); if(f) f.remove(); }
   if(a==="bsknew"){ ui.bskEdit={active:true}; ui.bskMsg=""; render(); document.getElementById("bsk-title").focus(); window.scrollTo(0,0); }
   if(a==="bskedit"){ const b=ui.bsk.find(x=>x.id===id); ui.bskEdit={...b}; ui.bskMsg=""; render(); window.scrollTo(0,0); }
   if(a==="bskcancel"){ ui.bskEdit=null; render(); }
@@ -2290,7 +2293,7 @@ document.addEventListener("click",async e=>{
     if(!(cost>0)){ ui.bskMsg="Enter what the basket costs, like 250."; render(); return; }
     el.disabled=true; const r=await rpc("admin_basket_save",{p:{id:x.id||"",title:x.title,cost,description:x.description||"",photo:x.photo||"",active:!!x.active}});
     if(r.err){ ui.bskMsg=r.err; el.disabled=false; render(); return; }
-    ui.bskEdit=null; toast(x.active?"Saved. It shows on the dinner page within a minute.":"Saved. It's off, so it won't show on the dinner page yet.","info"); await loadBaskets(); }
+    ui.bskEdit=null; const f=document.getElementById("bskform"); if(f) f.remove(); toast(x.active?"Saved. It shows on the dinner page within a minute.":"Saved. It's off, so it won't show on the dinner page yet.","info"); await loadBaskets(); }
   if(a==="bskall") bkDo("admin_basket_show",{p_id:null,p_on:v==="1"},v==="1"?"All baskets are on the dinner page.":"All baskets are hidden.");
   if(a==="bskmove") bkDo("admin_basket_move",{p_id:id,p_dir:+v});
   if(a==="bskgiven"){ let name=""; if(v==="1"){ name=prompt("Who gave this basket? (Their name shows on the dinner page. Leave blank to keep it private.)",""); if(name===null) return; }
@@ -2304,11 +2307,13 @@ document.addEventListener("change",async e=>{
   const t=e.target;
   if(t.dataset&&t.dataset.bkshow){ bkDo("admin_basket_show",{p_id:t.dataset.bkshow,p_on:t.checked},t.checked?"On the dinner page within a minute.":"Hidden from the dinner page."); return; }
   if(t.id==="bsk-file"&&t.files&&t.files[0]){ bkGrab(); ui.bskUp=true; ui.bskMsg=""; render();
-    try{ const b=await compress(t.files[0]); if(!b) throw new Error("read");
+    try{ const b=await withTimeout(compress(t.files[0]),20000,"read"); if(!b) throw new Error("read");
       const path=`baskets/${Date.now()}-${rid()}.jpg`;
-      const {error}=await sb.storage.from("photos").upload(path,b,{contentType:"image/jpeg",cacheControl:"31536000"}); if(error) throw new Error("upload");
+      const {error}=await withTimeout(sb.storage.from("photos").upload(path,b,{contentType:"image/jpeg",cacheControl:"31536000"}),45000,"slow");
+      if(error){ console.error("basket photo",error); throw new Error("Upload refused: "+(error.message||error.error||"unknown")); }
       ui.bskEdit.photo=path; }
-    catch(err){ ui.bskMsg=err.message==="read"?"That photo couldn't be read. Try a JPEG or PNG.":"The photo didn't upload. Check your connection and try again."; }
+    catch(err){ console.error("basket photo",err); ui.bskMsg=err.message==="read"?"That photo couldn't be read. Try saving it as a JPEG or PNG first.":err.message==="slow"?"The photo upload took too long. Check your connection and try again.":err.message; }
+    t.value="";
     ui.bskUp=false; render(); }
 });
 /* ---------- Events ---------- */
