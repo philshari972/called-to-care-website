@@ -699,8 +699,9 @@ function exportCSV(k){const n=rowsFor(k).length;if(!n){toast('Nothing to export 
 
 /* ---------------- auction ---------------- */
 function auctionPage(){return`<div class="ph"><div><span class="label">Auction</span><h1>Charity Auction</h1><p>The auction has its own site and tools for event night.</p></div></div>
- <div class="cards"><div class="card"><h3>Auction admin</h3><p class="note">Items, bidders, live clerk, raffles, pickup, and reports.</p><a class="btn primary" style="justify-self:start" href="https://auction.wearecalledtocare.com/" target="_blank" rel="noopener">Open ↗</a></div></div>
- <p class="note">The auction site goes live before the March dinner. Until then this link won't load.</p>`}
+ <div class="cards"><div class="card"><h3>Auction admin</h3><p class="note">Items, bidders, live clerk, raffles, pickup, and reports.</p><button class="btn primary" type="button" data-act="auction-admin" style="justify-self:start">Open Auction Admin ↗</button><p class="note" style="margin:0">Opens the auction already unlocked for you, even before it goes live.</p></div>
+ <div class="card"><h3>Guest view</h3><p class="note">What bidders see. Until you turn the auction live, the public sees a "coming soon" page.</p><a class="btn" style="justify-self:start" href="https://auction.wearecalledtocare.com/" target="_blank" rel="noopener">Open ↗</a></div>
+ <div class="card"><h3>Big screen</h3><p class="note">Open on the computer connected to the projector.</p><a class="btn" style="justify-self:start" href="https://auction.wearecalledtocare.com/#screen" target="_blank" rel="noopener">Open ↗</a></div></div>`}
 
 /* ---------------- events ---------------- */
 function eventsPage(){const lv=PERMS.events;const up=EVENTS.filter(e=>D(e.starts_at)>new Date(Date.now()-864e5)),past=EVENTS.filter(e=>!up.includes(e)).reverse().slice(0,6);
@@ -994,6 +995,9 @@ document.addEventListener('click',async e=>{
   if(act==='invite')openUser(null);
   if(act==='newevent')eventForm(null);
   if(act==='letters')letterDrawer();
+  if(act==='auction-admin'){const w=window.open('','_blank');if(w)w.document.write('<p style="font:16px system-ui;padding:24px;color:#1D4766">Opening the auction…</p>');const r=await SB.rpc('auction_admin_link');
+    if(r.error||!r.data){if(w)w.close();toast(r.error&&/permission|Only/i.test(r.error.message)?'You need edit access to the Auction to open admin.':'Could not open the auction admin. Ask Phil to run auction-admin-link.sql in Supabase.',true);}
+    else{const u='https://auction.wearecalledtocare.com/?preview='+encodeURIComponent(r.data.preview)+'#admin='+encodeURIComponent(r.data.admin);if(w)w.location.href=u;else location.href=u;}}
   if(act==='lt-add'){LT=readLetterForm();LT.updates.push({title:'',text:'',on:true,until:''});letterDrawer(true);setTimeout(()=>{const t=document.querySelectorAll('.lt-item');const last=t[t.length-1];if(last)last.querySelector('input').focus()},40)}
   if(act==='lt-del'){LT=readLetterForm();LT.updates.splice(Number(a.dataset.i),1);letterDrawer(true)}
   if(act==='lt-up'){LT=readLetterForm();const i=Number(a.dataset.i);if(i>0){const x=LT.updates.splice(i,1)[0];LT.updates.splice(i-1,0,x)}letterDrawer(true)}
