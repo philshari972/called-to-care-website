@@ -98,6 +98,14 @@ img{max-width:100%}
 .masq .pill{border-radius:0;font-family:var(--engraved);font-weight:600;font-size:.76rem;letter-spacing:.16em;padding:14px 20px}
 .masq .pill::after{content:none}
 .masq .tier .pick{width:100%}
+/* donor baskets */
+.masq #baskets{background:var(--velvet)}
+#baskets .lab{background:var(--onyx);box-shadow:inset 0 0 0 1px var(--gold-line),inset 0 0 0 6px var(--onyx),inset 0 0 0 7px rgba(221,182,90,.4);padding-top:22px}
+.bk-photo{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;border:1px solid var(--gold-line)}
+.bk-photo.none{display:grid;place-items:center;background:var(--relief);color:var(--gold);font-family:var(--engraved);letter-spacing:.2em;font-size:.8rem}
+#baskets .tier.given{opacity:.82}
+#baskets .given-tag{font-family:var(--engraved);letter-spacing:.16em;font-size:.76rem;color:var(--gold);border:1px solid var(--gold-line);padding:14px 20px;width:100%;text-align:center;margin-top:auto}
+#baskets .given-tag b{display:block;font-family:var(--book);font-style:italic;letter-spacing:0;font-size:1.05rem;font-weight:500;color:var(--ivory);margin-top:4px;text-transform:none}
 .masq .hint{font-family:var(--book);font-style:italic;font-size:1.05rem}
 .masq .pill.p-hot,.masq .pill.p-navy,.masq .pill.p-pink{background:var(--gold);color:#141315;border-color:var(--gold)}
 .masq .pill.p-hot:hover,.masq .pill.p-navy:hover,.masq .pill.p-pink:hover{background:var(--gold-hi)}
@@ -975,7 +983,7 @@ html.tickets-on .tix-off{display:none!important}
       <p class="mq-venue"><a href="https://www.google.com/maps/search/?api=1&query=Whitetail+Ridge+Golf+Club+7671+Clubhouse+Drive+Yorkville+IL" target="_blank" rel="noopener">Whitetail Ridge Golf Club<br>7671 Clubhouse Drive, Yorkville</a></p>
       <p class="mq-lede">An evening of dinner, an auction, and stories from the families you help us serve.</p>
     </div>
-    <nav class="subnav mq-nav" style="justify-content:center" aria-label="On this page"><a href="#charity-dinner" data-anchor="tickets">Tickets</a><a href="#charity-dinner" data-anchor="sponsors">Sponsorships</a><a href="#charity-dinner" data-anchor="underwriting">Underwriting</a><a href="#charity-dinner" data-anchor="monthly">Monthly Partners</a></nav>
+    <nav class="subnav mq-nav" style="justify-content:center" aria-label="On this page"><a href="#charity-dinner" data-anchor="tickets">Tickets</a><a href="#charity-dinner" data-anchor="sponsors">Sponsorships</a><a href="#charity-dinner" data-anchor="underwriting">Underwriting</a><a href="#charity-dinner" data-anchor="baskets" id="basketNav" hidden>Baskets</a><a href="#charity-dinner" data-anchor="monthly">Monthly Partners</a></nav>
   </header>
 
   <div class="dinner-band photo has-img" style="--pos:50% 45%"><img src="assets/charity-dinner.jpg" alt="Guests at round tables raising bid paddles during the Called to Care charity auction" width="2200" height="1467"></div>
@@ -1054,6 +1062,11 @@ html.tickets-on .tix-off{display:none!important}
         <button type="button" class="pill p-navy pick" data-item="flowers" data-name="Flowers Sponsor" data-price="1000">Choose Flowers</button>
       </div>
     </div>
+  </section>
+
+  <section id="baskets" hidden>
+    <div class="wrap center vstack" style="gap:14px;margin-bottom:44px"><img class="mq-div" src="masq/divider.svg" alt="" aria-hidden="true"><span class="label">Donor baskets</span><h2 class="d2 c-navy">Give an auction basket.</h2><p style="max-width:640px;margin-inline:auto">Choose a basket and cover its cost. We put it together for the auction, and every dollar it raises goes to foster and adoptive families. You'll get a receipt for your gift.</p></div>
+    <div class="wrap tiers" id="basketGrid"></div>
   </section>
 
   <div class="split b-teal" id="monthly">
@@ -1906,7 +1919,10 @@ html.tickets-on .tix-off{display:none!important}
       $('coTitle').textContent=o.title?o.title:isGift?(o.recurring?'Monthly Gift':'Your Gift'):isTicket?'Buy Tickets':isTable?'Reserve a Table':'Become a Sponsor';
       $('coItem').textContent=o.name+(isTicket?' · $100 each':''); $('coPrice').textContent=fmt(o.price)+(o.recurring?'/mo':'');
       $('coAmtWrap').hidden=!o.choose; if(o.choose){$('co-amt').value='';document.querySelectorAll('[data-coamt]').forEach(b=>b.classList.toggle('on',+b.dataset.coamt===o.price));}
-      $('coQtyWrap').hidden=!isTicket; $('coDisplayWrap').hidden=isTicket||isTable||isGift; $('co-display').required=!(isTicket||isTable||isGift);
+      const isBasket=o.kind==='basket';
+      $('coQtyWrap').hidden=!isTicket; $('coDisplayWrap').hidden=isTicket||isTable||isGift; $('co-display').required=!(isTicket||isTable||isGift||isBasket);
+      const dl=$('coDisplayWrap').querySelector('.lbl'); dl.dataset.orig=dl.dataset.orig||dl.innerHTML;
+      dl.innerHTML=isBasket?'Name to Show on the <span class="nw">Basket (optional)</span>':dl.dataset.orig; $('co-display').placeholder=isBasket?'Leave blank to give quietly':'Company, family, or individual';
       $('coGuestsWrap').hidden=!(isTicket||isTable||['legacy','gold','platinum','diamond'].includes(o.item));
       const isSp=o.kind==='sponsorship'; $('coHowWrap').hidden=!isSp; $('co-how1').checked=true; howUpd();
       $('coErr').textContent=''; $('coErr2').textContent=''; step('form'); upd();
@@ -1915,6 +1931,18 @@ html.tickets-on .tix-off{display:none!important}
     };
     document.querySelectorAll('.pick').forEach(b=>b.addEventListener('click',()=>C2C.openCheckout({kind:b.dataset.item==='ticket'?'tickets':b.dataset.item==='table'?'table':'sponsorship',item:b.dataset.item,name:b.dataset.name,price:+b.dataset.price,qty:!!b.dataset.qty})));
     $('co-qty').addEventListener('input',upd);
+    // Donor baskets (added by the committee in the Auction Admin)
+    C2C.renderBaskets=function(){const list=(C2C.cfg&&C2C.cfg.baskets)||[], sec=$('baskets'), nav=$('basketNav'); if(!sec) return;
+      sec.hidden=!list.length; if(nav) nav.hidden=!list.length; if(!list.length) return;
+      $('basketGrid').innerHTML=list.map(b=>{const lines=String(b.description||'').split(/\n+/).map(x=>x.trim()).filter(Boolean);
+        return `<div class="lab tier${b.given?' given':''}">${b.photo?`<img class="bk-photo" src="${esc(b.photo)}" alt="${esc(b.title)}" loading="lazy">`:'<div class="bk-photo none" aria-hidden="true">BASKET</div>'}
+        <div class="tier-top"><span class="label">${esc(b.title)}</span><span class="price">${fmt(b.cost)}</span></div>
+        ${lines.length?`<ul class="perks">${lines.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>`:''}
+        ${b.given?`<span class="given-tag">GIVEN${b.givenBy?`<b>Thank you, ${esc(b.givenBy)}</b>`:'<b>Thank you!</b>'}</span>`
+          :`<button type="button" class="pill p-navy pick-basket" data-basket="${esc(b.id)}" style="width:100%;margin-top:auto">Give This Basket</button>`}</div>`}).join('');};
+    C2C.ready.then(()=>C2C.renderBaskets());
+    document.addEventListener('click',e=>{const a=e.target.closest('[data-basket]'); if(!a) return; const b=(C2C.cfg.baskets||[]).find(x=>x.id===a.dataset.basket); if(!b||b.given) return;
+      C2C.openCheckout({kind:'basket',item:b.id,name:b.title,price:b.cost,title:'Give a Basket',eyebrow:'<span class="nw">Charity Dinner &amp; Auction</span><span style="display:block">Donor Baskets</span>'});});
     // Monthly amount chooser (Charity Dinner monthly partners)
     const setAmt=v=>{cur.price=v;$('coPrice').textContent=fmt(v)+'/mo';upd();};
     document.querySelectorAll('[data-coamt]').forEach(b=>b.addEventListener('click',()=>{$('co-amt').value='';document.querySelectorAll('[data-coamt]').forEach(x=>x.classList.toggle('on',x===b));setAmt(+b.dataset.coamt);}));
@@ -1935,6 +1963,9 @@ html.tickets-on .tix-off{display:none!important}
     const payload=provider=>({action:'start',provider,kind:cur.kind,item:cur.item,qty:+$('co-qty').value||1,amount:cur.price,recurring:!!cur.recurring,designation:cur.fund||'',
       display_name:f.display_name.value,guests:f.guest_names.value,website:hp(f),t:C2C.t,contact:{first:f.first_name.value,last:f.last_name.value,email:f.email.value,phone:f.phone.value,street:f.street.value,city:f.city.value,state:f.state.value,zip:f.zip.value}});
     function done(note){
+      if(cur.kind==='basket'){ const bk=(C2C.cfg.baskets||[]).find(x=>x.id===cur.item); if(bk){bk.given=true;bk.givenBy=f.display_name.value.trim();} C2C.renderBaskets&&C2C.renderBaskets();
+        $('coDoneMsg').textContent=`Thank you, ${f.first_name.value}! You gave the ${cur.name} basket (${fmt(total())}). A receipt is on its way to ${f.email.value}.`;
+        $('coDoneNote').textContent=note||'Questions? Email donations@wearecalledtocare.com.'; step('done'); return; }
       const what=cur.kind==='donation'?`gift of ${fmt(total())}${cur.recurring?' each month':''}`:`${cur.name.toLowerCase()} (${fmt(total())})`;
       $('coDoneMsg').textContent=`Thank you, ${f.first_name.value}! Your ${what} is complete. A receipt is on its way to ${f.email.value}.`;
       $('coDoneNote').textContent=note||'Questions? Email donations@wearecalledtocare.com.'; step('done');

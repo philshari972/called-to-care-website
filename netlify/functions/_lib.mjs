@@ -166,6 +166,10 @@ export async function finalizePayment(payment, { method } = {}) {
       contact_id: payment.contact_id, year: DINNER_YEAR, present: false, ticket_type: payment.purpose === 'table' ? 'Table of 10' : 'Tickets',
       guests: Number(meta.qty || (payment.purpose === 'table' ? 10 : 1)), source: 'Website' } });
   }
+  if (meta.basket_id) {   // a donor basket: mark it given on the Charity Dinner page
+    await db(`baskets?id=eq.${meta.basket_id}`, { method: 'PATCH', body: { claimed_at: new Date().toISOString(), claimed_payment: payment.id,
+      claimed_contact: payment.contact_id, claimed_name: meta.display_name || '', held_until: null, updated_at: new Date().toISOString() } }).catch((e) => console.error('basket', e.message));
+  }
   const c = payment.contact_id ? (await db(`contacts?id=eq.${payment.contact_id}&select=email,first_name`))[0] : null;
   if (c?.email) {
     const org = await setting('org', { legal_name: 'We Are Called to Care, NFP', ein: '86-2900453' });
@@ -176,7 +180,8 @@ export async function finalizePayment(payment, { method } = {}) {
     const html = emailShell({
       preheader: 'Your receipt is inside.',
       heading: `Thank you, ${esc(c.first_name || 'friend')}.`,
-      bodyHtml: p(payment.purpose === 'donation' ? 'Your gift goes straight to work for foster and adoptive families. We are so grateful you are in this with us.'
+      bodyHtml: p(meta.basket_id ? 'Thank you for giving an auction basket! Your gift fills the basket for the Charity Dinner auction, and every dollar raised goes to foster and adoptive families.'
+               : payment.purpose === 'donation' ? 'Your gift goes straight to work for foster and adoptive families. We are so grateful you are in this with us.'
                : payment.purpose === 'sponsorship' ? `Thank you for sponsoring the ${DINNER_YEAR} Charity Dinner &amp; Auction. Shari will be in touch about your signage and program listing.`
                : `You're all set for the ${DINNER_YEAR} Charity Dinner &amp; Auction. We can't wait to see you.`)
         + box([['For', esc(what)], ['Amount', money(payment.amount)], ['Date', new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/Chicago' })], ['Paid with', esc(method || payment.method || payment.provider)], ['Receipt #', esc(receipt)]])

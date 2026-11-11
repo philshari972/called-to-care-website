@@ -1,7 +1,7 @@
 // Printed thank-you letters for donors. When a gift comes in, the letter (PDF) is emailed to Shari
 // (and anyone else listed in Settings) to print, sign, fold, and mail in a #10 single-window envelope.
 // Monthly partners get a letter with their first gift, then again every 2 to 5 months (picked at random).
-import { db, setting, sendEmail, emailShell, p, box, esc, money, isEmail } from './_lib.mjs';
+import { db, setting, sendEmail, emailShell, p, box, esc, money, isEmail, DINNER_YEAR } from './_lib.mjs';
 import { PDF, wrap, textWidth } from './_pdf.mjs';
 import { LOGO } from './_letterlogo.mjs';
 
@@ -32,11 +32,14 @@ export async function letterSettings() {
 }
 
 // Fill in {next_support_night} and {dinner_date}; drop a sentence whose date isn't known yet; skip hidden or expired items.
-export async function resolveUpdates(updates, now = new Date()) {
+export async function letterValues(now = new Date()) {
   let events = [];
   try { events = await db(`events?starts_at=gte.${encodeURIComponent(now.toISOString())}&select=kind,starts_at&order=starts_at`); } catch {}
   const sn = events.find((e) => e.kind === 'support_night'), dn = events.find((e) => e.kind === 'dinner');
-  const vals = { next_support_night: sn ? eventDay(sn.starts_at) : '', dinner_date: dn ? eventDay(dn.starts_at) + ', ' + new Date(dn.starts_at).getFullYear() : (now < new Date('2027-03-14') ? 'Saturday, March 13, 2027' : '') };
+  return { next_support_night: sn ? eventDay(sn.starts_at) : '', dinner_date: dn ? eventDay(dn.starts_at) + ', ' + new Date(dn.starts_at).getFullYear() : (now < new Date('2027-03-14') ? 'Saturday, March 13, 2027' : '') };
+}
+export async function resolveUpdates(updates, now = new Date()) {
+  const vals = await letterValues(now);
   const today = chicagoDay(now);
   return (updates || []).filter((u) => u && u.on !== false && String(u.text || '').trim() && (!u.until || u.until >= today)).map((u) => {
     const sentences = String(u.text).trim().split(/(?<=[.!?])\s+/);
@@ -55,10 +58,9 @@ export function addressLines(c = {}) {
 }
 
 // kind: 'one-time' | 'monthly-first' | 'monthly'
-export function buildLetterPdf({ contact = {}, amount, designation = '', kind = 'one-time', updates = [], signer = DEFAULT_SIGNER, date = new Date(), sample = false }) {
-  const doc = new PDF();
-  const L = IN, R = 8.5 * IN - IN, W = R - L;
-
+// Letterhead, fold marks, date, the address in the envelope window, and the footer. Shared by every letter.
+function drawFrame(doc, { contact = {}, date = new Date(), sample = false }) {
+  const L = IN, R = 8.5 * IN - IN;
   // Letterhead
   const lw = 2.35 * IN, lh = lw * LOGO.h / LOGO.w;
   doc.image(logoJpeg, LOGO.w, LOGO.h, L, 0.55 * IN, lw, lh);
@@ -73,6 +75,17 @@ export function buildLetterPdf({ contact = {}, amount, designation = '', kind = 
   const addr = addressLines(contact);
   let y = 2.42 * IN;
   addr.lines.slice(0, 5).forEach((t) => { doc.text(L, y, t, { size: 11.5, color: INK }); y += 14; });
+  // Footer
+  doc.line(L, 10.32 * IN, R, 10.32 * IN, { color: SKY, width: 0.6 });
+  doc.text(4.25 * IN, 10.52 * IN, '“Let us love in deed and in truth.”  1 John 3:18', { font: 'Times-Italic', size: 9.5, color: NAVY, align: 'center' });
+  doc.text(4.25 * IN, 10.7 * IN, 'We Are Called to Care, NFP is a 501(c)(3) nonprofit, EIN 86-2900453.', { font: 'Helvetica', size: 7.5, color: MUTED, align: 'center' });
+  if (sample) doc.text(R, 0.35 * IN, 'SAMPLE', { font: 'Helvetica-Bold', size: 9, color: PINK, align: 'right', spacing: 2 });
+}
+
+export function buildLetterPdf({ contact = {}, amount, designation = '', kind = 'one-time', updates = [], signer = DEFAULT_SIGNER, date = new Date(), sample = false }) {
+  const doc = new PDF();
+  const L = IN, R = 8.5 * IN - IN, W = R - L;
+  drawFrame(doc, { contact, date, sample });
 
   // Letter body
   const first = (contact.salutation || contact.first_name || '').trim();
@@ -124,13 +137,6 @@ export function buildLetterPdf({ contact = {}, amount, designation = '', kind = 
     if (o[0] === 't') doc.text(o[1], o[2], o[3], { font: o[4], size: o[5], color: INK });
     else doc.circle(o[1], o[2], 2.2, { fill: PINK });
   }
-
-  // Footer
-  doc.line(L, 10.32 * IN, R, 10.32 * IN, { color: SKY, width: 0.6 });
-  doc.text(4.25 * IN, 10.52 * IN, '“Let us love in deed and in truth.”  1 John 3:18', { font: 'Times-Italic', size: 9.5, color: NAVY, align: 'center' });
-  doc.text(4.25 * IN, 10.7 * IN, 'We Are Called to Care, NFP is a 501(c)(3) nonprofit, EIN 86-2900453.', { font: 'Helvetica', size: 7.5, color: MUTED, align: 'center' });
-  if (sample) doc.text(R, 0.35 * IN, 'SAMPLE', { font: 'Helvetica-Bold', size: 9, color: PINK, align: 'right', spacing: 2 });
-
   return doc.build({ title: 'Thank you from Called to Care', author: 'We Are Called to Care' });
 }
 
@@ -188,4 +194,59 @@ export async function donorLetterOnGift(payment) {
     await db('donor_letters', { method: 'POST', body: { payment_id: payment.id, contact_id: payment.contact_id, recurring: !!payment.recurring, kind,
       next_after: payment.recurring ? nextAfter() : null, sent_to: sentTo } });
   } catch (e) { console.error('donor letter', e.message); }
+}
+
+// ---------------- Sponsor thank-you letters (from the admin, many at once) ----------------
+export const DEFAULT_SPONSOR_LETTER = {
+  paragraphs: [
+    'Thank you so much for sponsoring our Charity Dinner & Auction in {years}. Your generosity means the world to us, and even more to the foster, adoptive, and kinship families we walk alongside.',
+    'Because of sponsors like you, families who say yes to children in need never have to do it alone. Your support helps make Support Nights for foster and adoptive moms, Care Closet bags for children arriving in new homes, camp scholarships, and Christmas gifts for kids in care possible.',
+    'We are so excited about our 6th annual Charity Dinner & Auction on {dinner_date} at Whitetail Ridge Golf Club in Yorkville. We would be honored to have you with us again as a sponsor this year. You can see this year\'s sponsor options at wearecalledtocare.com, or simply reach out and I will be glad to help.',
+  ],
+  closing: 'With gratitude,',
+};
+export async function sponsorLetterSettings() {
+  const [t, signer] = await Promise.all([setting('sponsor_letter', DEFAULT_SPONSOR_LETTER), setting('letter_signer', DEFAULT_SIGNER)]);
+  return { text: { ...DEFAULT_SPONSOR_LETTER, ...(t || {}) }, signer: { ...DEFAULT_SIGNER, ...(signer || {}) } };
+}
+export const listYears = (ys) => { const y = [...new Set(ys)].sort(); return y.length < 2 ? y.join('') : y.length === 2 ? `${y[0]} and ${y[1]}` : `${y.slice(0, -1).join(', ')}, and ${y[y.length - 1]}`; };
+const COUNTS = ['Committed', 'Invoiced', 'Partially Paid', 'Paid in Full'];
+export const sponsorYears = (spons) => spons.filter((s) => COUNTS.includes(s.status) && s.year < DINNER_YEAR).map((s) => s.year);
+
+function greeting(c) {
+  const biz = ['business', 'church', 'foundation'].includes(c.kind) && c.org;
+  const name = String(c.salutation || c.first_name || '').trim();
+  return name ? `Dear ${name},` : biz ? `Dear Friends at ${c.org},` : 'Dear Friend,';
+}
+function fillIn(t, vals) {
+  let s = String(t || '');
+  if (!vals.years) s = s.replace(/\s*(?:in|during|for)?\s*\{years\}/gi, '');
+  if (!vals.dinner_date) s = s.replace(/\s*on \{dinner_date\}/gi, '');
+  return s.replace(/\{(\w+)\}/g, (m, k) => vals[k] ?? '').replace(/\s+([.,!?])/g, '$1').replace(/\s{2,}/g, ' ').trim();
+}
+
+// letters: [{ contact, years: [2025, 2026] }] -> one PDF, one page per sponsor
+export function buildSponsorLetters({ letters, text = DEFAULT_SPONSOR_LETTER, signer = DEFAULT_SIGNER, values = {}, date = new Date(), sample = false }) {
+  const doc = new PDF();
+  const L = IN, R = 8.5 * IN - IN, W = R - L, bottom = 9.95 * IN;
+  letters.forEach((lt, i) => {
+    if (i) doc.addPage();
+    const c = lt.contact || {};
+    drawFrame(doc, { contact: c, date, sample });
+    const vals = { ...values, years: listYears(lt.years || []), organization: c.org || '', first_name: c.first_name || '' };
+    const paras = (text.paragraphs || []).map((t) => fillIn(t, vals)).filter(Boolean);
+    const plan = (size) => {
+      const lead = size * 1.45, ops = []; let y = 3.98 * IN;
+      ops.push([L, y, greeting(c), 'Times-Roman']); y += lead * 1.45;
+      paras.forEach((t) => { wrap(t, 'Times-Roman', size, W).forEach((ln) => { ops.push([L, y, ln, 'Times-Roman']); y += lead; }); y += lead * 0.5; });
+      ops.push([L, y, text.closing || 'With gratitude,', 'Times-Roman']); y += 0.62 * IN;
+      ops.push([L, y, signer.name, 'Times-Bold']); y += lead;
+      ops.push([L, y, signer.title, 'Times-Italic']);
+      return { ops, end: y, size };
+    };
+    let pick = null;
+    for (const size of [11.5, 11, 10.5, 10, 9.5]) { const r = plan(size); if (r.end <= bottom || size === 9.5) { pick = r; break; } }
+    pick.ops.forEach(([x, y, t, font]) => doc.text(x, y, t, { font, size: pick.size, color: INK }));
+  });
+  return doc.build({ title: 'Sponsor thank-you letters', author: 'We Are Called to Care' });
 }

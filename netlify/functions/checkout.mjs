@@ -42,6 +42,15 @@ async function price(b) {
     const fund = clean(b.designation, 60) || 'Where needed most';
     return { purpose: 'donation', amount, description: `${b.recurring ? 'Monthly gift' : 'Donation'}: ${fund}`, designation: fund, recurring: !!b.recurring, tags: ['Donor', ...(b.recurring ? ['Monthly Partner'] : [])] };
   }
+  if (b.kind === 'basket') {
+    if (!/^[0-9a-f-]{36}$/.test(String(b.item || ''))) throw new Error('Unknown basket.');
+    const [bk] = await db(`baskets?id=eq.${b.item}&select=id,title,cost,active,claimed_at,held_until`);
+    if (!bk || !bk.active) throw new Error('This basket is no longer available. Please choose another.');
+    if (bk.claimed_at) throw new Error('Someone just gave this basket. Thank you for thinking of it! Please choose another.');
+    if (bk.held_until && new Date(bk.held_until) > new Date()) throw new Error('Someone is checking out with this basket right now. Please choose another, or try again in a few minutes.');
+    return { purpose: 'donation', amount: Number(bk.cost), description: `Charity Dinner donor basket: ${bk.title}`.slice(0, 200), designation: 'Charity Dinner donor basket',
+      basket: bk.id, tags: ['Donor', 'Basket Donor'] };
+  }
   if (b.kind === 'sponsorship') {
     const lv = SPONSOR_LEVELS[b.item]; if (!lv) throw new Error('Unknown sponsorship level.');
     if (lv.limit) {
@@ -101,11 +110,16 @@ export default async (req) => {
 
   try {
     const contactId = await upsertContact({ first: c.first, last: c.last, email, phone: c.phone, street: c.street, city: c.city, state: c.state, zip: c.zip, org: c.org, tags: item.tags, source: 'Website checkout' });
-    const meta = { item: b.item || b.kind, qty: item.qty, display_name: clean(b.display_name, 120), guests: clean(b.guests, 1000), name: `${clean(c.first)} ${clean(c.last)}` };
+    const meta = { item: b.item || b.kind, qty: item.qty, ...(item.basket ? { basket_id: item.basket } : {}), display_name: clean(b.display_name, 120), guests: clean(b.guests, 1000), name: `${clean(c.first)} ${clean(c.last)}` };
     const [pay] = await db('payments', { method: 'POST', prefer: 'return=representation', body: {
       provider: b.provider === 'paypal' ? 'paypal' : 'stripe', contact_id: contactId, purpose: item.purpose, description: item.description,
       designation: item.designation || '', amount: item.amount, recurring: !!item.recurring, status: 'pending', meta } });
     const metadata = { c2c_payment_id: pay.id, purpose: item.purpose, item: meta.item };
+    if (item.basket) {   // hold the basket for 20 minutes so two donors can't pay for the same one
+      const until = new Date(Date.now() + 20 * 60e3).toISOString(), now = new Date().toISOString();
+      const held = await db(`baskets?id=eq.${item.basket}&claimed_at=is.null&or=(held_until.is.null,held_until.lt.${now})`, { method: 'PATCH', prefer: 'return=representation', body: { held_until: until, held_payment: pay.id } });
+      if (!held.length) { await db(`payments?id=eq.${pay.id}`, { method: 'PATCH', body: { status: 'failed' } }); return fail('Someone is checking out with this basket right now. Please choose another, or try again in a few minutes.'); }
+    }
 
     if (b.provider === 'paypal') {
       const order = await paypal('/v2/checkout/orders', { intent: 'CAPTURE', purchase_units: [{ reference_id: pay.id, custom_id: pay.id, description: item.description.slice(0, 127),

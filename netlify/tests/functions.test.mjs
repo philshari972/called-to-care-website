@@ -9,7 +9,7 @@ Object.assign(process.env, {
 });
 
 // ---- tiny in-memory PostgREST ----
-const T = { donor_letters: [], contacts: [], submissions: [], payments: [], sponsorships: [], attendance: [], subscriptions: [], email_log: [], events: [], settings: [{ key: 'tickets_on', value: false }, { key: 'staff_alert_email', value: ['staff@example.org', 'boss@example.org'] }, { key: 'org', value: { legal_name: 'We Are Called to Care, NFP', ein: '86-2900453' } }] };
+const T = { baskets: [], donor_letters: [], contacts: [], submissions: [], payments: [], sponsorships: [], attendance: [], subscriptions: [], email_log: [], events: [], settings: [{ key: 'tickets_on', value: false }, { key: 'staff_alert_email', value: ['staff@example.org', 'boss@example.org'] }, { key: 'org', value: { legal_name: 'We Are Called to Care, NFP', ein: '86-2900453' } }] };
 let seq = 1001; const uid = () => crypto.randomUUID();
 function match(row, params) {
   for (const [k, v] of params) {
@@ -19,6 +19,9 @@ function match(row, params) {
     if (op === 'neq' && String(cell) === val) return false;
     if (op === 'ilike' && String(cell ?? '').toLowerCase() !== val.toLowerCase()) return false;
     if (op === 'gte' && !(String(cell) >= val)) return false;
+    if (k === 'or') { if (!v.replace(/^\(|\)$/g, '').split(',').some((c) => { const [ck, ...cr] = c.split('.'); return match(row, [[ck, cr.join('.')]]); })) return false; continue; }
+    if (op === 'is' && !(val === 'null' ? cell == null : String(cell) === val)) return false;
+    if (op === 'lt' && !(cell != null && String(cell) < val)) return false;
     if (op === 'in' && !val.replace(/^\(|\)$/g, '').split(',').includes(String(cell))) return false;
   }
   return true;
@@ -40,7 +43,7 @@ function rest(url, init) {
     }
     return init.headers.prefer?.includes('representation') ? rows : null;
   }
-  if (m === 'PATCH') { tbl.filter((r) => match(r, params)).forEach((r) => Object.assign(r, body)); return null; }
+  if (m === 'PATCH') { const hit = tbl.filter((r) => match(r, params)); hit.forEach((r) => Object.assign(r, body)); return init.headers.prefer?.includes('representation') ? hit : null; }
 }
 const sent = []; const stripeCalls = []; const stored = [];
 globalThis.fetch = async (url, init = {}) => {
@@ -118,6 +121,27 @@ ok(T.sponsorships.length + sent.length === before, 'Stripe retry does not double
 const other = JSON.stringify({ type: 'payment_intent.succeeded', data: { object: { id: 'pi_donorbox', metadata: {} } } });
 r = await webhook(new Request('https://x/', { method: 'POST', body: other, headers: { 'stripe-signature': sig(other) } })); ok(r.status === 200 && !T.payments.some((p) => p.provider_id === 'pi_donorbox'), 'Donorbox payments ignored');
 
+console.log('donor baskets');
+{ const bk = { id: uid(), title: 'Movie Night', description: 'Four passes', cost: 250, photo: 'baskets/a.jpg', active: true, sort: 1, claimed_at: null, held_until: null };
+  T.baskets.push(bk, { id: uid(), title: 'Hidden', cost: 99, active: false, claimed_at: null, sort: 2 });
+  const cfg = await (await (await import('../functions/config.mjs')).default()).json();
+  ok(cfg.baskets.length === 1 && cfg.baskets[0].photo === 'https://db.test/storage/v1/object/public/photos/baskets/a.jpg' && !cfg.baskets[0].given, 'only baskets turned on show on the dinner page, with photo link');
+  const who = { first: 'Gi', last: 'Ver', email: 'gi@x.com', street: '1 Main St', city: 'Plano', state: 'IL', zip: '60545' };
+  r = await (await post(checkout, { kind: 'basket', item: T.baskets[1].id, amount: 1, provider: 'stripe', contact: who })).json(); ok(!r.ok && /no longer available/.test(r.error), 'a basket that is off cannot be bought');
+  const n0 = stripeCalls.length;
+  r = await (await post(checkout, { kind: 'basket', item: bk.id, amount: 1, display_name: 'The Ver Family', provider: 'stripe', contact: who })).json();
+  const bpi = stripeCalls.slice(n0).find((c) => c[1] === 'payment_intents');
+  ok(r.ok && new URLSearchParams(bpi[2]).get('amount') === '25000' && bk.held_until, 'basket price set by server ($250) and basket held during checkout');
+  r = await (await post(checkout, { kind: 'basket', item: bk.id, provider: 'stripe', contact: { ...who, email: 'two@x.com' } })).json(); ok(!r.ok && /checking out/.test(r.error), 'a second donor cannot pay for a basket on hold');
+  const bp = T.payments.find((p) => p.meta?.basket_id === bk.id);
+  const be = JSON.stringify({ type: 'payment_intent.succeeded', data: { object: { id: bp.provider_id, metadata: { c2c_payment_id: bp.id } } } });
+  await webhook(new Request('https://x/', { method: 'POST', body: be, headers: { 'stripe-signature': sig(be) } }));
+  ok(bk.claimed_at && bk.claimed_payment === bp.id && bk.claimed_name === 'The Ver Family' && bp.purpose === 'donation', 'paid basket marked given, recorded as a donation');
+  ok(sent.some((e) => e.to[0] === 'gi@x.com' && /receipt/i.test(e.subject) && /auction basket/.test(e.html) && e.html.includes('No goods or services')), 'basket donor gets a receipt');
+  const cfg2 = await (await (await import('../functions/config.mjs')).default()).json();
+  ok(cfg2.baskets[0].given && cfg2.baskets[0].givenBy === 'The Ver Family', 'dinner page shows the basket as given');
+  bk.held_until = null; r = await (await post(checkout, { kind: 'basket', item: bk.id, provider: 'stripe', contact: who })).json(); ok(!r.ok && /just gave/.test(r.error), 'a given basket cannot be bought again'); }
+
 console.log('monthly gift');
 r = await (await post(checkout, { kind: 'donation', amount: 50, recurring: true, provider: 'stripe', contact: { first: 'Cy', last: 'Ro', email: 'cy@x.com', street: '1 Main St', city: 'Plano', state: 'IL', zip: '60545' } })).json();
 ok(r.ok && T.subscriptions.length === 1 && T.contacts.find((c) => c.email === 'cy@x.com').tags.includes('Monthly Partner'), 'monthly gift creates subscription + Monthly Partner tag');
@@ -176,4 +200,16 @@ r = await (await post(submit, { form: 'camp_followup', ref: `${app.id}.${app.adm
 const fu = T.submissions.find((x) => x.id === r.id);
 ok(fu.data.photos.length === 2 && stored.length === 2, 'recap photos saved to private storage');
 ok(app.status === 'Follow-up Received' && app.admin.followup_id === fu.id && fu.status === 'Linked', 'recap attached to the application');
+console.log('sponsor letters');
+{ const letter = (await import('../functions/letter.mjs')).default;
+  const lpost = (body, auth) => letter(new Request('https://x/', { method: 'POST', headers: auth ? { authorization: 'Bearer staff-jwt' } : {}, body: JSON.stringify(body) }));
+  const spc = T.contacts.find((c) => c.id === T.sponsorships[0].contact_id); spc.street = '1 Main St'; spc.city = 'Plano'; spc.zip = '60545';
+  T.sponsorships.push({ contact_id: spc.id, year: 2025, status: 'Paid in Full' }, { contact_id: spc.id, year: 2026, status: 'Paid in Full' });
+  const nobody = T.contacts.find((c) => !c.street && c.id !== spc.id);
+  r = await lpost({ action: 'sponsors', contact_ids: [spc.id] }); ok(r.status === 403, 'sponsor letters need staff sign-in');
+  r = await lpost({ action: 'sponsors', contact_ids: [spc.id, nobody.id] }, true);
+  const buf = Buffer.from(await r.arrayBuffer()); const pages = (buf.toString('latin1').match(/\/Type \/Page /g) || []).length;
+  ok(r.status === 200 && buf.subarray(0, 5).toString() === '%PDF-' && pages === 2 && r.headers.get('x-letters') === '2', 'two sponsors make one PDF with two pages');
+  ok(buf.toString('latin1').includes('in 2025 and 2026'), 'letter names the years they sponsored');
+  r = await lpost({ action: 'sponsors', contact_ids: [spc.id, nobody.id], skip_no_address: true }, true); ok(r.headers.get('x-letters') === '1', 'sponsors without an address can be left out'); }
 console.log(`\n${pass} checks passed`);

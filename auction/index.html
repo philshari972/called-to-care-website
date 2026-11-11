@@ -280,6 +280,8 @@ body.screenmode{background:#0B1222}
 body.screenmode .eventbar,body.screenmode .nav,body.screenmode .banner button{display:none}
 body.screenmode main{padding:0}
 body.screenmode .wrap{max-width:none;gap:0}
+body.screenmode .scr{position:fixed;inset:0;z-index:60;overflow:auto;min-height:0}
+body.screenmode .banner,body.screenmode .hdr,body.screenmode .cats{display:none}
 .scr{min-height:calc(100vh - 40px);background:radial-gradient(1200px 600px at 10% 0%,#17284A 0%,#0B1222 60%);color:#F3F6FB;display:flex;flex-direction:column;font-family:var(--f-body);padding:2.2vw 3vw;padding-left:max(3vw,env(safe-area-inset-left,0px));padding-right:max(3vw,env(safe-area-inset-right,0px));gap:2vw}
 .scr-head{display:flex;justify-content:space-between;align-items:center;gap:16px}
 .scr-head h1{font-family:var(--f-display);font-size:clamp(20px,2.4vw,40px);font-weight:800;letter-spacing:-.01em}
@@ -518,6 +520,7 @@ body.wide .list .grid{grid-template-columns:1fr}
     <div class="hright">
       <button class="hlink hide-sm" type="button" data-act="go" data-v="mine" id="hhello"><small>Hello, bidder</small><b>My Bids</b></button>
       <button class="hlink hide-sm" type="button" data-act="go" data-v="alerts" id="halerts"><small>Bid</small><b>Alerts</b></button>
+      <button class="hlink hide-sm" type="button" data-act="go" data-v="admin" id="hadmin" hidden><small>Run the</small><b>Admin</b></button>
       <div class="hclock" id="clock"><small id="clocklbl">Closes in</small><b data-ends="all">--:--</b></div>
       <button class="hlink hcart" type="button" data-act="go" data-v="checkout" aria-label="Checkout"><span class="cnt num" id="hcnt">0</span><svg viewBox="0 0 36 30" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h5l4 17h18l4-12H9"/><circle cx="13" cy="26" r="2"/><circle cx="27" cy="26" r="2"/></svg><b class="hide-xs">Checkout</b></button>
     </div>
@@ -1490,10 +1493,10 @@ async function runImport(){
    ===================================================================== */
 function vAdmin(){
   if(!isAdmin) return API.adminGate();
-  const tabs=[["run","Run"],["live","Live"],["raffles","Raffles"],["items","Items"],["reports","Reports"],["pickup","Pickup"],["setup","Setup"]];
+  const tabs=[["run","Run"],["live","Live"],["raffles","Raffles"],["items","Items"],["baskets","Baskets"],["reports","Reports"],["pickup","Pickup"],["setup","Setup"]];
   const seg=`<div class="seg adm-tabs" role="tablist">${tabs.map(([k,l])=>`<button type="button" role="tab" data-act="adm" data-v="${k}" aria-pressed="${ui.adm===k}" aria-selected="${ui.adm===k}">${l}</button>`).join("")}</div>`;
   if((ui.adm==="run"||ui.adm==="live")&&!items().length) return seg+vWaiting();
-  return seg+({run:admRun,live:admLive,raffles:admRaffles,items:admItems,reports:vReports,pickup:admPickup,setup:admSetup}[ui.adm]||admRun)();
+  return seg+({run:admRun,live:admLive,raffles:admRaffles,items:admItems,baskets:admBaskets,reports:vReports,pickup:admPickup,setup:admSetup}[ui.adm]||admRun)();
 }
 function publicCard(){
   const set=(S.meta&&S.meta.settings)||{};const pub=!!set.open;
@@ -1801,7 +1804,7 @@ document.addEventListener("click",async e=>{
   const a=el.dataset.act, v=el.dataset.v, id=el.dataset.id;
   const copy=(text,btn,label)=>{ const ok=()=>{ btn.textContent="Copied"; setTimeout(()=>btn.textContent=label,1500); }; try{ navigator.clipboard.writeText(text).then(ok,()=>toast("Copy didn't work here. Select the text and copy it.","outbid")); }catch(err){ toast("Copy didn't work here. Select the text and copy it.","outbid"); } };
   switch(a){
-    case "adm": ui.adm=v; render(); if(v==="reports"&&API.loadAllHist) API.loadAllHist(); window.scrollTo(0,0); break;
+    case "adm": ui.adm=v; if(v==="baskets") loadBaskets(); render(); if(v==="reports"&&API.loadAllHist) API.loadAllHist(); window.scrollTo(0,0); break;
     case "give": openGive(); break;
     case "glevel": ui.give.amt=+v; ui.give.custom=""; ui.give.err=""; renderGive(); break;
     case "givego": submitGive(); break;
@@ -2194,6 +2197,7 @@ function renderHeader(){
   const u=person(me());
   const hh=document.getElementById("hhello"); if(hh) hh.innerHTML=`<small>Hello, ${esc(String(u.name).split(" ")[0])} · #${esc(u.paddle)}</small><b>My Bids</b>`;
   const unread=L.inbox.filter(n=>n.run===run()&&!n.read).length;
+  const hadm=document.getElementById("hadmin"); if(hadm) hadm.hidden=!isAdmin;
   const ha=document.getElementById("halerts"); if(ha) ha.innerHTML=`<small>${unread?unread+" new":"Bid"}</small><b>Alerts</b>`;
   const dd=dueFor(me()); document.getElementById("hcnt").textContent=dd.items.length+dd.pledges.length;
   const pr=(on)=>`aria-pressed="${on}"`;
@@ -2223,6 +2227,90 @@ function renderNav(){
   document.getElementById("nav").innerHTML=`<div class="nav-in">${b("browse","Auction")}${b("mine","My bids",out)}${b("alerts","Alerts",unread)}${b("checkout","Checkout",due)}${b("admin","Admin")}</div>`;
 }
 
+
+/* ---------- Donor baskets (shown on the Charity Dinner page; donors pay the cost to give one) ---------- */
+async function loadBaskets(){ const r=await rpc("admin_baskets"); ui.bsk=r.err?[]:(r.data||[]); ui.bskErr=r.err||""; if(ui.view==="admin"&&ui.adm==="baskets") render(); }
+function bkStatus(b){
+  if(b.claimed_at) return `<span class="pill win">Given${b.donor||b.claimed_name?` · ${esc(b.donor||b.claimed_name)}`:""}</span>`;
+  if(b.held) return `<span class="pill res">Someone is paying now</span>`;
+  return b.active?`<span class="pill win">On the dinner page</span>`:`<span class="pill closed">Off</span>`;
+}
+function bkEditor(){
+  const e=ui.bskEdit;
+  return `<section class="sec" id="bskform"><h2>${e.id?"Edit basket":"Add a basket"}</h2>
+    <div class="formgrid">
+      <label class="field full">Basket name<input id="bsk-title" value="${esc(e.title||"")}" placeholder="Family Movie Night" maxlength="120"></label>
+      <label class="field">What it costs to fill<input id="bsk-cost" inputmode="decimal" value="${e.cost?esc(e.cost):""}" placeholder="$250"><span class="hint">This is what the donor pays.</span></label>
+      <label class="field full">What's inside<textarea id="bsk-desc" rows="5" placeholder="One item per line, for example:&#10;Four movie passes&#10;Popcorn and candy">${esc(e.description||"")}</textarea><span class="hint">Each line shows as its own line on the card.</span></label>
+    </div>
+    <div class="mrow" style="gap:12px;align-items:center">
+      ${e.photo?`<img src="${esc(blob(e.photo))}" alt="" style="width:120px;height:90px;object-fit:cover;border-radius:10px;border:1px solid var(--line)">`:`<div class="small muted" style="width:120px;height:90px;border:1px dashed var(--line);border-radius:10px;display:grid;place-items:center">No photo</div>`}
+      <div class="btnrow"><label class="btn small" style="cursor:pointer">${e.photo?"Change photo":"Add a photo"}<input type="file" id="bsk-file" accept="image/*" hidden></label>${e.photo?`<button class="btn small" type="button" data-act="bskphotox">Remove photo</button>`:""}</div>
+    </div>
+    ${ui.bskUp?`<p class="small muted" style="margin:0">Uploading photo…</p>`:""}
+    <label class="check"><input type="checkbox" id="bsk-active" ${e.active?"checked":""}><span>Show it on the Charity Dinner page</span></label>
+    <p class="small" style="margin:0;color:var(--out)" role="alert">${esc(ui.bskMsg||"")}</p>
+    <div class="btnrow"><button class="btn primary" type="button" data-act="bsksave" ${ui.bskUp?"disabled":""}>Save basket</button><button class="btn" type="button" data-act="bskcancel">Cancel</button></div>
+  </section>`;
+}
+function admBaskets(){
+  if(ui.bsk===undefined){ loadBaskets(); return `<section class="sec"><h2>Donor baskets</h2><p class="small muted" style="margin:0">Loading…</p></section>`; }
+  const list=ui.bsk, on=list.filter(b=>b.active).length, given=list.filter(b=>b.claimed_at), raised=given.reduce((a,b)=>a+Number(b.cost),0);
+  return `${ui.bskEdit?bkEditor():""}<section class="sec">
+    <div class="row"><h2>Donor baskets</h2><span class="muted num">${list.length}</span></div>
+    <p class="small muted" style="margin:0">Add a basket, give it a cost and a photo, and turn it on. It shows on the Charity Dinner page within a minute, where a donor gives it by paying the cost online. Given baskets are marked automatically, and the donor gets a receipt.</p>
+    ${ui.bskErr?`<p class="small" style="margin:0;color:var(--out)">${esc(ui.bskErr)}</p>`:""}
+    <div class="btnrow"><button class="btn small primary" type="button" data-act="bsknew">Add basket</button>${list.length?`<button class="btn small" type="button" data-act="bskall" data-v="1">Turn all on</button><button class="btn small" type="button" data-act="bskall" data-v="0">Turn all off</button>`:""}<a class="btn small" href="https://wearecalledtocare.com/#charity-dinner" target="_blank" rel="noopener">See the dinner page</a></div>
+    ${list.length?`<p class="small muted" style="margin:0">${on} on the dinner page · ${given.length} given · ${money(raised)} raised</p>
+    <div class="rows">${list.map((b,i)=>`<div class="row" style="flex-wrap:wrap;gap:12px;align-items:center">
+      <div class="mrow" style="flex:1 1 280px">${b.photo?`<img src="${esc(blob(b.photo))}" alt="" class="mthumb" style="object-fit:cover">`:`<div class="mthumb" style="display:grid;place-items:center;font-size:11px;color:var(--muted)">No photo</div>`}
+        <div><b>${esc(b.title)} · ${money(b.cost)}</b><div style="margin-top:4px">${bkStatus(b)}</div>${b.claimed_at&&b.donor_email?`<div class="small muted">${esc(b.donor_email)} · ${esc(b.via||"")}</div>`:b.claimed_at&&b.via?`<div class="small muted">${esc(b.via)}</div>`:""}</div></div>
+      <div class="btnrow" style="flex-wrap:wrap">
+        <label class="check" style="align-items:center"><input type="checkbox" data-bkshow="${b.id}" ${b.active?"checked":""}><span>On page</span></label>
+        <button class="btn small" type="button" data-act="bskedit" data-id="${b.id}">Edit</button>
+        <button class="btn small" type="button" data-act="bskmove" data-id="${b.id}" data-v="-1" ${i?"":"disabled"} aria-label="Move up">↑</button><button class="btn small" type="button" data-act="bskmove" data-id="${b.id}" data-v="1" ${i<list.length-1?"":"disabled"} aria-label="Move down">↓</button>
+        ${b.claimed_at?(b.via==="Marked by hand"?`<button class="btn small" type="button" data-act="bskgiven" data-id="${b.id}" data-v="0">Undo given</button>`:"")
+          :`<button class="btn small" type="button" data-act="bskgiven" data-id="${b.id}" data-v="1">Paid by check</button>`}
+        ${b.via==="Paid online"?"":`<button class="btn small" type="button" data-act="bskdel" data-id="${b.id}">${ui.bskDel===b.id?"Tap again to delete":"Delete"}</button>`}
+      </div></div>`).join("")}</div>`:`<p class="small muted" style="margin:0">No baskets yet. Tap Add basket to make the first one.</p>`}
+  </section>`;
+}
+function bkGrab(){ const g=id=>document.getElementById(id); if(!ui.bskEdit||!g("bsk-title")) return;
+  Object.assign(ui.bskEdit,{title:g("bsk-title").value,cost:g("bsk-cost").value,description:g("bsk-desc").value,active:g("bsk-active").checked}); }
+async function bkDo(fn,args,msg){ const r=await rpc(fn,args); if(r.err){ toast(r.err,"outbid"); } else if(msg) toast(msg,"info"); await loadBaskets(); return r; }
+document.addEventListener("click",async e=>{
+  const el=e.target.closest("[data-act^='bsk']"); if(!el||!isAdmin) return;
+  const a=el.dataset.act, id=el.dataset.id, v=el.dataset.v;
+  if(a==="bsknew"){ ui.bskEdit={active:true}; ui.bskMsg=""; render(); document.getElementById("bsk-title").focus(); window.scrollTo(0,0); }
+  if(a==="bskedit"){ const b=ui.bsk.find(x=>x.id===id); ui.bskEdit={...b}; ui.bskMsg=""; render(); window.scrollTo(0,0); }
+  if(a==="bskcancel"){ ui.bskEdit=null; render(); }
+  if(a==="bskphotox"){ bkGrab(); ui.bskEdit.photo=""; render(); }
+  if(a==="bsksave"){ bkGrab(); const x=ui.bskEdit, cost=num(String(x.cost||"").replace(/[$,]/g,""));
+    if(!String(x.title||"").trim()){ ui.bskMsg="Give the basket a name."; render(); return; }
+    if(!(cost>0)){ ui.bskMsg="Enter what the basket costs, like 250."; render(); return; }
+    el.disabled=true; const r=await rpc("admin_basket_save",{p:{id:x.id||"",title:x.title,cost,description:x.description||"",photo:x.photo||"",active:!!x.active}});
+    if(r.err){ ui.bskMsg=r.err; el.disabled=false; render(); return; }
+    ui.bskEdit=null; toast(x.active?"Saved. It shows on the dinner page within a minute.":"Saved. It's off, so it won't show on the dinner page yet.","info"); await loadBaskets(); }
+  if(a==="bskall") bkDo("admin_basket_show",{p_id:null,p_on:v==="1"},v==="1"?"All baskets are on the dinner page.":"All baskets are hidden.");
+  if(a==="bskmove") bkDo("admin_basket_move",{p_id:id,p_dir:+v});
+  if(a==="bskgiven"){ let name=""; if(v==="1"){ name=prompt("Who gave this basket? (Their name shows on the dinner page. Leave blank to keep it private.)",""); if(name===null) return; }
+    bkDo("admin_basket_given",{p_id:id,p_given:v==="1",p_name:name},v==="1"?"Marked as given.":"Basket is open again."); }
+  if(a==="bskdel"){ if(ui.bskDel!==id){ ui.bskDel=id; render(); setTimeout(()=>{ if(ui.bskDel===id){ ui.bskDel=null; render(); } },4000); return; }
+    ui.bskDel=null; const b=ui.bsk.find(x=>x.id===id); const r=await bkDo("admin_basket_delete",{p_id:id},"Basket deleted.");
+    if(!r.err&&b&&b.photo&&!b.photo.startsWith("img/")){ try{ await sb.storage.from("photos").remove([b.photo]); }catch(err){} } }
+});
+document.addEventListener("change",async e=>{
+  if(!isAdmin) return;
+  const t=e.target;
+  if(t.dataset&&t.dataset.bkshow){ bkDo("admin_basket_show",{p_id:t.dataset.bkshow,p_on:t.checked},t.checked?"On the dinner page within a minute.":"Hidden from the dinner page."); return; }
+  if(t.id==="bsk-file"&&t.files&&t.files[0]){ bkGrab(); ui.bskUp=true; ui.bskMsg=""; render();
+    try{ const b=await compress(t.files[0]); if(!b) throw new Error("read");
+      const path=`baskets/${Date.now()}-${rid()}.jpg`;
+      const {error}=await sb.storage.from("photos").upload(path,b,{contentType:"image/jpeg",cacheControl:"31536000"}); if(error) throw new Error("upload");
+      ui.bskEdit.photo=path; }
+    catch(err){ ui.bskMsg=err.message==="read"?"That photo couldn't be read. Try a JPEG or PNG.":"The photo didn't upload. Check your connection and try again."; }
+    ui.bskUp=false; render(); }
+});
 /* ---------- Events ---------- */
 document.addEventListener("click",async e=>{
   const el=e.target.closest("[data-act]"); if(!el) return;

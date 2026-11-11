@@ -269,6 +269,7 @@ select{-webkit-appearance:none!important;-moz-appearance:none!important;appearan
 select::-ms-expand{display:none}
 select:hover{border-color:var(--teal)!important}
 select:focus-visible{outline:3px solid rgba(226,25,122,.25);outline-offset:2px}
+td.selc,th.selc{width:36px;padding-right:0}.selc input{width:18px;height:18px;cursor:pointer;accent-color:var(--navy)}
 </style>
 <style>[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
 </head>
@@ -465,8 +466,8 @@ async function loadAll(){
  if(PERMS.dinner)DATA.dinner=pay.filter(p=>p.purpose==='tickets'||p.purpose==='table').map(mapPay);
 }
 function mapContact(c){const biz=['business','church','foundation'].includes(c.kind)&&c.org;
- const name=biz?c.org:(c.household||(c.last_name?`${c.last_name}, ${c.first_name}`:c.first_name||c.email||'(no name)'));
- return{id:c.id,raw:c,name,type:biz?(c.kind==='church'?'Church':c.kind==='foundation'?'Foundation':'Business'):'Family',first:c.first_name,last:c.last_name,org:c.org,salutation:c.salutation||c.first_name,
+ const name=biz?c.org:((c.last_name?`${c.last_name}, ${c.first_name}`:c.first_name||c.email||'(no name)'));
+ return{id:c.id,raw:c,name,type:biz?(c.kind==='church'?'Church':c.kind==='foundation'?'Foundation':'Business'):'Person',first:c.first_name,last:c.last_name,org:c.org,salutation:c.salutation||c.first_name,
   email:c.email||'',household:c.household||'',phone:c.phone,street:c.street,city:c.city,state:c.state,zip:c.zip,okEmail:c.email_ok&&!c.do_not_email,okText:c.text_ok,okMail:c.mail_ok,unsub:c.do_not_email,tags:c.tags||[],source:c.source,notes:c.notes,created:D(c.created_at)}}
 function mapSpon(s){return{id:s.id,cid:s.contact_id,year:s.year,name:s.sponsor_name,level:s.level,amount:Number(s.amount||0),status:s.status,received:Number(s.received||0),method:s.method,source:s.source,logo:s.logo_received,receipt:s.receipt_sent,thanks:s.thanks_sent,notes:s.notes,date:D(s.created_at)}}
 function mapAtt(a){return{id:a.id,cid:a.contact_id,year:a.year,guests:a.guests,ticket:a.ticket_type,table:a.table_label,present:a.present,bid:a.bid_number,source:a.source,total:a.auction_total}}
@@ -818,7 +819,7 @@ let SP={tab:'year',year:null,st:'all',q:'',hy:'any',hn:'any',lapsed:false,an:'an
 const yrDots=(c,kind)=>`<span class="yrs">${DYEARS.map(y=>{let on,t;if(kind==='spon'){const s=sponOf(c,y);on=s&&COUNTS_AS(s.status);t=on?`${y}: ${s.level} · ${money(s.amount)}`:`${y}: no`;}else{const a=DIN.att.find(x=>x.cid===c.id&&x.year===y);on=!!a&&(a.present||y===CUR);t=on?`${y}: ${a.guests} guest${a.guests>1?'s':''}${y===CUR?' (registered)':''}`:`${y}: no`;}return`<i class="${on?'on':''}${y===CUR?' cur':''}" title="${t}">${String(y).slice(2)}</i>`}).join('')}</span>`;
 const spPill=s=>`<span class="pill ${{'Asked':'s-off','Committed':'s-info','Invoiced':'s-mid','Partially Paid':'s-mid','Paid in Full':'s-done','Declined':'s-bad'}[s]||'s-off'}">${esc(s)}</span>`;
 const yes=b=>b?`<span class="ok">✓</span>`:`<span class="no">—</span>`;
-const cName=(c,s)=>`<b>${esc(s&&s.name||c.name)}</b><span class="sub">${esc(c.type==='Family'?c.email:[c.first,c.last].filter(Boolean).join(' '))}</span>`;
+const cName=(c,s)=>`<b>${esc(s&&s.name||c.name)}</b><span class="sub">${esc(c.type==='Person'?c.email:[c.first,c.last].filter(Boolean).join(' '))}</span>`;
 function spRows(){const y=SP.year;let rows=DIN.spons.filter(s=>s.year===y);if(SP.st!=='all')rows=rows.filter(s=>s.status===SP.st);
  if(SP.q){const qq=SP.q.toLowerCase();rows=rows.filter(s=>hit({...cById(s.cid),raw:0,lv:s.level,sn:s.name},qq))}
  return rows.sort((a,b)=>SPST.indexOf(b.status)-SPST.indexOf(a.status)||b.amount-a.amount)}
@@ -839,7 +840,7 @@ function sponsorsPage(){if(SP.year==null)SP.year=CUR;const lv=PERMS.sponsors,edi
  const tabs=[['year','Sponsors by Year'],['history','Sponsor History'],['attend','Dinner Attendance']];
  const access=lv==='view'?`<span class="readonly">View only</span>`:'';
  const head=`<div class="ph"><div><span class="label">Charity Dinner</span><h1>Sponsors &amp; Guests</h1><p>Every sponsor and guest${DYEARS.length?' since '+DYEARS[0]:''}. Website sponsorships and ticket purchases land here automatically.</p></div>
-  <div class="actions">${access}<button class="btn" data-sp="export">${ic('down')}Export List</button>${edit&&SP.tab==='year'?`<button class="btn primary" data-sp="add">${ic('plus')}Add Sponsor</button>`:''}</div></div>
+  <div class="actions">${access}${SP.tab!=='attend'?`<button class="btn" data-sp="letters">${ic('down')}Thank-You Letters${SPSEL.size?` (${SPSEL.size})`:''}</button>`:''}${edit&&DUPES().length?`<button class="btn" data-sp="dupes">Possible duplicates (${DUPES().length})</button>`:''}<button class="btn" data-sp="export">${ic('down')}Export List</button>${edit&&SP.tab==='year'?`<button class="btn primary" data-sp="add">${ic('plus')}Add Sponsor</button>`:''}</div></div>
   <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${SP.tab===k}" data-spt="${k}">${l}</button>`).join('')}</div>`;
  const search=`<label class="search" for="spq">${ic('search')}<input id="spq" placeholder="Search names, emails, cities" value="${esc(SP.q)}"></label>`;
  const seg=(key,opts)=>`<div class="seg" role="group">${opts.map(([v,l])=>`<button class="${String(SP[key])===String(v)?'on':''}" data-spf="${key}" data-v="${v}">${l}</button>`).join('')}</div>`;
@@ -848,19 +849,19 @@ function sponsorsPage(){if(SP.year==null)SP.year=CUR;const lv=PERMS.sponsors,edi
   return head+`<div class="summary"><div><b>${com.length}</b><span>Committed sponsors</span></div><div><b>${money(pl)}</b><span>Pledged</span></div><div><b>${money(rc)}</b><span>Received</span></div><div><b>${money(Math.max(pl-rc,0))}</b><span>Still owed</span></div><div><b>${all.filter(s=>s.status==='Asked').length}</b><span>Asked, no answer yet</span></div>${SP.year===CUR?lvl:''}</div>
   <div class="toolbar">${search}<select class="sel" id="spyear" aria-label="Year">${DYEARS.slice().reverse().map(y=>`<option value="${y}" ${y===SP.year?'selected':''}>${y} dinner${y===CUR?' (this year)':''}</option>`).join('')}</select>
   ${seg('st',[['all','All'],...SPST.map(s=>[s,s])])}</div>
-  <div class="panel"><div class="tablewrap"><table><thead><tr><th>Sponsor</th><th>Level</th><th class="r">Pledged</th><th class="r">Received</th><th>Status</th><th>Logo</th><th>Receipt</th><th>Thank-you</th><th>Years with us</th></tr></thead><tbody>
-  ${rows.length?rows.map(s=>{const c=cById(s.cid);return`<tr data-sps="${s.id}"><td>${cName(c,s)}${s.source==='Website'?'<span class="sub web">via website</span>':''}</td><td>${esc(s.level)}</td><td class="r">${money(s.amount)}</td><td class="r">${s.received?money(s.received):'—'}</td><td>${spPill(s.status)}</td><td>${yes(s.logo)}</td><td>${yes(s.receipt)}</td><td>${yes(s.thanks)}</td><td>${yrDots(c,'spon')}</td></tr>`}).join(''):`<tr><td colspan="9" class="empty">${all.length?'No sponsors match.':`No ${SP.year} sponsors yet.${edit?' Use Add Sponsor, or they appear when someone sponsors on the website.':''}`}</td></tr>`}
+  <div class="panel"><div class="tablewrap"><table><thead><tr><th class="selc">${selAll(rows.map(s=>s.cid))}</th><th>Sponsor</th><th>Level</th><th class="r">Pledged</th><th class="r">Received</th><th>Status</th><th>Logo</th><th>Receipt</th><th>Thank-you</th><th>Years with us</th></tr></thead><tbody>
+  ${rows.length?rows.map(s=>{const c=cById(s.cid);return`<tr data-sps="${s.id}"><td class="selc">${selBox(s.cid)}</td><td>${cName(c,s)}${s.source==='Website'?'<span class="sub web">via website</span>':''}</td><td>${esc(s.level)}</td><td class="r">${money(s.amount)}</td><td class="r">${s.received?money(s.received):'—'}</td><td>${spPill(s.status)}</td><td>${yes(s.logo)}</td><td>${yes(s.receipt)}</td><td>${yes(s.thanks)}</td><td>${yrDots(c,'spon')}</td></tr>`}).join(''):`<tr><td colspan="10" class="empty">${all.length?'No sponsors match.':`No ${SP.year} sponsors yet.${edit?' Use Add Sponsor, or they appear when someone sponsors on the website.':''}`}</td></tr>`}
   </tbody></table></div></div>`}
  if(SP.tab==='history'){const rows=histRows();const tot=rows.reduce((a,c)=>a+lifetime(c),0);
   return head+`<div class="summary"><div><b>${rows.length}</b><span>Sponsors shown</span></div><div><b>${money(tot)}</b><span>Given across all years</span></div><div><b>${rows.filter(c=>yearsSpon(c).length>=3).length}</b><span>Sponsored 3+ years</span></div></div>
   <div class="toolbar">${search}<select class="sel" id="spsort" aria-label="Sort"><option value="life" ${SP.sort==='life'?'selected':''}>Most given</option><option value="years" ${SP.sort==='years'?'selected':''}>Most years</option><option value="name" ${SP.sort==='name'?'selected':''}>Name A–Z</option></select></div>
   <div class="filters"><span class="flabel">Sponsored in</span>${seg('hy',[['any','Any year'],...DYEARS.map(y=>[y,y])])}</div>
   <div class="filters"><span class="flabel">Years sponsored</span>${seg('hn',[['any','Any'],['1','1'],['2','2'],['3','3'],['4','4'],['5','5+'],['all','Every year']])}<label class="tick"><input type="checkbox" id="splapsed" ${SP.lapsed?'checked':''}> Not yet in for ${CUR}</label></div>
-  <div class="panel"><div class="tablewrap"><table><thead><tr><th>Sponsor</th><th>Type</th><th>${DYEARS[0]||''}–${CUR}</th><th class="r">Years</th><th class="r">Lifetime</th><th>Phone</th><th>City</th></tr></thead><tbody>
-  ${rows.length?rows.map(c=>`<tr data-spc="${c.id}"><td>${cName(c)}</td><td>${c.type}</td><td>${yrDots(c,'spon')}</td><td class="r">${yearsSpon(c).length}</td><td class="r">${money(lifetime(c))}</td><td>${esc(c.phone)}</td><td>${esc(c.city)}</td></tr>`).join(''):`<tr><td colspan="7" class="empty">No sponsors match these filters.</td></tr>`}
+  <div class="panel"><div class="tablewrap"><table><thead><tr><th class="selc">${selAll(rows.map(c=>c.id))}</th><th>Sponsor</th><th>Type</th><th>${DYEARS[0]||''}–${CUR}</th><th class="r">Years</th><th class="r">Lifetime</th><th>Phone</th><th>City</th></tr></thead><tbody>
+  ${rows.length?rows.map(c=>`<tr data-spc="${c.id}"><td class="selc">${selBox(c.id)}</td><td>${cName(c)}</td><td>${c.type}</td><td>${yrDots(c,'spon')}</td><td class="r">${yearsSpon(c).length}</td><td class="r">${money(lifetime(c))}</td><td>${esc(c.phone)}</td><td>${esc(c.city)}</td></tr>`).join(''):`<tr><td colspan="8" class="empty">No sponsors match these filters.</td></tr>`}
   </tbody></table></div></div>`}
  const rows=attRows();
- return head+`<div class="summary"><div><b>${rows.length}</b><span>Households / businesses shown</span></div><div><b>${rows.filter(c=>HELD.length&&attended(c).length===HELD.length).length}</b><span>Came to all ${HELD.length} dinners</span></div><div><b>${rows.filter(c=>registered(c)).reduce((a,c)=>a+registered(c).guests,0)}</b><span>Guests registered for ${CUR}</span></div></div>
+ return head+`<div class="summary"><div><b>${rows.length}</b><span>Guests shown</span></div><div><b>${rows.filter(c=>HELD.length&&attended(c).length===HELD.length).length}</b><span>Came to all ${HELD.length} dinners</span></div><div><b>${rows.filter(c=>registered(c)).reduce((a,c)=>a+registered(c).guests,0)}</b><span>Guests registered for ${CUR}</span></div></div>
   <div class="toolbar">${search}<select class="sel" id="spay" aria-label="Attended year"><option value="any">Any year</option>${HELD.slice().reverse().map(y=>`<option value="${y}" ${String(y)===SP.ay?'selected':''}>Attended ${y}</option>`).join('')}</select><label class="tick"><input type="checkbox" id="spreg" ${SP.reg?'checked':''}> Registered for ${CUR}</label></div>
   <div class="filters"><span class="flabel">Dinners attended</span>${seg('am',[['exact','Exactly'],['least','At least']])}${seg('an',[['any','Any'],['1','1'],['2','2'],['3','3'],['4','4'],['all',`All ${HELD.length}`],['0','New in '+CUR]])}</div>
   <div class="panel"><div class="tablewrap"><table><thead><tr><th>Guest</th><th>${DYEARS[0]||''}–${CUR}</th><th class="r">Dinners</th><th>${CUR}</th><th>Also sponsors</th><th>Phone</th><th>City</th></tr></thead><tbody>
@@ -876,6 +877,7 @@ function contactDrawer(id,from){const c=cById(id);const edit=from==='emaillist'?
   <div class="prefs">${['okEmail','okText','okMail'].map((k,i)=>`<label class="tick"><input type="checkbox" id="cf-${k}" ${c[k]?'checked':''} ${edit?'':'disabled'}> ${['Email OK','Text OK','Mail OK'][i]}</label>`).join('')}</div>
   ${c.unsub?`<p class="note">This person unsubscribed from emails. Turning Email OK back on requires their permission.</p>`:''}
   ${hist?`<div style="display:grid;gap:8px"><span class="label" style="color:var(--muted)">Charity dinner history</span><ul class="log">${hist}</ul></div>`:''}
+  ${PERMS.sponsors&&yearsSpon(c).length?`<div><button class="btn" type="button" data-sponletter="${c.id}">${ic('down')}Sponsor Thank-You Letter (PDF)</button></div>`:''}
   <p class="err" id="cf-err" role="alert"></p>
   ${edit?`<div style="display:flex;gap:8px"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-close>Cancel</button></div>`:''}
  </form></div>`)}
@@ -902,7 +904,7 @@ function sponDrawer(id){const isNew=!id;const s=isNew?{id:'',cid:'',year:SP.year
  </form></div>`)}
 function exportList(){const rows=SP.tab==='year'?spRows().map(s=>({c:cById(s.cid),s})):(SP.tab==='history'?histRows():attRows()).map(c=>({c}));
  const sets={letters:['Mailing list (letters)',r=>r.c.okMail&&r.c.street,[['Name',r=>r.s&&r.s.name||r.c.name],['Salutation',r=>r.c.salutation],['First Name',r=>r.c.first],['Last Name',r=>r.c.last],['Street',r=>r.c.street],['City',r=>r.c.city],['State',r=>r.c.state],['ZIP',r=>r.c.zip]]],
-  emails:['Email list',r=>r.c.okEmail&&r.c.email,[['Email',r=>r.c.email],['First Name',r=>r.c.first],['Last Name',r=>r.c.last],['Organization',r=>r.c.type==='Family'?'':r.c.name]]],
+  emails:['Email list',r=>r.c.okEmail&&r.c.email,[['Email',r=>r.c.email],['First Name',r=>r.c.first],['Last Name',r=>r.c.last],['Organization',r=>r.c.type==='Person'?'':r.c.name]]],
   texts:['Text list',r=>r.c.okText&&r.c.phone,[['Phone',r=>r.c.phone],['First Name',r=>r.c.first],['Name',r=>r.c.name]]],
   all:['Everything (spreadsheet)',()=>true,[['Name',r=>r.s&&r.s.name||r.c.name],['Type',r=>r.c.type],['First Name',r=>r.c.first],['Last Name',r=>r.c.last],['Salutation',r=>r.c.salutation],['Email',r=>r.c.email],['Phone',r=>r.c.phone],['Street',r=>r.c.street],['City',r=>r.c.city],['State',r=>r.c.state],['ZIP',r=>r.c.zip],['Years Sponsored',r=>yearsSpon(r.c).length],['Lifetime $',r=>lifetime(r.c)],['Dinners Attended',r=>attended(r.c).length],...(SP.tab==='year'?[['Level',r=>r.s.level],['Pledged',r=>r.s.amount],['Received',r=>r.s.received],['Status',r=>r.s.status]]:[])]]};
  const build=k=>{const[,ok,cols]=sets[k];const rs=rows.filter(ok);return{n:rs.length,txt:[cols.map(c=>csvq(c[0])).join(','),...rs.map(r=>cols.map(c=>csvq(c[1](r))).join(','))].join('\n')}};
@@ -914,14 +916,98 @@ function exportList(){const rows=SP.tab==='year'?spRows().map(s=>({c:cById(s.cid
   <button class="btn" data-close style="justify-self:start">Close</button></div></div>`);
  document.querySelectorAll('[data-ex]').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.ex,r=build(k);if(!r.n){toast('No one on this list');return}download(`${SP.tab==='year'?'sponsors-'+SP.year:SP.tab==='history'?'sponsor-history':'dinner-guests'}-${k}.csv`,r.txt);toast(`Downloaded ${r.n} people`)}))}
 
+
+/* ---------------- possible duplicates (same person entered twice) ---------------- */
+const NICKS=[['phil','philip','phillip'],['rob','robert','bob','bobby','robbie'],['bill','william','will','billy'],['mike','michael','mikey'],['jim','james','jimmy','jamie'],['dan','daniel','danny'],['dave','david'],['tom','thomas','tommy'],['chris','christopher','christine','christina'],['kim','kimberly'],['jen','jenn','jennifer','jenni','jenny'],['matt','matthew'],['nick','nicholas'],['tony','anthony'],['steve','steven','stephen'],['kate','katie','katherine','kathy','catherine','kathryn','cathy'],['liz','beth','elizabeth','betsy','lizzie'],['sue','susan','suzy'],['deb','debbie','deborah','debra'],['pat','patrick','patricia','patti','patty'],['joe','joseph','joey'],['sam','samantha','samuel','sammy'],['alex','alexander','alexandra','alexis'],['ben','benjamin'],['greg','gregory'],['andy','andrew','drew'],['ed','eddie','edward','ted'],['rich','rick','richard','dick','ricky'],['ron','ronald','ronnie'],['tim','timothy','timmy'],['jeff','jeffrey'],['ken','kenneth','kenny'],['kris','kristen','kristin','kristine','krissy'],['josh','joshua'],['jon','john','jonathan','johnny','jack'],['brad','bradford','bradley'],['jake','jacob'],['meg','megan','maggie','margaret','peggy'],['becky','rebecca','becca'],['cindy','cynthia'],['terri','teresa','theresa','terry'],['larry','lawrence'],['doug','douglas'],['don','donald','donnie'],['ray','raymond'],['nate','nathan','nathaniel'],['zach','zachary','zack'],['abby','abigail'],['mandy','amanda'],['vicki','victoria','vicky'],['jess','jessica','jessie'],['val','valerie'],['barb','barbara'],['fred','frederick'],['al','allen','alan','albert'],['gerry','gerald','jerry'],['frank','francis'],['charlie','charles','chuck'],['reggie','reginald']];
+const NICK=new Map();NICKS.forEach((g,i)=>g.forEach(n=>NICK.set(n,i)));
+const fnorm=s=>String(s||'').toLowerCase().replace(/^(dr|mr|mrs|ms|rev|pastor)\.?\s+/,'').replace(/[^a-z]/g,'');
+function lev(a,b){if(Math.abs(a.length-b.length)>1)return 9;const d=[...Array(b.length+1).keys()];for(let i=1;i<=a.length;i++){let p=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const t=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,p+(a[i-1]===b[j-1]?0:1));p=t}}return d[b.length]}
+function sameFirst(a,b){if(!a||!b)return false;if(a===b)return true;
+ if(NICK.has(a)&&NICK.get(a)===NICK.get(b))return true;
+ const [s,l]=a.length<b.length?[a,b]:[b,a];if(s.length>=3&&l.startsWith(s))return true;
+ if(a.length>=5&&b.length>=5&&(lev(a,b)<=1||[...a].sort().join('')===[...b].sort().join('')))return true;return false}
+function dupKey(a,b){return[a,b].sort().join('|')}
+function dupesHidden(){try{return new Set(JSON.parse(localStorage.getItem('c2c-notdupes')||'[]'))}catch(e){return new Set()}}
+let DUPE_CACHE=null,DUPE_SRC=null;
+function DUPES(){if(DUPE_SRC===CONTACTS&&DUPE_CACHE)return DUPE_CACHE;
+ const hide=dupesHidden(),by=new Map(),out=[];
+ CONTACTS.forEach(c=>{if(c.type!=='Person'||!c.last)return;const k=fnorm(c.last);if(!by.has(k))by.set(k,[]);by.get(k).push(c)});
+ by.forEach(list=>{for(let i=0;i<list.length;i++)for(let j=i+1;j<list.length;j++){const a=list[i],b=list[j];
+  if(sameFirst(fnorm(a.first),fnorm(b.first))&&!hide.has(dupKey(a.id,b.id)))out.push([a,b])}});
+ DUPE_SRC=CONTACTS;DUPE_CACHE=out.sort((x,y)=>x[0].name.localeCompare(y[0].name));return out}
+function dupInfo(c){const n=DIN.att.filter(a=>a.cid===c.id).length,sp=DIN.spons.filter(s=>s.cid===c.id).length,pay=(DIN.payments||[]).filter(p=>p.contact_id===c.id).length;
+ return[c.email,c.city,n?`${n} dinner${n>1?'s':''}`:'',sp?`${sp} sponsorship${sp>1?'s':''}`:'',pay?`${pay} payment${pay>1?'s':''}`:''].filter(Boolean).map(esc).join(' · ')||'No other details'}
+function dupesDrawer(){const list=DUPES();
+ layer(`<div class="drawer"><button class="scrim" data-close aria-label="Close"></button><div class="sheet" role="dialog" aria-modal="true" aria-label="Possible duplicates">
+  <button class="x" type="button" data-close aria-label="Close">×</button>
+  <div><span class="label" style="color:var(--pink)">Contacts</span><h2>Possible duplicates</h2><p class="note">These look like the same person entered twice (same last name, similar first name). Combining keeps one record with all of their dinners, sponsorships, payments and letters. It can't be undone.</p></div>
+  ${list.length?`<ul class="log dupes">${list.map(([a,b])=>`<li style="display:grid;gap:8px"><div><b>${esc(a.first+' '+a.last)}</b><span class="sub" style="display:block">${dupInfo(a)}</span></div><div><b>${esc(b.first+' '+b.last)}</b><span class="sub" style="display:block">${dupInfo(b)}</span></div>
+   <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-merge="${a.id}" data-drop="${b.id}">Combine as ${esc(a.first+' '+a.last)}</button><button class="btn primary" data-merge="${b.id}" data-drop="${a.id}">Combine as ${esc(b.first+' '+b.last)}</button><button class="btn" data-notdupe="${dupKey(a.id,b.id)}">Not the same person</button></div></li>`).join('')}</ul>`:'<p class="empty">No possible duplicates right now.</p>'}
+ </div></div>`)}
+document.addEventListener('click',async e=>{
+ const nd=e.target.closest('[data-notdupe]');if(nd){const h=dupesHidden();h.add(nd.dataset.notdupe);try{localStorage.setItem('c2c-notdupes',JSON.stringify([...h]))}catch(x){}DUPE_CACHE=null;render();dupesDrawer();return}
+ const m=e.target.closest('[data-merge]');if(!m)return;
+ if(!m.dataset.sure){m.dataset.sure='1';m.textContent='Tap again to combine';return}
+ m.disabled=true;const r=await SB.rpc('merge_contacts',{p_keep:m.dataset.merge,p_drop:m.dataset.drop});
+ if(r.error){m.disabled=false;toast('Not combined: '+r.error.message,true);return}
+ DUPE_CACHE=null;await loadAll();render();dupesDrawer();toast('Combined into one contact')});
+
+/* ---------------- sponsor thank-you letters ---------------- */
+const SPSEL=new Set();
+const bbusy=(b,on)=>{b.disabled=on;if(on){b.dataset.t=b.innerHTML;b.textContent='Working…'}else if(b.dataset.t)b.innerHTML=b.dataset.t};
+const selBox=id=>`<input type="checkbox" aria-label="Select for letters" data-spsel="${id}" ${SPSEL.has(id)?'checked':''}>`;
+const selAll=ids=>{const u=[...new Set(ids)];return`<input type="checkbox" aria-label="Select all shown" title="Select all shown" data-spselall="${u.join(',')}" ${u.length&&u.every(i=>SPSEL.has(i))?'checked':''}>`};
+const SL_DEFAULT={paragraphs:['Thank you so much for sponsoring our Charity Dinner & Auction in {years}. Your generosity means the world to us, and even more to the foster, adoptive, and kinship families we walk alongside.','Because of sponsors like you, families who say yes to children in need never have to do it alone. Your support helps make Support Nights for foster and adoptive moms, Care Closet bags for children arriving in new homes, camp scholarships, and Christmas gifts for kids in care possible.',"We are so excited about our 6th annual Charity Dinner & Auction on {dinner_date} at Whitetail Ridge Golf Club in Yorkville. We would be honored to have you with us again as a sponsor this year. You can see this year's sponsor options at wearecalledtocare.com, or simply reach out and I will be glad to help."],closing:'With gratitude,'};
+let SLT=null;
+const slText=()=>{const t=SETTINGS.sponsor_letter||{};return{paragraphs:(t.paragraphs&&t.paragraphs.length?t.paragraphs:SL_DEFAULT.paragraphs).slice(),closing:t.closing||SL_DEFAULT.closing}};
+const hasAddr=c=>!!(c&&c.street&&c.city&&c.zip);
+function slGrab(){if(!SLT)return;const ps=[...document.querySelectorAll('[data-slp]')];if(ps.length)SLT.paragraphs=ps.map(x=>x.value);const cl=$('#sl-close');if(cl)SLT.closing=cl.value;const sk=$('#sl-skip');if(sk)SLT.skip=sk.checked}
+function sponLettersDrawer(keep){if(!keep)SLT={...slText(),skip:true};const ids=[...SPSEL],cs=ids.map(cById).filter(Boolean),noAddr=cs.filter(c=>!hasAddr(c));
+ const canSave=(ME.roles||[]).includes('owner')||PERMS.sponsors==='edit';const n=SLT.skip?cs.length-noAddr.length:cs.length;
+ layer(`<div class="drawer"><button class="scrim" data-close aria-label="Close"></button><form class="sheet" id="slForm" role="dialog" aria-modal="true" aria-label="Sponsor thank-you letters" novalidate>
+  <button class="x" type="button" data-close aria-label="Close">×</button>
+  <div><span class="label" style="color:var(--pink)">Charity Dinner</span><h2>Sponsor Thank-You Letters</h2>
+   <p class="note">One printed page per sponsor on letterhead, in one PDF. Print, sign, fold in thirds (small marks on the left edge), and mail in #10 single-window envelopes. The address lines up with the window.</p></div>
+  ${cs.length?`<div style="display:grid;gap:6px"><span class="label" style="color:var(--muted)">${cs.length} sponsor${cs.length>1?'s':''} selected</span><p class="note" style="margin:0">${cs.slice(0,8).map(c=>esc(c.name)).join(' · ')}${cs.length>8?` and ${cs.length-8} more`:''}</p>
+   ${noAddr.length?`<label class="tick"><input type="checkbox" id="sl-skip" ${SLT.skip?'checked':''}> Leave out the ${noAddr.length} without a mailing address</label><p class="note" style="margin:0">No address: ${noAddr.slice(0,10).map(c=>`<a href="#" data-spc-open="${c.id}">${esc(c.name)}</a>`).join(', ')}${noAddr.length>10?` and ${noAddr.length-10} more`:''}</p>`:''}
+   <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" data-slclear>Clear selection</button></div></div>`
+   :`<p class="note">Check the boxes next to sponsors on <b>Sponsors by Year</b> or <b>Sponsor History</b> (the box at the top selects everyone shown), then open this again. You can still preview the letter below.</p>`}
+  <div style="display:grid;gap:10px"><span class="label" style="color:var(--muted)">Letter wording</span>
+   <p class="note" style="margin:0"><b>{years}</b> becomes the years they sponsored, like “2025 and 2026”. <b>{dinner_date}</b> becomes the next dinner date. The greeting and address fill in for each sponsor.</p>
+   ${SLT.paragraphs.map((t,i)=>`<label class="field" for="sl-p${i}">Paragraph ${i+1}<textarea id="sl-p${i}" data-slp rows="4">${esc(t)}</textarea></label>`).join('')}
+   <div style="display:flex;gap:8px;flex-wrap:wrap">${SLT.paragraphs.length<5?'<button class="btn" type="button" data-sladd>Add a paragraph</button>':''}${SLT.paragraphs.length>1?'<button class="btn" type="button" data-sldel>Remove last paragraph</button>':''}</div>
+   <label class="field" for="sl-close">Closing<input id="sl-close" value="${esc(SLT.closing)}"></label>
+   <p class="note" style="margin:0">Signed by ${esc((SETTINGS.letter_signer||{}).name||'Shari Chapman')}, ${esc((SETTINGS.letter_signer||{}).title||'Executive Director')} (change this under Donations → Letter settings).</p></div>
+  <p class="err" id="sl-err" role="alert"></p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">${cs.length?`<button class="btn primary" type="button" data-sldown ${n?'':'disabled'}>${ic('down')}Download ${n} Letter${n===1?'':'s'} (PDF)</button>`:''}<button class="btn" type="button" data-slsample>Preview Sample</button>${canSave?'<button class="btn" type="button" data-slsave>Save Wording</button>':''}</div>
+ </form></div>`)}
+async function sponLetterPdf(body,name){const res=await letterFn({action:'sponsors',...body});if(!res.ok){const j=await res.json().catch(()=>({}));throw new Error(j.error||'Could not make the letters')}
+ const url=URL.createObjectURL(await res.blob());const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);return +(res.headers.get('x-letters')||0)}
+document.addEventListener('click',async e=>{
+ const one=e.target.closest('[data-sponletter]');if(one){const c=cById(one.dataset.sponletter);bbusy(one,true);try{await sponLetterPdf({contact_ids:[c.id]},`Thank-you letter - ${c.name}.pdf`.replace(/[\\/:*?"<>|]/g,''));toast('Letter downloaded')}catch(x){toast(x.message,true)}bbusy(one,false);return}
+ if(!document.getElementById('slForm'))return;
+ const op=e.target.closest('[data-spc-open]');if(op){e.preventDefault();contactDrawer(op.dataset.spcOpen);return}
+ if(e.target.closest('[data-slclear]')){SPSEL.clear();slGrab();render();sponLettersDrawer(true);return}
+ if(e.target.closest('[data-sladd]')){slGrab();SLT.paragraphs.push('');sponLettersDrawer(true);return}
+ if(e.target.closest('[data-sldel]')){slGrab();SLT.paragraphs.pop();sponLettersDrawer(true);return}
+ const text=()=>{slGrab();return{paragraphs:SLT.paragraphs.filter(x=>x.trim()),closing:SLT.closing}};
+ const err=$('#sl-err');
+ const smp=e.target.closest('[data-slsample]');if(smp){bbusy(smp,true);try{await sponLetterPdf({sample:true,text:text()},'Sample sponsor letter.pdf')}catch(x){err.textContent=x.message}bbusy(smp,false);return}
+ const dl=e.target.closest('[data-sldown]');if(dl){bbusy(dl,true);err.textContent='';try{const n=await sponLetterPdf({contact_ids:[...SPSEL],text:text(),skip_no_address:!!SLT.skip},`Sponsor thank-you letters (${SPSEL.size}).pdf`);toast(`${n} letter${n===1?'':'s'} downloaded`)}catch(x){err.textContent=x.message}bbusy(dl,false);return}
+ const sv=e.target.closest('[data-slsave]');if(sv){const t=text();if(!t.paragraphs.length){err.textContent='Add at least one paragraph.';return}bbusy(sv,true);const r=await SB.from('settings').upsert({key:'sponsor_letter',value:t});bbusy(sv,false);
+  if(r.error){err.textContent='Not saved: '+r.error.message;return}SETTINGS.sponsor_letter=t;toast('Letter wording saved for everyone')}});
+document.addEventListener('change',e=>{if(e.target.id==='sl-skip'){slGrab();sponLettersDrawer(true)}});
 /* ---------------- sponsors wiring ---------------- */
 document.addEventListener('click',e=>{if(VIEW!=='sponsors')return;
+ if(e.target.closest('.selc'))return;
  const t=e.target.closest('[data-spt]');if(t){SP.tab=t.dataset.spt;SP.q='';render();return}
  const f=e.target.closest('[data-spf]');if(f){SP[f.dataset.spf]=f.dataset.v;render();return}
  const s=e.target.closest('[data-sps]');if(s){sponDrawer(s.dataset.sps);return}
  const c=e.target.closest('[data-spc]');if(c){e.preventDefault();contactDrawer(c.dataset.spc);return}
- const a=e.target.closest('[data-sp]');if(a){if(a.dataset.sp==='add')sponDrawer(null);if(a.dataset.sp==='export')exportList();}});
+ const a=e.target.closest('[data-sp]');if(a){if(a.dataset.sp==='add')sponDrawer(null);if(a.dataset.sp==='export')exportList();if(a.dataset.sp==='dupes')dupesDrawer();if(a.dataset.sp==='letters')sponLettersDrawer();}});
 document.addEventListener('change',e=>{if(VIEW!=='sponsors')return;const id=e.target.id;
+ if(e.target.dataset.spsel!==undefined){e.target.checked?SPSEL.add(e.target.dataset.spsel):SPSEL.delete(e.target.dataset.spsel);render();return}
+ if(e.target.dataset.spselall!==undefined){const ids=e.target.dataset.spselall.split(',').filter(Boolean);ids.forEach(i=>e.target.checked?SPSEL.add(i):SPSEL.delete(i));render();return}
  if(id==='spyear'){SP.year=+e.target.value;render()}
  if(id==='spsort'){SP.sort=e.target.value;render()}
  if(id==='spay'){SP.ay=e.target.value;render()}
@@ -944,7 +1030,7 @@ document.addEventListener('submit',async e=>{const fm=e.target;
    let c=[...CONTACTS.values()].find(x=>x.name.toLowerCase()===who.toLowerCase());
    if(!c){const g=k=>$('#sf-'+k).value.trim();if(!g('first')||!g('email')){err.textContent='For a new sponsor, add at least a contact first name and email.';return}
     const family=/,|family/i.test(who);
-    busy(fm,true);const r=await SB.from('contacts').insert({email:g('email').toLowerCase(),first_name:g('first'),last_name:g('last'),org:family?'':who,kind:family?'family':/church/i.test(who)?'church':'business',salutation:g('first'),phone:g('phone'),street:g('street'),city:g('city'),zip:g('zip'),state:'IL',tags:['Dinner Sponsor'],source:'Admin: added sponsor'}).select().single();busy(fm,false);
+    busy(fm,true);const r=await SB.from('contacts').insert({email:g('email').toLowerCase(),first_name:g('first'),last_name:g('last'),org:family?'':who,kind:family?'person':/church/i.test(who)?'church':'business',salutation:g('first'),phone:g('phone'),street:g('street'),city:g('city'),zip:g('zip'),state:'IL',tags:['Dinner Sponsor'],source:'Admin: added sponsor'}).select().single();busy(fm,false);
     if(r.error){err.textContent=r.error.message.includes('contacts_email_uq')?'That email already belongs to a contact. Type their name to pick them instead.':r.error.message;return}
     c=mapContact(r.data);CONTACTS.set(c.id,c)}
    if(DIN.spons.some(x=>x.cid===c.id&&x.year===SP.year)){err.textContent=`${c.name} already has a ${SP.year} sponsorship. Open it from the list instead.`;return}
