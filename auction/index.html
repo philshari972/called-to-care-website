@@ -193,6 +193,7 @@ details.how summary{font-weight:700;cursor:pointer}
 .or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px}
 .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
 @media (min-width:720px){ .grid{grid-template-columns:repeat(3,minmax(0,1fr))} .wrap{max-width:760px} .eventbar-in,.nav-in{max-width:760px} }
+@media (min-width:1000px){ body.admview .wrap{max-width:1180px} body.admview .eventbar-in,body.admview .nav-in{max-width:1180px} }
 </style>
 
 <style>body:not(.ok)>*{visibility:hidden}body:not(.ok){background:#1D4766}</style>
@@ -2172,7 +2173,7 @@ function render(){
   sy.classList.toggle("on",!ui.offline);
   document.getElementById("synctxt").textContent=ui.offline||`Live test auction · ${humans().length} joined`;
   const v=document.getElementById("view"), keep=capture(v);
-  document.body.classList.toggle("screenmode",ui.view==="screen"); renderHeader();
+  document.body.classList.toggle("screenmode",ui.view==="screen"); document.body.classList.toggle("admview",ui.view==="admin"); renderHeader();
   if(ui.view==="screen"){ v.innerHTML=vScreen(); document.getElementById("nav").hidden=true; afterScreen(); tick(); return; }
   if(!registered()){ v.innerHTML=vRegister(); document.getElementById("nav").hidden=true; restore(v,keep); tick(); return; }
   if(!S.people[me()]) { L.acting=myUid; saveL(); }
@@ -2335,7 +2336,7 @@ document.addEventListener("submit",async e=>{
 async function register(name){
   const r=await rpc("join_auction",{p_name:name});
   if(r.err){ const er=document.getElementById("r-err"); if(er){ er.hidden=false; er.textContent=r.err; } return; }
-  await loadPeople(); L.acting=myUid; saveL(); ui.view="browse"; render();
+  await loadPeople(); L.acting=myUid; saveL(); ui.view=ui.adminLink?"admin":"browse"; render();
   toast(`Welcome, ${name}! You're bidder #${r.data}.`,"info");
 }
 /* ---------- Loading data from Supabase ---------- */
@@ -2444,6 +2445,9 @@ async function start(){
   // Private preview link: ?preview=CODE unlocks this device before the auction goes live
   const pv=new URLSearchParams(location.search).get("preview");
   if(pv){ try{ await sb.rpc("enter_preview",{p_code:pv}); }catch(e){} history.replaceState(null,"",location.pathname+location.hash); }
+  // Admin link from the website admin: #admin=CODE unlocks admin on this device, then the code is removed from the address
+  const am=location.hash.match(/^#admin(?:=(.+))?$/);
+  if(am){ ui.view="admin"; if(am[1]){ try{ const r=await sb.rpc("become_admin",{p_code:decodeURIComponent(am[1])}); if(r.data) ui.adminLink=true; }catch(e){} } history.replaceState(null,"",location.pathname+"#admin"); }
   // If the access check fails for any reason, show the coming-soon page (never the auction).
   let acc=null; for(let i=0;i<2&&!acc;i++){ try{ const r=await sb.rpc("my_access"); acc=r.error?null:r.data; }catch(e){} }
   if(!acc||(!acc.open&&!acc.admin&&!acc.tester)) return comingSoon();
