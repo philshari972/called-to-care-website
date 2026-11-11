@@ -2328,6 +2328,8 @@ document.addEventListener("change",async e=>{
     ui.bskMsg=(failed?`${todo.length-failed} added, ${failed} didn't upload. ${why}`:"")+(files.length>room?` Only 10 photos fit; ${files.length-room} left out.`:"");
     render(); }
 });
+// "Your" lists (winning, bid on, outbid, watchlist) always cover every category, so a leftover category can't hide them.
+const PERSONAL=["winning","mine","outbid","watch"];
 // Searching is a one-time thing: once you open an item, pick a category, or tap a filter, the search box empties.
 function clearSearch(){ if(!ui.q) return false; ui.q=""; ["hq","q"].forEach(id=>{ const el=document.getElementById(id); if(el){ el.value=""; el.blur(); } }); return true; }
 /* ---------- Events ---------- */
@@ -2355,11 +2357,11 @@ document.addEventListener("click",async e=>{
         if(!r.err&&!v.startsWith("img/")){ try{ await sb.storage.from("photos").remove([v]); }catch(err){} }
         ui.pmDel=null; ui.pmMsg=r.err||"Photo removed."; renderPM(); render(); break; }
     case "go": ui.view=v; ui.resetConfirm=false; render(); if(v==="alerts"){ L.inbox.forEach(n=>n.read=true); saveL(); renderNav(); } window.scrollTo(0,0); break;
-    case "cat": clearSearch(); ui.cat=v; ui.view="browse"; closeSheet(); render(); window.scrollTo(0,0); break;
+    case "cat": clearSearch(); ui.cat=v; if(PERSONAL.includes(ui.filter)) ui.filter="all"; ui.view="browse"; closeSheet(); render(); window.scrollTo(0,0); break;
     case "home": ui.cat="all"; ui.filter="all"; ui.q=""; ui.view="browse"; closeSheet(); render(); window.scrollTo(0,0); break;
     case "clearall": ui.cat="all"; ui.filter="all"; ui.q=""; render(); break;
     case "hgo": ui.view="browse"; closeSheet(); render(); break;
-    case "filter": clearSearch(); ui.filter=v; ui.view="browse"; closeSheet(); render(); window.scrollTo(0,0); break;
+    case "filter": clearSearch(); ui.filter=v; if(PERSONAL.includes(v)) ui.cat="all"; ui.view="browse"; closeSheet(); render(); window.scrollTo(0,0); break;
     case "layout": ui.layout=v; render(); break;
     case "bstep": { const it=item(ui.sheet), mn=minNext(it,me()); ui.bidAmt=Math.max(mn,(ui.bidAmt||mn)+(+v)*inc(it.price)); ui.err=""; ui.confirm=null; renderSheet(); break; }
     case "confirmbid": if(ui.confirm) submitBid(ui.confirm.amt,ui.confirm.kind); break;
