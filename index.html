@@ -8,7 +8,7 @@
 <meta name="description" content="We Are Called to Care mobilizes churches and individuals to care for children and families in the foster care system. Plano, IL.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Oswald:wght@500;600&family=DM+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Oswald:wght@500;600&family=DM+Mono:wght@400;500&family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Pinyon+Script&display=swap">
 <style>
 /* Layout: editorial color-block bands (navy / teal / sky / pink) stacked full width, giant serif display type,
    tracked mono labels, pill buttons, white cards on color. One committed light look; colors set explicitly.
@@ -33,6 +33,112 @@ h1,h2,h3{margin:0;font-weight:400;text-wrap:balance}
 p{margin:0;max-width:62ch;text-wrap:pretty}
 img{max-width:100%}
 :focus-visible{outline:3px solid var(--pink);outline-offset:3px;border-radius:4px}
+/* ===== Charity Dinner: masquerade theme (black-on-black embossing, champagne gold) ===== */
+.masq{--onyx:#121212;--velvet:#1A1918;--relief:#22201D;--ivory:#F3ECDD;--pewter:#B9B1A2;--gold:#DDB65A;--gold-hi:#F0D58C;--gold-line:rgba(221,182,90,.75);
+  --engraved:'Cinzel',Georgia,serif;--book:'Cormorant Garamond',Georgia,serif;--script:'Pinyon Script',cursive;
+  background:var(--onyx);color:var(--ivory)}
+.masq .mq-c,.masq .mq-fin{filter:drop-shadow(-1px -1px 0 rgba(255,240,210,.13)) drop-shadow(1.5px 2px 1.5px rgba(0,0,0,.95))}
+.mq-hero{position:relative;padding:clamp(40px,7vw,96px) 16px clamp(48px,7vw,88px);display:flex;flex-direction:column;align-items:center;gap:34px;
+  background:radial-gradient(circle at 8% 22%,rgba(240,213,140,.55) 0 1.5px,transparent 2.5px),radial-gradient(circle at 16% 64%,rgba(240,213,140,.35) 0 1px,transparent 2px),radial-gradient(circle at 23% 38%,rgba(240,213,140,.6) 0 2px,transparent 3px),radial-gradient(circle at 12% 86%,rgba(240,213,140,.45) 0 1.5px,transparent 2.5px),radial-gradient(circle at 84% 16%,rgba(240,213,140,.6) 0 2px,transparent 3px),radial-gradient(circle at 91% 48%,rgba(240,213,140,.4) 0 1.5px,transparent 2.5px),radial-gradient(circle at 78% 74%,rgba(240,213,140,.5) 0 1.5px,transparent 2.5px),radial-gradient(circle at 94% 88%,rgba(240,213,140,.35) 0 1px,transparent 2px),radial-gradient(60% 40% at 12% 100%,rgba(221,170,70,.10),transparent 70%),radial-gradient(50% 35% at 90% 0%,rgba(221,170,70,.08),transparent 70%),var(--onyx)}
+.mq-card{position:relative;width:min(680px,100%);background:var(--velvet);padding:clamp(70px,10vw,104px) clamp(34px,7vw,92px);text-align:center;
+  box-shadow:inset 0 0 0 8px var(--velvet),inset 0 0 0 10px var(--gold-line),inset 0 0 0 14px var(--velvet),inset 0 0 0 15px rgba(221,182,90,.45),0 40px 80px -40px rgba(0,0,0,.9);display:flex;flex-direction:column;align-items:center}
+.mq-c{position:absolute;width:clamp(110px,24vw,190px);pointer-events:none}
+.mq-c.tl{top:16px;left:16px}.mq-c.tr{top:16px;right:16px}.mq-c.bl{bottom:16px;left:16px}.mq-c.br{bottom:16px;right:16px}
+.mq-fin{position:absolute;left:50%;width:clamp(90px,16vw,128px);transform:translateX(-50%);pointer-events:none}
+.mq-fin.top{top:22px}.mq-fin.bot{bottom:22px;transform:translateX(-50%) scaleY(-1)}
+.mq-fin.left,.mq-fin.right{top:50%;width:clamp(70px,11vw,96px)}.mq-fin.left{left:-2px;transform:translate(0,-50%) rotate(-90deg)}.mq-fin.right{left:auto;right:-2px;transform:translate(0,-50%) rotate(90deg)}
+.masq .mq-host{margin-top:12px!important;font-family:var(--engraved);font-size:.92rem;letter-spacing:.32em;color:var(--pewter);margin:0}
+.masq .mq-inv{font-family:var(--book);font-style:italic;font-size:1.25rem;color:var(--pewter);margin:6px 0 18px}
+.masq .mq-title{font-family:var(--engraved);font-weight:500;font-size:clamp(2.2rem,6.4vw,3.9rem);line-height:1.08;letter-spacing:.06em;color:var(--gold-hi);margin:0 0 26px;
+  text-shadow:0 1px 0 rgba(0,0,0,.8),0 -1px 0 rgba(255,255,255,.06)}
+.masq .mq-amp{display:block;font-family:var(--book);font-style:italic;font-weight:500;font-size:.78em;letter-spacing:0;color:var(--gold);line-height:1;margin:.04em 0}
+.masq .mq-script{font-family:var(--script);font-size:clamp(2.2rem,6vw,3.2rem);line-height:1.1;color:var(--gold);margin:18px 0 22px}
+.masq .mq-date{display:flex;align-items:center;justify-content:center;font-family:var(--engraved);font-size:clamp(.95rem,2.4vw,1.15rem);letter-spacing:.24em;color:var(--ivory);margin:0}
+.masq .mq-date span{padding:2px clamp(12px,3vw,22px)}
+.masq .mq-date span+span{border-left:1px solid var(--gold)}
+.masq .mq-cd{margin:26px auto 22px;gap:0}
+.masq .mq-cd div{border:0;border-radius:0;background:none;min-width:clamp(70px,14vw,104px);padding:4px 8px}
+.masq .mq-cd div+div{border-left:1px solid rgba(221,182,90,.35)}
+.masq .mq-cd b{font-family:var(--engraved);font-weight:400;color:var(--ivory);font-size:clamp(1.8rem,4.6vw,2.7rem)}
+.masq .mq-cd span{font-family:var(--book);font-style:italic;letter-spacing:0;text-transform:none;color:var(--pewter);font-size:1rem}
+.masq .mq-venue{font-family:var(--engraved);font-size:.9rem;letter-spacing:.16em;line-height:1.8;margin:0}
+.mq-venue a{color:var(--ivory);text-decoration:none;border-bottom:1px solid rgba(221,182,90,.45)}
+.mq-venue a:hover{color:var(--gold-hi)}
+.masq .mq-lede{font-family:var(--book);font-style:italic;font-size:1.22rem;line-height:1.5;color:var(--pewter);max-width:34ch;margin:18px 0 0}
+.mq-nav{margin:0;justify-content:center;gap:4px 0}
+.masq .mq-nav a{border:0;border-radius:0;text-transform:none;font-family:var(--engraved);font-size:.8rem;letter-spacing:.2em;color:var(--gold);text-decoration:none;padding:8px 18px}
+.masq .mq-nav a+a{border-left:1px solid rgba(221,182,90,.35)}
+.mq-nav a:hover{color:var(--gold-hi)}
+.mq-div{display:block;width:180px;margin:0 auto 6px}
+/* sections */
+.masq section,.masq .split{background:var(--onyx);color:var(--ivory)}
+.masq #sponsors,.masq #monthly,.masq .b-pinkpale{background:var(--velvet)}
+.masq .dinner-band img,.masq .split .photo img{filter:grayscale(1) sepia(.28) brightness(.62) contrast(1.08)}
+.masq .label{font-family:var(--book);font-style:italic;font-size:1.2rem;letter-spacing:0;text-transform:none;font-weight:500;color:var(--gold)!important}
+.masq .d2,.masq .d3,.masq h2,.masq h3{font-family:var(--engraved);font-weight:500;letter-spacing:.05em;color:var(--ivory)!important}
+.masq .d2{font-size:clamp(1.9rem,4.2vw,3rem);line-height:1.12}
+.masq .d3,.masq .lab h3{font-size:clamp(1.3rem,2.4vw,1.7rem);line-height:1.25}
+.masq p,.masq li{font-family:var(--book);font-size:1.2rem;line-height:1.55;font-weight:500}
+.masq p,.masq .lab p{color:var(--ivory)}
+.masq .hint,.masq .tix-off.soon-cd{color:var(--pewter)}
+.masq .soon-cd{font-family:var(--book);font-style:italic;letter-spacing:0;text-transform:none;font-size:1.05rem;color:var(--gold)!important}
+.masq a:not(.pill){color:var(--gold)}
+/* cards become engraved place cards */
+.masq .lab{background:var(--relief);color:var(--ivory);border:0;text-align:center;align-items:center;box-shadow:inset 0 0 0 1px var(--gold-line),inset 0 0 0 6px var(--relief),inset 0 0 0 7px rgba(221,182,90,.4);position:relative}
+#sponsors .lab,.masq .b-pinkpale .lab{background:var(--onyx);box-shadow:inset 0 0 0 1px var(--gold-line),inset 0 0 0 6px var(--onyx),inset 0 0 0 7px rgba(221,182,90,.4)}
+.masq .lab .pill{align-self:center}
+.masq .tier-top{flex-direction:column;align-items:center;gap:6px}
+.masq .tier-top .label{font-family:var(--engraved);font-style:normal;font-size:1.15rem;letter-spacing:.24em;color:var(--ivory)!important}
+.masq .price{font-family:var(--engraved);color:var(--gold);font-size:1.9rem;letter-spacing:.04em}
+.masq .perks{color:var(--pewter);gap:6px;justify-items:center}
+.masq .perks li{padding:0;font-size:1.08rem}
+.masq .perks li::before{display:none}
+.masq .perks li+li{padding-top:6px;border-top:1px solid rgba(221,182,90,.14);width:100%}
+/* buttons: stationery, square corners */
+.masq .pill{border-radius:0;font-family:var(--engraved);font-weight:600;font-size:.76rem;letter-spacing:.16em;padding:14px 20px}
+.masq .pill::after{content:none}
+.masq .tier .pick{width:100%}
+.masq .hint{font-family:var(--book);font-style:italic;font-size:1.05rem}
+.masq .pill.p-hot,.masq .pill.p-navy,.masq .pill.p-pink{background:var(--gold);color:#141315;border-color:var(--gold)}
+.masq .pill.p-hot:hover,.masq .pill.p-navy:hover,.masq .pill.p-pink:hover{background:var(--gold-hi)}
+.masq .pill.p-line{background:transparent;color:var(--gold)!important;border:1px solid var(--gold)}
+.masq :focus-visible{outline-color:var(--gold)}
+@media (max-width:560px){.masq .mq-date span{white-space:nowrap;padding:2px 10px}.masq .mq-date{letter-spacing:.12em;font-size:.9rem}.masq .mq-venue{letter-spacing:.08em;font-size:.82rem}.masq .mq-nav{display:grid;grid-template-columns:1fr 1fr;width:100%;max-width:360px}.masq .mq-nav a{text-align:center;border:0!important}.mq-card{padding:84px 22px 92px}.mq-c{width:92px}.mq-c.tl,.mq-c.tr{top:10px}.mq-c.tl,.mq-c.bl{left:10px}.mq-c.tr,.mq-c.br{right:10px}.mq-c.bl,.mq-c.br{bottom:10px}.mq-date{letter-spacing:.14em}.mq-nav a{padding:8px 12px}}
+/* masquerade header + navigation (Charity Dinner page only) */
+html.masq-on .promo{background:#0C0C0C;color:#F3ECDD;border-bottom:1px solid rgba(221,182,90,.35)}
+html.masq-on .promo a{color:#F0D58C}
+html.masq-on header.site{background:#121212;box-shadow:inset 0 -1px 0 rgba(221,182,90,.55)}
+html.masq-on nav.main a{font-family:'Cinzel',Georgia,serif;font-weight:500;font-size:.82rem;letter-spacing:.08em;color:#F3ECDD;border-radius:0}
+html.masq-on nav.main a:hover{background:transparent;color:#F0D58C}
+html.masq-on nav.main a[aria-current="page"]{color:#DDB65A;box-shadow:inset 0 -1px 0 #DDB65A}
+html.masq-on nav.main a.give{background:#DDB65A;color:#121212;box-shadow:none}
+html.masq-on nav.main a.give:hover{background:#F0D58C;color:#121212}
+html.masq-on .diamond{background:#DDB65A}
+html.masq-on .diamond span{background:#121212;box-shadow:0 6px 0 #121212,0 -6px 0 #121212}
+html.masq-on .hello{background:#1A1918;color:#F3ECDD}
+html.masq-on .hello .name{font-family:'Cinzel',Georgia,serif;font-size:clamp(2.2rem,3.6vw,3.2rem);line-height:1.05;color:#F0D58C}
+html.masq-on .hello p{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.35rem;color:#D8D0C1}
+html.masq-on .hello-photo img{filter:grayscale(1) sepia(.28) brightness(.75)}
+html.masq-on .socials a{color:#DDB65A}
+html.masq-on .strip{background:#DDB65A}
+html.masq-on .strip li{font-family:'Cinzel',Georgia,serif;color:#121212}
+html.masq-on .menu-side{background:radial-gradient(70% 45% at 85% 8%,rgba(221,170,70,.12),transparent 70%),linear-gradient(180deg,#151413,#0E0E0E)}
+html.masq-on .menu-side nav a{font-family:'Cinzel',Georgia,serif;font-size:clamp(1.6rem,2.8vw,2.3rem);line-height:1.45;color:#F3ECDD}
+html.masq-on .menu-side nav a:hover,html.masq-on .menu-side nav a[aria-current="page"]{color:#F0D58C}
+html.masq-on .menu-side .extras a,html.masq-on .menu-side .extras a.on-teal{color:#DDB65A;font-family:'Cinzel',Georgia,serif;letter-spacing:.16em}
+html.masq-on footer .badge{display:none}
+html.masq-on .close{color:#121212}
+@media (max-width:860px){html.masq-on .menu-side{box-shadow:inset 0 22px 0 #DDB65A,inset 0 -22px 0 #DDB65A}html.masq-on .m-socials a{color:#DDB65A}}
+@media (max-width:860px){html.masq-on .close{color:#121212}}
+@media (max-width:560px){.masq .mq-fin.left,.masq .mq-fin.right{display:none}}
+html.masq-on footer{background:#0E0E0E;box-shadow:inset 0 1px 0 rgba(221,182,90,.55)}
+html.masq-on footer h4{font-family:'Cinzel',Georgia,serif;letter-spacing:.18em;color:#DDB65A}
+html.masq-on footer a{color:#F3ECDD}
+html.masq-on footer a:hover{color:#F0D58C}
+html.masq-on footer p,html.masq-on .legal{color:#B9B1A2}
+html.masq-on .legal{border-top-color:rgba(221,182,90,.3)}
+html.masq-on .handle{font-family:'Cinzel',Georgia,serif;font-weight:500;letter-spacing:.02em;font-size:clamp(1.5rem,5.4vw,4.2rem);color:#DDB65A;word-break:normal;overflow-wrap:anywhere}
+html.masq-on footer a,html.masq-on footer p{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.12rem;font-weight:500}
 /* accessibility (WCAG 2.1 AA): text colors that meet contrast on teal and light blocks; skip link */
 .b-teal{--sky:#C4DAE4}
 .b-sky,.b-pink,.b-skypale{--pink:#CC1569}
@@ -824,16 +930,21 @@ html.tickets-on .tix-off{display:none!important}
 </div>
 
 <!-- ======================= CHARITY DINNER ======================= -->
-<div class="page" data-page="charity-dinner" hidden>
-  <div class="ph b-navy center"><div class="wrap vstack" style="align-items:center;gap:18px">
-    <span class="label c-pinkl">Save the date · 6th annual</span>
-    <h1 class="d1">Charity Dinner <em class="it c-pinkl">&amp;</em> Auction</h1>
-    <p style="font-family:var(--serif);font-size:clamp(1.8rem,4vw,2.8rem);color:var(--sky)">Saturday, March 13, 2027</p>
-    <div class="cd" data-countdown="2027-03-13T17:00:00-06:00" aria-label="Countdown to the Charity Dinner"><div><b data-u="d">--</b><span>Days</span></div><div><b data-u="h">--</b><span>Hours</span></div><div><b data-u="m">--</b><span>Minutes</span></div><div><b data-u="s">--</b><span>Seconds</span></div></div>
-    <p class="label c-pinkl"><a href="https://www.google.com/maps/search/?api=1&query=Whitetail+Ridge+Golf+Club+7671+Clubhouse+Drive+Yorkville+IL" target="_blank" rel="noopener" style="color:inherit;text-underline-offset:5px">Whitetail Ridge Golf Club · 7671 Clubhouse Drive, Yorkville</a></p>
-    <p class="lede" style="color:var(--sky)">An evening of dinner, an auction, and stories from the families you help us serve.</p>
-    <nav class="subnav c-pinkl" style="justify-content:center" aria-label="On this page"><a href="#charity-dinner" data-anchor="tickets">Tickets</a><a href="#charity-dinner" data-anchor="sponsors">Sponsorships</a><a href="#charity-dinner" data-anchor="underwriting">Underwriting</a><a href="#charity-dinner" data-anchor="monthly">Monthly Partners</a></nav>
-  </div></div>
+<div class="page masq" data-page="charity-dinner" hidden>
+  <header class="mq-hero">
+    <div class="mq-card">
+      <img class="mq-c tl" src="assets/masq/corner-tl.svg" alt="" aria-hidden="true"><img class="mq-c tr" src="assets/masq/corner-tr.svg" alt="" aria-hidden="true"><img class="mq-c bl" src="assets/masq/corner-bl.svg" alt="" aria-hidden="true"><img class="mq-c br" src="assets/masq/corner-br.svg" alt="" aria-hidden="true">
+      <img class="mq-fin top" src="assets/masq/finial.svg" alt="" aria-hidden="true"><img class="mq-fin bot" src="assets/masq/finial.svg" alt="" aria-hidden="true"><img class="mq-fin left" src="assets/masq/finial.svg" alt="" aria-hidden="true"><img class="mq-fin right" src="assets/masq/finial.svg" alt="" aria-hidden="true">
+      <p class="mq-host">We Are Called to Care</p>
+      <p class="mq-inv">invites you to the sixth annual</p>
+      <h1 class="mq-title">Charity Dinner <span class="mq-amp">&amp;</span> Auction</h1>
+      <p class="mq-date"><span>Saturday</span><span>March 13</span><span>2027</span></p>
+      <div class="cd mq-cd" data-countdown="2027-03-13T17:00:00-06:00" aria-label="Countdown to the Charity Dinner"><div><b data-u="d">--</b><span>Days</span></div><div><b data-u="h">--</b><span>Hours</span></div><div><b data-u="m">--</b><span>Minutes</span></div><div><b data-u="s">--</b><span>Seconds</span></div></div>
+      <p class="mq-venue"><a href="https://www.google.com/maps/search/?api=1&query=Whitetail+Ridge+Golf+Club+7671+Clubhouse+Drive+Yorkville+IL" target="_blank" rel="noopener">Whitetail Ridge Golf Club<br>7671 Clubhouse Drive, Yorkville</a></p>
+      <p class="mq-lede">An evening of dinner, an auction, and stories from the families you help us serve.</p>
+    </div>
+    <nav class="subnav mq-nav" style="justify-content:center" aria-label="On this page"><a href="#charity-dinner" data-anchor="tickets">Tickets</a><a href="#charity-dinner" data-anchor="sponsors">Sponsorships</a><a href="#charity-dinner" data-anchor="underwriting">Underwriting</a><a href="#charity-dinner" data-anchor="monthly">Monthly Partners</a></nav>
+  </header>
 
   <div class="dinner-band photo has-img" style="--pos:50% 45%"><img src="assets/charity-dinner.jpg" alt="Guests at round tables raising bid paddles during the Called to Care charity auction" width="2200" height="1467"></div>
 
@@ -849,7 +960,7 @@ html.tickets-on .tix-off{display:none!important}
   </section>
 
   <section class="b-skypale" id="sponsors">
-    <div class="wrap center vstack" style="gap:14px;margin-bottom:44px"><span class="label" style="color:var(--teal)">2027 sponsor menu</span><h2 class="d2 c-navy">Be part of our sixth year.</h2><p>Every sponsor, at every level, is listed by name in the program book.</p></div>
+    <div class="wrap center vstack" style="gap:14px;margin-bottom:44px"><img class="mq-div" src="assets/masq/divider.svg" alt="" aria-hidden="true"><span class="label" style="color:var(--teal)">2027 sponsor menu</span><h2 class="d2 c-navy">Be part of our sixth year.</h2><p>Every sponsor, at every level, is listed by name in the program book.</p></div>
     <div class="wrap tiers">
       <div class="lab cap-hot tier" data-tier="legacy">
         <div class="tier-top"><span class="label">Legacy</span><span class="price">$15,000</span></div>
@@ -890,7 +1001,7 @@ html.tickets-on .tix-off{display:none!important}
   </section>
 
   <section class="b-white" id="underwriting">
-    <div class="wrap center vstack" style="gap:14px;margin-bottom:44px"><span class="label" style="color:var(--pink)">Underwrite a piece of the night</span><h2 class="d2 c-navy">Appetizers, desserts &amp; flowers</h2></div>
+    <div class="wrap center vstack" style="gap:14px;margin-bottom:44px"><img class="mq-div" src="assets/masq/divider.svg" alt="" aria-hidden="true"><span class="label" style="color:var(--pink)">Underwrite a piece of the night</span><h2 class="d2 c-navy">Appetizers, desserts &amp; flowers</h2></div>
     <div class="wrap tiers t3">
       <div class="lab cap-sky tier" data-tier="appetizer">
         <div class="tier-top"><span class="label">Appetizer Table</span><span class="price">$1,000</span></div>
@@ -925,8 +1036,8 @@ html.tickets-on .tix-off{display:none!important}
 
   <section class="b-pinkpale" style="padding-block:64px">
     <div class="wrap g2" style="gap:40px">
-      <div class="vstack" style="gap:10px"><span class="label">Prefer to mail a check?</span><p class="d3 c-navy">Called to Care<br>15450 State Route 47<br>Newark, IL 60541</p><p class="hint">Make checks payable to We Are Called to Care, NFP.</p></div>
-      <div class="vstack" style="gap:10px"><span class="label">Questions about sponsoring?</span><p>Contact our Executive Director, Shari Chapman, at <span style="user-select:all;font-weight:700">shari@wearecalledtocare.com</span>.</p><a class="pill p-line" style="color:var(--navy);align-self:flex-start" href="assets/sponsor-packet-2027.pdf" target="_blank" rel="noopener">Download Sponsor Packet</a></div>
+      <div class="vstack" style="gap:10px"><span class="label">Prefer to mail a check?</span><p class="d3 c-navy">Called to Care<br>15450 State Route 47<br>Newark, IL 60541</p><p class="hint">Make checks payable to We Are Called to Care, NFP. We Are Called to Care, NFP is a 501(c)(3) nonprofit, EIN 86-2900453.</p></div>
+      <div class="vstack" style="gap:10px"><span class="label">Questions about sponsoring?</span><p>Contact our Executive Director, Shari Chapman, at <span style="user-select:all;font-weight:700">shari@wearecalledtocare.com</span>.</p><a class="pill p-line" style="color:var(--navy);align-self:flex-start" href="assets/sponsor-packet-2027.pdf" target="_blank" rel="noopener">Download Sponsor Packet (PDF)</a><p class="hint">Everything in the printable packet is also listed on this page.</p></div>
     </div>
   </section>
 
@@ -1610,6 +1721,7 @@ html.tickets-on .tix-off{display:none!important}
     if(!names.includes(h)) h='home';
     if(h==='lemonade'&&!document.documentElement.classList.contains('lemonade-on')) h='home';
     pages.forEach(p=>p.hidden=p.dataset.page!==h);
+    document.documentElement.classList.toggle('masq-on',h==='charity-dinner');
     const active=parentOf[h]||h;
     navLinks.forEach(a=>a.getAttribute('href')==='#'+active?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
     drawerLinks.forEach(a=>a.getAttribute('href')==='#'+h?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
