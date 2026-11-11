@@ -139,6 +139,38 @@ html.masq-on footer p,html.masq-on .legal{color:#B9B1A2}
 html.masq-on .legal{border-top-color:rgba(221,182,90,.3)}
 html.masq-on .handle{font-family:'Cinzel',Georgia,serif;font-weight:500;letter-spacing:.02em;font-size:clamp(1.5rem,5.4vw,4.2rem);color:#DDB65A;word-break:normal;overflow-wrap:anywhere}
 html.masq-on footer a,html.masq-on footer p{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.12rem;font-weight:500}
+.co-amts{display:flex;flex-wrap:wrap;gap:10px}
+.co-amts button{border:1.5px solid var(--navy);background:var(--white);color:var(--navy);border-radius:999px;padding:11px 20px;font:inherit;font-weight:700;cursor:pointer}
+.co-amts button.on{background:var(--navy);color:var(--white)}
+.co-amts .money{flex:1;min-width:120px}
+/* checkout side panel in the Charity Dinner look */
+html.masq-on .co .scrim{background:rgba(0,0,0,.65)}
+html.masq-on .co-panel{background:#1A1918;color:#F3ECDD;box-shadow:inset 1px 0 0 rgba(221,182,90,.6);font-family:'Cormorant Garamond',Georgia,serif;font-size:1.12rem;font-weight:500}
+html.masq-on .co-panel .label,html.masq-on #coEyebrow{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:1.15rem;letter-spacing:0;text-transform:none;color:#DDB65A!important}
+html.masq-on .co-panel h2,html.masq-on .co-panel .d3,html.masq-on .co-panel .d2{font-family:'Cinzel',Georgia,serif;font-weight:500;letter-spacing:.05em;color:#F0D58C!important}
+html.masq-on .co-x{color:#F3ECDD}
+html.masq-on .co-line,html.masq-on .co-total{border-color:rgba(221,182,90,.3)}
+html.masq-on .co-total{border-top:1px solid #DDB65A}
+html.masq-on .co-panel .price{font-family:'Cinzel',Georgia,serif;color:#DDB65A}
+html.masq-on .co-panel .apply{background:transparent;color:#F3ECDD}
+html.masq-on .co-panel .apply .q > .lbl,html.masq-on .co-panel .apply label.q{font-family:'Cinzel',Georgia,serif;font-weight:500;font-size:.82rem;letter-spacing:.1em;color:#F3ECDD}
+html.masq-on .co-panel .apply .req{color:#DDB65A}
+html.masq-on .co-panel .hint{color:#C2BAAB;font-style:italic;font-size:1rem}
+html.masq-on .co-panel input:not([type=checkbox]):not([type=radio]),html.masq-on .co-panel textarea,html.masq-on .co-panel select{background:#121212;color:#F3ECDD;border:1px solid rgba(221,182,90,.5);border-radius:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.1rem}
+html.masq-on .co-panel input::placeholder,html.masq-on .co-panel textarea::placeholder{color:#8F877A}
+html.masq-on .co-panel input:focus,html.masq-on .co-panel textarea:focus{border-color:#F0D58C;box-shadow:0 0 0 2px rgba(221,182,90,.25)}
+html.masq-on .co-panel .money span{color:#C2BAAB}
+html.masq-on .co-panel .choice input{accent-color:#DDB65A}
+html.masq-on .co-panel .check-note{background:#121212;border-left-color:#DDB65A;border-radius:0}
+html.masq-on .co-panel .err{color:#FF8FA3}
+html.masq-on .co-panel .q.invalid input:not([type=checkbox]):not([type=radio]){border-color:#FF8FA3}
+html.masq-on .co-panel .pill{border-radius:0;font-family:'Cinzel',Georgia,serif;font-weight:600;letter-spacing:.16em}
+html.masq-on .co-panel .pill::after{content:none}
+html.masq-on .co-panel .pill.p-hot,html.masq-on .co-panel .pill.p-navy{background:#DDB65A;color:#121212}
+html.masq-on .co-panel .co-back{color:#DDB65A}
+html.masq-on .co-amts button{border-radius:0;border:1px solid rgba(221,182,90,.6);background:#121212;color:#F3ECDD;font-family:'Cinzel',Georgia,serif;font-weight:500}
+html.masq-on .co-amts button.on{background:#DDB65A;color:#121212;border-color:#DDB65A}
+html.masq-on .co-panel .done-card{background:transparent}
 /* accessibility (WCAG 2.1 AA): text colors that meet contrast on teal and light blocks; skip link */
 .b-teal{--sky:#C4DAE4}
 .b-sky,.b-pink,.b-skypale{--pink:#CC1569}
@@ -954,7 +986,7 @@ html.tickets-on .tix-off{display:none!important}
       <div class="g2" style="gap:20px">
         <div class="lab cap-hot tier"><div class="tier-top"><span class="label">Single Ticket</span><span class="price">$100</span></div><ul class="perks"><li>Dinner, auction, and program for one guest</li></ul><span class="pill p-line tix-off soon" style="color:var(--navy)">On Sale Soon</span><span class="tix-off soon-cd" data-countdown="2026-12-15T12:00:00-06:00" data-short="1">On sale Dec 15 at noon</span><button type="button" class="pill p-hot pick tix-on" data-item="ticket" data-name="Dinner Ticket" data-price="100" data-qty="1">Buy Tickets</button></div>
         <div class="lab cap-navy tier"><div class="tier-top"><span class="label">Table of 10</span><span class="price">$1,000</span></div><ul class="perks"><li>Reserved table for 10 guests</li></ul><span class="pill p-line tix-off soon" style="color:var(--navy)">On Sale Soon</span><span class="tix-off soon-cd" data-countdown="2026-12-15T12:00:00-06:00" data-short="1">On sale Dec 15 at noon</span><button type="button" class="pill p-navy pick tix-on" data-item="table" data-name="Table of 10" data-price="1000">Reserve a Table</button></div>
-        <div class="lab cap-teal tier tix-off early"><span class="label" style="color:var(--teal)">Early access</span><h3 class="d3 c-navy" style="margin:0">Buy tickets early by becoming a monthly partner.</h3><p style="margin:0">Regular tickets to the Charity Dinner go on sale <b>December 15, 2026</b>. Monthly partners get first access.</p><a class="pill p-hot" href="#donate" data-anchor="give" data-monthly="50" style="justify-self:start">Become a Monthly Partner</a></div>
+        <div class="lab cap-teal tier tix-off early"><span class="label" style="color:var(--teal)">Early access</span><h3 class="d3 c-navy" style="margin:0">Buy tickets early by becoming a monthly partner.</h3><p style="margin:0">Regular tickets to the Charity Dinner go on sale <b>December 15, 2026</b>. Monthly partners get first access.</p><a class="pill p-hot" href="#donate" data-dinner-monthly style="justify-self:start">Become a Monthly Partner</a></div>
       </div>
     </div>
   </section>
@@ -1030,14 +1062,14 @@ html.tickets-on .tix-off{display:none!important}
       <span class="label c-pinkl">Monthly partners · $50 / month</span>
       <h2 class="d2">Give monthly, get first dibs.</h2>
       <p style="color:var(--sky)">Give $50 or more a month for 6 months or longer and get early access to buy Charity Dinner tickets before they go on sale to everyone.</p>
-      <div class="pills"><a class="pill p-pink" href="#donate" data-anchor="give" data-monthly="50">Start monthly giving</a></div>
+      <div class="pills"><a class="pill p-pink" href="#donate" data-dinner-monthly>Start monthly giving</a></div>
     </div>
   </div>
 
   <section class="b-pinkpale" style="padding-block:64px">
     <div class="wrap g2" style="gap:40px">
       <div class="vstack" style="gap:10px"><span class="label">Prefer to mail a check?</span><p class="d3 c-navy">Called to Care<br>15450 State Route 47<br>Newark, IL 60541</p><p class="hint">Make checks payable to We Are Called to Care, NFP. We Are Called to Care, NFP is a 501(c)(3) nonprofit, EIN 86-2900453.</p></div>
-      <div class="vstack" style="gap:10px"><span class="label">Questions about sponsoring?</span><p>Contact our Executive Director, Shari Chapman, at <span style="user-select:all;font-weight:700">shari@wearecalledtocare.com</span>.</p><a class="pill p-line" style="color:var(--navy);align-self:flex-start" href="assets/sponsor-packet-2027.pdf" target="_blank" rel="noopener">Download Sponsor Packet (PDF)</a><p class="hint">Everything in the printable packet is also listed on this page.</p></div>
+      <div class="vstack" style="gap:10px"><span class="label">Questions about sponsoring?</span><p>Contact our Executive Director, Shari Chapman, at <span style="user-select:all;font-weight:700">shari@wearecalledtocare.com</span>.</p><a class="pill p-line" style="color:var(--navy);align-self:flex-start" href="sponsor-packet-2027.pdf" target="_blank" rel="noopener">Download Sponsor Packet (PDF)</a><p class="hint">Everything in the printable packet is also listed on this page.</p></div>
     </div>
   </section>
 
@@ -1652,6 +1684,9 @@ html.tickets-on .tix-off{display:none!important}
           <span class="label" style="color:var(--pink);padding-right:44px;line-height:1.8" id="coEyebrow">Charity Dinner &amp; Auction · March 13, 2027</span>
           <h2 class="d3 c-navy" id="coTitle">Sponsor</h2>
           <div class="co-line"><span id="coItem">Item</span><span id="coPrice" class="price">$0</span></div>
+          <div class="q" id="coAmtWrap" hidden><span class="lbl">Monthly Amount</span>
+            <div class="co-amts" role="group" aria-label="Monthly amount"><button type="button" data-coamt="50">$50</button><button type="button" data-coamt="100">$100</button><button type="button" data-coamt="250">$250</button><span class="money"><span>$</span><input id="co-amt" inputmode="decimal" placeholder="Other" aria-label="Other monthly amount"></span></div>
+            <span class="hint">Give $50 or more a month for 6 months or longer to get early access to Charity Dinner tickets.</span></div>
           <label class="q" for="co-qty" id="coQtyWrap" hidden><span class="lbl">Number of <span class="nw">Tickets<span class="req">*</span></span></span><input id="co-qty" name="qty" type="number" min="1" max="20" value="1" inputmode="numeric"></label>
           <label class="q" for="co-display" id="coDisplayWrap"><span class="lbl">Name as It Should Appear on <span class="nw">Signage<span class="req">*</span></span></span><input id="co-display" name="display_name" placeholder="Company, family, or individual"></label>
           <div class="c2">
@@ -1867,9 +1902,10 @@ html.tickets-on .tix-off{display:none!important}
     function close(){co.hidden=true;document.body.classList.remove('locked');}
     C2C.openCheckout=function(o){
       cur=o; const isTicket=o.kind==='tickets', isTable=o.kind==='table', isGift=o.kind==='donation';
-      $('coEyebrow').innerHTML=isGift?'Give to We Are Called to Care':'<span class="nw">Charity Dinner &amp; Auction</span><span style="display:block">Saturday, March 13, 2027</span>';
-      $('coTitle').textContent=isGift?(o.recurring?'Monthly Gift':'Your Gift'):isTicket?'Buy Tickets':isTable?'Reserve a Table':'Become a Sponsor';
+      $('coEyebrow').innerHTML=o.eyebrow?o.eyebrow:isGift?'Give to We Are Called to Care':'<span class="nw">Charity Dinner &amp; Auction</span><span style="display:block">Saturday, March 13, 2027</span>';
+      $('coTitle').textContent=o.title?o.title:isGift?(o.recurring?'Monthly Gift':'Your Gift'):isTicket?'Buy Tickets':isTable?'Reserve a Table':'Become a Sponsor';
       $('coItem').textContent=o.name+(isTicket?' · $100 each':''); $('coPrice').textContent=fmt(o.price)+(o.recurring?'/mo':'');
+      $('coAmtWrap').hidden=!o.choose; if(o.choose){$('co-amt').value='';document.querySelectorAll('[data-coamt]').forEach(b=>b.classList.toggle('on',+b.dataset.coamt===o.price));}
       $('coQtyWrap').hidden=!isTicket; $('coDisplayWrap').hidden=isTicket||isTable||isGift; $('co-display').required=!(isTicket||isTable||isGift);
       $('coGuestsWrap').hidden=!(isTicket||isTable||['legacy','gold','platinum','diamond'].includes(o.item));
       const isSp=o.kind==='sponsorship'; $('coHowWrap').hidden=!isSp; $('co-how1').checked=true; howUpd();
@@ -1879,6 +1915,13 @@ html.tickets-on .tix-off{display:none!important}
     };
     document.querySelectorAll('.pick').forEach(b=>b.addEventListener('click',()=>C2C.openCheckout({kind:b.dataset.item==='ticket'?'tickets':b.dataset.item==='table'?'table':'sponsorship',item:b.dataset.item,name:b.dataset.name,price:+b.dataset.price,qty:!!b.dataset.qty})));
     $('co-qty').addEventListener('input',upd);
+    // Monthly amount chooser (Charity Dinner monthly partners)
+    const setAmt=v=>{cur.price=v;$('coPrice').textContent=fmt(v)+'/mo';upd();};
+    document.querySelectorAll('[data-coamt]').forEach(b=>b.addEventListener('click',()=>{$('co-amt').value='';document.querySelectorAll('[data-coamt]').forEach(x=>x.classList.toggle('on',x===b));setAmt(+b.dataset.coamt);}));
+    $('co-amt').addEventListener('input',()=>{const v=parseFloat($('co-amt').value.replace(/[^0-9.]/g,''));document.querySelectorAll('[data-coamt]').forEach(x=>x.classList.remove('on'));setAmt(v>0?Math.round(v*100)/100:0);});
+    document.addEventListener('click',e=>{const a=e.target.closest('[data-dinner-monthly]');if(!a)return;e.preventDefault();
+      C2C.openCheckout({kind:'donation',item:'donation',name:'Monthly Partner',title:'Become a Monthly Partner',price:50,recurring:true,fund:'Where needed most',choose:true,min:50,
+        eyebrow:'<span class="nw">Charity Dinner &amp; Auction</span><span style="display:block">Monthly Partners</span>'});});
     const byCheck=()=>cur&&cur.kind==='sponsorship'&&$('co-how2').checked;
     function howUpd(){const c=byCheck();$('coCheckNote').hidden=!c;$('coNext').textContent=c?'Reserve My Sponsorship':'Continue to Payment';$('coPaypal').style.display=c?'none':'';}
     ['co-how1','co-how2'].forEach(id=>$(id).addEventListener('change',howUpd));
@@ -1887,7 +1930,8 @@ html.tickets-on .tix-off{display:none!important}
     phoneFmt($('co-phone'));
     function valid(){const bad=[...f.querySelectorAll('input[required]')].filter(i=>!i.closest('[hidden]')&&!i.checkValidity());
       f.querySelectorAll('.q').forEach(q=>q.classList.remove('invalid')); bad.forEach(i=>i.closest('.q').classList.add('invalid'));
-      if(bad.length){$('coErr').textContent='Please fill in the fields marked in pink.'; bad[0].focus(); return false;} $('coErr').textContent=''; return true;}
+      if(bad.length){$('coErr').textContent='Please fill in the fields marked in pink.'; bad[0].focus(); return false;}
+      if(cur.min&&!(cur.price>=cur.min)){$('coErr').textContent=`Monthly partner gifts start at ${fmt(cur.min)} a month.`; $('co-amt').focus(); return false;} $('coErr').textContent=''; return true;}
     const payload=provider=>({action:'start',provider,kind:cur.kind,item:cur.item,qty:+$('co-qty').value||1,amount:cur.price,recurring:!!cur.recurring,designation:cur.fund||'',
       display_name:f.display_name.value,guests:f.guest_names.value,website:hp(f),t:C2C.t,contact:{first:f.first_name.value,last:f.last_name.value,email:f.email.value,phone:f.phone.value,street:f.street.value,city:f.city.value,state:f.state.value,zip:f.zip.value}});
     function done(note){
@@ -1909,7 +1953,8 @@ html.tickets-on .tix-off{display:none!important}
         const cfg=await C2C.ready; if(!cfg.stripeKey) throw new Error('Card payments are not available right now. Please try PayPal or contact us.');
         await loadScript('https://js.stripe.com/v3/');
         stripe=stripe||window.Stripe(cfg.stripeKey);
-        elements=stripe.elements({clientSecret:r.clientSecret,appearance:{theme:'stripe',variables:{colorPrimary:'#E2197A',colorText:'#1D4766',fontFamily:'Figtree, system-ui, sans-serif',borderRadius:'10px'}},fonts:[{cssSrc:'https://fonts.googleapis.com/css2?family=Figtree:wght@400;600&display=swap'}]});
+        const masq=document.documentElement.classList.contains('masq-on');
+        elements=stripe.elements({clientSecret:r.clientSecret,appearance:masq?{theme:'night',variables:{colorPrimary:'#DDB65A',colorBackground:'#1A1918',colorText:'#F3ECDD',colorTextSecondary:'#C2BAAB',colorDanger:'#FF8FA3',fontFamily:'Cormorant Garamond, Georgia, serif',fontSizeBase:'17px',borderRadius:'0px'}}:{theme:'stripe',variables:{colorPrimary:'#E2197A',colorText:'#1D4766',fontFamily:'Figtree, system-ui, sans-serif',borderRadius:'10px'}},fonts:[{cssSrc:masq?'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&display=swap':'https://fonts.googleapis.com/css2?family=Figtree:wght@400;600&display=swap'}]});
         $('coElement').innerHTML=''; elements.create('payment',{layout:'tabs',defaultValues:{billingDetails:{name:`${f.first_name.value} ${f.last_name.value}`,email:f.email.value,address:{postal_code:f.zip.value,country:'US'}}}}).mount('#coElement');
         $('coItem2').textContent=$('coItem').textContent; $('coPrice2').textContent=fmt(total())+(cur.recurring?'/mo':'');
         $('coConfirm').textContent=`Pay ${fmt(total())}${cur.recurring?' a Month':''}`; step('pay');
