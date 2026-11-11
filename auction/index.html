@@ -598,7 +598,10 @@ function isOpen(it){ return !it.closed && remaining(it)>0; }
 
 /* ---------- Server calls (Supabase) ---------- */
 const NET_ERR="Couldn't reach the auction. Check your connection and try again.";
-function friendly(e){ const m=(e&&e.message)||""; if(/Only auction admins|Enter your name|isn't open yet|Bidding opens/.test(m)) return m; return "The auction server didn't accept that. Please try again."; }
+function friendly(e){ const m=(e&&e.message)||""; if(/Only auction admins|Enter your name|isn't open yet|Bidding opens/.test(m)) return m; console.error("auction server",e);
+  // Admins see the real reason so problems can be fixed; bidders get the plain message.
+  if(typeof isAdmin!=="undefined"&&isAdmin&&m) return "The auction server didn't accept that: "+m+(e.code?" ("+e.code+")":"");
+  return "The auction server didn't accept that. Please try again."; }
 async function rpc(fn,args){
   try{ const {data,error}=await sb.rpc(fn,args||{}); if(error) return {err:friendly(error)};
     return (data&&typeof data==="object"&&!Array.isArray(data))?data:{ok:true,data}; }
