@@ -1158,7 +1158,7 @@ const API={
   },
   async loadAllHist(){
     try{
-      const d=await q("history",t=>t.select("item_id,uid,amt,t,auto,bin,live").eq("run",run()).order("t",{ascending:false}).limit(2000));
+      const d=await q("history",t=>t.select("item_id,uid,amt,t,auto,bin,live").eq("run",run()).order("t",{ascending:false}));
       S.allHist=d.map(h=>({item:h.item_id,u:h.uid,amt:h.amt,t:Number(h.t),auto:h.auto,bin:h.bin,live:h.live}));
       if(ui.view==="screen"||(ui.view==="admin"&&ui.adm==="reports")) render();
     }catch(e){}
@@ -2429,7 +2429,8 @@ async function register(name){
 }
 /* ---------- Loading data from Supabase ---------- */
 function loadL(){ L=Object.assign({acting:null,watch:{},inbox:[],seenAnn:{},reminded:{}},lsGet(LKEY())||{}); }
-async function q(table,build){ const {data,error}=await build(sb.from(table)); if(error) throw error; return data||[]; }
+// Supabase sends at most 1,000 rows per request, so keep asking until everything is in.
+async function q(table,build){ const out=[]; for(let from=0;;from+=1000){ const {data,error}=await build(sb.from(table)).range(from,from+999); if(error) throw error; out.push(...(data||[])); if(!data||data.length<1000) return out; } }
 function mapItem(row){
   const c=S.catalog[row.id]||{};
   return {id:row.id,no:c.no,title:c.title||row.id,cat:c.cat||"exp",value:c.value||0,start:c.start||0,reserve:c.reserve,bin:c.bin,featured:c.featured,

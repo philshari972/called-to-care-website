@@ -439,19 +439,22 @@ $('#refresh').addEventListener('click',async()=>{Object.keys(LOADED).forEach(k=>
 
 /* ---------------- loading ---------------- */
 async function q(p){const {data,error}=await p;if(error){console.error(error);toast('Could not load: '+error.message,true);return[]}return data||[]}
+// Supabase sends at most 1,000 rows per request, so big lists are loaded 1,000 at a time until everything is in.
+async function qAll(make){const out=[];for(let from=0;;from+=1000){const {data,error}=await make().range(from,from+999);
+ if(error){console.error(error);toast('Could not load: '+error.message,true);return out}out.push(...(data||[]));if(!data||data.length<1000)return out}}
 async function loadAll(){
  const jobs=[];
  jobs.push(q(SB.from('events').select('*').order('starts_at')).then(r=>EVENTS=r));
  jobs.push(q(SB.from('settings').select('*')).then(r=>{SETTINGS={};r.forEach(x=>SETTINGS[x.key]=x.value)}));
  const forms=Object.entries(FORM_OF).filter(([k])=>PERMS[k]).map(([,f])=>f);if(PERMS.camp)forms.push('camp_followup');
- if(forms.length)jobs.push(q(SB.from('submissions').select('*').in('form',forms).order('created_at',{ascending:false})).then(r=>{
+ if(forms.length)jobs.push(qAll(()=>SB.from('submissions').select('*').in('form',forms).order('created_at',{ascending:false}).order('id')).then(r=>{
   Object.entries(FORM_OF).forEach(([k,f])=>{if(PERMS[k])DATA[k]=r.filter(x=>x.form===f).map(x=>mapSub(k,x))});
   if(PERMS.camp){const fus=r.filter(x=>x.form==='camp_followup');DATA.camp.forEach(a=>{const fu=fus.find(f=>f.id===a.followupId||(f.admin||{}).application_id===a.id);if(fu){a.recap=fu.data||{};a.recapAt=D(fu.created_at)}});
    CAMP_ORPHANS=fus.filter(f=>!DATA.camp.some(a=>a.recap===f.data))}}));
  const needContacts=PERMS.emaillist||PERMS.payments||PERMS.donations||PERMS.sponsors||PERMS.dinner;
- if(needContacts)jobs.push(q(SB.from('contacts').select('*').order('last_name')).then(r=>{CONTACTS=new Map(r.map(c=>[c.id,mapContact(c)]))}));
- if(PERMS.sponsors||PERMS.dinner){jobs.push(q(SB.from('sponsorships').select('*')).then(r=>DIN.spons=r.map(mapSpon)));jobs.push(q(SB.from('attendance').select('*')).then(r=>DIN.att=r.map(mapAtt)));jobs.push(q(SB.from('dinners').select('*').order('year')).then(r=>DIN.dinners=r))}
- if(PERMS.payments||PERMS.donations||PERMS.dinner)jobs.push(q(SB.from('payments').select('*').order('created_at',{ascending:false})).then(r=>DIN.payments=r));
+ if(needContacts)jobs.push(qAll(()=>SB.from('contacts').select('*').order('last_name').order('id')).then(r=>{CONTACTS=new Map(r.map(c=>[c.id,mapContact(c)]))}));
+ if(PERMS.sponsors||PERMS.dinner){jobs.push(qAll(()=>SB.from('sponsorships').select('*').order('id')).then(r=>DIN.spons=r.map(mapSpon)));jobs.push(qAll(()=>SB.from('attendance').select('*').order('id')).then(r=>DIN.att=r.map(mapAtt)));jobs.push(q(SB.from('dinners').select('*').order('year')).then(r=>DIN.dinners=r))}
+ if(PERMS.payments||PERMS.donations||PERMS.dinner)jobs.push(qAll(()=>SB.from('payments').select('*').order('created_at',{ascending:false}).order('id')).then(r=>DIN.payments=r));
  if(PERMS.users)jobs.push(q(SB.from('staff').select('*').order('name')).then(r=>STAFF=r));
  await Promise.all(jobs);
  // derived
