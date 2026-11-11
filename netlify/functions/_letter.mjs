@@ -207,7 +207,9 @@ export const DEFAULT_SPONSOR_LETTER = {
 };
 export async function sponsorLetterSettings() {
   const [t, signer] = await Promise.all([setting('sponsor_letter', DEFAULT_SPONSOR_LETTER), setting('letter_signer', DEFAULT_SIGNER)]);
-  return { text: { ...DEFAULT_SPONSOR_LETTER, ...(t || {}) }, signer: { ...DEFAULT_SIGNER, ...(signer || {}) } };
+  // Sponsor letters have their own signer (set in Sponsors & Guests); until one is saved, use the donor-letter signer.
+  const own = t && t.signer && t.signer.name ? t.signer : null;
+  return { text: { ...DEFAULT_SPONSOR_LETTER, ...(t || {}) }, signer: { ...DEFAULT_SIGNER, ...(own || signer || {}) } };
 }
 export const listYears = (ys) => { const y = [...new Set(ys)].sort(); return y.length < 2 ? y.join('') : y.length === 2 ? `${y[0]} and ${y[1]}` : `${y.slice(0, -1).join(', ')}, and ${y[y.length - 1]}`; };
 const COUNTS = ['Committed', 'Invoiced', 'Partially Paid', 'Paid in Full'];

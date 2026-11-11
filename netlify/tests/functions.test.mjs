@@ -211,5 +211,11 @@ console.log('sponsor letters');
   const buf = Buffer.from(await r.arrayBuffer()); const pages = (buf.toString('latin1').match(/\/Type \/Page /g) || []).length;
   ok(r.status === 200 && buf.subarray(0, 5).toString() === '%PDF-' && pages === 2 && r.headers.get('x-letters') === '2', 'two sponsors make one PDF with two pages');
   ok(buf.toString('latin1').includes('in 2025 and 2026'), 'letter names the years they sponsored');
-  r = await lpost({ action: 'sponsors', contact_ids: [spc.id, nobody.id], skip_no_address: true }, true); ok(r.headers.get('x-letters') === '1', 'sponsors without an address can be left out'); }
+  r = await lpost({ action: 'sponsors', contact_ids: [spc.id, nobody.id], skip_no_address: true }, true); ok(r.headers.get('x-letters') === '1', 'sponsors without an address can be left out');
+  r = await lpost({ action: 'sponsors', contact_ids: [spc.id], text: { paragraphs: ['Thank you.'], signer: { name: 'Wendy Peterson', title: 'Event Chair' } } }, true);
+  const sb2 = Buffer.from(await r.arrayBuffer()).toString('latin1'); ok(sb2.includes('Wendy Peterson') && sb2.includes('Event Chair') && !sb2.includes('Shari Chapman'), 'sponsor letters use their own signer');
+  T.settings.push({ key: 'sponsor_letter', value: { paragraphs: ['Saved wording.'], closing: 'Warmly,', signer: { name: 'Jen Hall', title: 'Committee Director' } } });
+  r = await lpost({ action: 'sponsors', contact_ids: [spc.id] }, true); const sb3 = Buffer.from(await r.arrayBuffer()).toString('latin1');
+  ok(sb3.includes('Jen Hall') && sb3.includes('Committee Director') && sb3.includes('Warmly,'), 'saved sponsor signer and wording are used');
+  const dl = await (await import('../functions/_letter.mjs')).letterSettings(); ok(dl.signer.name !== 'Jen Hall', 'donor letters keep their own signer'); }
 console.log(`\n${pass} checks passed`);

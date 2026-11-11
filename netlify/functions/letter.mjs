@@ -49,6 +49,8 @@ async function sponsorLetters(req, b) {
   try {
     const s = await sponsorLetterSettings();
     const text = b.text && Array.isArray(b.text.paragraphs) ? cleanText(b.text) : s.text;
+    const signer = b.text && b.text.signer && String(b.text.signer.name || '').trim()
+      ? { name: String(b.text.signer.name).trim().slice(0, 80), title: String(b.text.signer.title || '').trim().slice(0, 80) } : s.signer;
     const values = await letterValues();
     let letters;
     if (b.sample) {
@@ -67,7 +69,7 @@ async function sponsorLetters(req, b) {
         .map((c) => ({ contact: c, years: sponsorYears(spons.filter((x) => x.contact_id === c.id)) }));
       if (!letters.length) return fail('None of these sponsors has a mailing address yet.');
     }
-    const pdf = buildSponsorLetters({ letters, text, signer: s.signer, values, sample: !!b.sample });
+    const pdf = buildSponsorLetters({ letters, text, signer, values, sample: !!b.sample });
     return new Response(pdf, { status: 200, headers: { 'content-type': 'application/pdf', 'content-disposition': `inline; filename="Sponsor letters.pdf"`, 'cache-control': 'no-store', 'x-letters': String(letters.length) } });
   } catch (e) { console.error('sponsor letters', e.message); return fail('Could not make the letters: ' + e.message, 500); }
 }

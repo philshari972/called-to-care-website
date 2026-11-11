@@ -2243,13 +2243,15 @@ function bkEditor(){
     <div class="formgrid">
       <label class="field full">Basket name<input id="bsk-title" value="${esc(e.title||"")}" placeholder="Family Movie Night" maxlength="120"></label>
       <label class="field">What it costs to fill<input id="bsk-cost" inputmode="decimal" value="${e.cost?esc(e.cost):""}" placeholder="$250"><span class="hint">This is what the donor pays.</span></label>
-      <label class="field full">What's inside<textarea id="bsk-desc" rows="5" placeholder="One item per line, for example:&#10;Four movie passes&#10;Popcorn and candy">${esc(e.description||"")}</textarea><span class="hint">Each line shows as its own line on the card.</span></label>
+      <label class="field full">What's inside<textarea id="bsk-desc" rows="5" placeholder="One item per line, for example:&#10;Four movie passes&#10;Popcorn and candy">${esc(e.description||"")}</textarea><span class="hint">Each line shows as its own line. The card shows the first few; donors tap the basket to see everything.</span></label>
     </div>
-    <div class="mrow" style="gap:12px;align-items:center">
-      ${e.photo?`<img src="${esc(blob(e.photo))}" alt="" style="width:120px;height:90px;object-fit:cover;border-radius:10px;border:1px solid var(--line)">`:`<div class="small muted" style="width:120px;height:90px;border:1px dashed var(--line);border-radius:10px;display:grid;place-items:center">No photo</div>`}
-      <div class="btnrow"><label class="btn small" style="cursor:pointer">${e.photo?"Change photo":"Add a photo"}<input type="file" id="bsk-file" accept="image/*" hidden></label>${e.photo?`<button class="btn small" type="button" data-act="bskphotox">Remove photo</button>`:""}</div>
-    </div>
-    ${ui.bskUp?`<p class="small muted" style="margin:0">Uploading photo…</p>`:""}
+    <div style="display:grid;gap:8px"><b style="font-size:13px">Photos <span class="muted" style="font-weight:400">(up to 10; the first one is the main photo)</span></b>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+      ${bskPhotos(e).map((ph,i)=>`<div style="display:grid;gap:4px;width:150px"><div style="position:relative"><img src="${esc(blob(ph))}" alt="" style="width:150px;height:112px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block">${i===0?`<span class="pill win" style="position:absolute;left:6px;top:6px">Main</span>`:""}</div>
+        <div class="btnrow" style="gap:4px;flex-wrap:nowrap">${i>0?`<button class="btn small" type="button" data-act="bskmain" data-v="${i}" style="padding:4px 8px;min-height:30px;font-size:12px">Make main</button>`:""}<button class="btn small" type="button" data-act="bskphotox" data-v="${i}" style="padding:4px 8px;min-height:30px;font-size:12px" aria-label="Remove photo ${i+1}">Remove</button></div></div>`).join("")}
+      ${bskPhotos(e).length<10?`<label class="btn small" style="cursor:pointer;width:150px;height:112px;border-style:dashed;flex-direction:column">${bskPhotos(e).length?"Add more":"Add photos"}<span class="small muted" style="font-weight:400">pick one or several</span><input type="file" id="bsk-file" accept="image/*" multiple hidden></label>`:""}
+      </div></div>
+    ${ui.bskUp?`<p class="small muted" style="margin:0">${esc(ui.bskUp)}</p>`:""}
     <label class="check"><input type="checkbox" id="bsk-active" ${e.active?"checked":""}><span>Show it on the Charity Dinner page</span></label>
     <p class="small" style="margin:0;color:var(--out)" role="alert">${esc(ui.bskMsg||"")}</p>
     <div class="btnrow"><button class="btn primary" type="button" data-act="bsksave" ${ui.bskUp?"disabled":""}>Save basket</button><button class="btn" type="button" data-act="bskcancel">Cancel</button></div>
@@ -2265,7 +2267,7 @@ function admBaskets(){
     <div class="btnrow"><button class="btn small primary" type="button" data-act="bsknew">Add basket</button>${list.length?`<button class="btn small" type="button" data-act="bskall" data-v="1">Turn all on</button><button class="btn small" type="button" data-act="bskall" data-v="0">Turn all off</button>`:""}<a class="btn small" href="https://wearecalledtocare.com/#charity-dinner" target="_blank" rel="noopener">See the dinner page</a></div>
     ${list.length?`<p class="small muted" style="margin:0">${on} on the dinner page · ${given.length} given · ${money(raised)} raised</p>
     <div class="rows">${list.map((b,i)=>`<div class="row" style="flex-wrap:wrap;gap:12px;align-items:center">
-      <div class="mrow" style="flex:1 1 280px">${b.photo?`<img src="${esc(blob(b.photo))}" alt="" class="mthumb" style="object-fit:cover">`:`<div class="mthumb" style="display:grid;place-items:center;font-size:11px;color:var(--muted)">No photo</div>`}
+      <div class="mrow" style="flex:1 1 280px">${bskPhotos(b).length?`<img src="${esc(blob(bskPhotos(b)[0]))}" alt="" class="mthumb" style="object-fit:cover">`:`<div class="mthumb" style="display:grid;place-items:center;font-size:11px;color:var(--muted)">No photo</div>`}
         <div><b>${esc(b.title)} · ${money(b.cost)}</b><div style="margin-top:4px">${bkStatus(b)}</div>${b.claimed_at&&b.donor_email?`<div class="small muted">${esc(b.donor_email)} · ${esc(b.via||"")}</div>`:b.claimed_at&&b.via?`<div class="small muted">${esc(b.via)}</div>`:""}</div></div>
       <div class="btnrow" style="flex-wrap:wrap">
         <label class="check" style="align-items:center"><input type="checkbox" data-bkshow="${b.id}" ${b.active?"checked":""}><span>On page</span></label>
@@ -2277,6 +2279,7 @@ function admBaskets(){
       </div></div>`).join("")}</div>`:`<p class="small muted" style="margin:0">No baskets yet. Tap Add basket to make the first one.</p>`}
   </section>`;
 }
+const bskPhotos=b=>b&&b.photos&&b.photos.length?b.photos:b&&b.photo?[b.photo]:[];
 function bkGrab(){ const g=id=>document.getElementById(id); if(!ui.bskEdit||!g("bsk-title")) return;
   Object.assign(ui.bskEdit,{title:g("bsk-title").value,cost:g("bsk-cost").value,description:g("bsk-desc").value,active:g("bsk-active").checked}); }
 async function bkDo(fn,args,msg){ const r=await rpc(fn,args); if(r.err){ toast(r.err,"outbid"); } else if(msg) toast(msg,"info"); await loadBaskets(); return r; }
@@ -2287,11 +2290,12 @@ document.addEventListener("click",async e=>{
   if(a==="bsknew"){ ui.bskEdit={active:true}; ui.bskMsg=""; render(); document.getElementById("bsk-title").focus(); window.scrollTo(0,0); }
   if(a==="bskedit"){ const b=ui.bsk.find(x=>x.id===id); ui.bskEdit={...b}; ui.bskMsg=""; render(); window.scrollTo(0,0); }
   if(a==="bskcancel"){ ui.bskEdit=null; render(); }
-  if(a==="bskphotox"){ bkGrab(); ui.bskEdit.photo=""; render(); }
+  if(a==="bskphotox"){ bkGrab(); const l=bskPhotos(ui.bskEdit).slice(); l.splice(+v,1); ui.bskEdit.photos=l; ui.bskEdit.photo=l[0]||""; render(); }
+  if(a==="bskmain"){ bkGrab(); const l=bskPhotos(ui.bskEdit).slice(); const [x]=l.splice(+v,1); l.unshift(x); ui.bskEdit.photos=l; ui.bskEdit.photo=l[0]; render(); }
   if(a==="bsksave"){ bkGrab(); const x=ui.bskEdit, cost=num(String(x.cost||"").replace(/[$,]/g,""));
     if(!String(x.title||"").trim()){ ui.bskMsg="Give the basket a name."; render(); return; }
     if(!(cost>0)){ ui.bskMsg="Enter what the basket costs, like 250."; render(); return; }
-    el.disabled=true; const r=await rpc("admin_basket_save",{p:{id:x.id||"",title:x.title,cost,description:x.description||"",photo:x.photo||"",active:!!x.active}});
+    el.disabled=true; const r=await rpc("admin_basket_save",{p:{id:x.id||"",title:x.title,cost,description:x.description||"",photos:bskPhotos(x),active:!!x.active}});
     if(r.err){ ui.bskMsg=r.err; el.disabled=false; render(); return; }
     ui.bskEdit=null; const f=document.getElementById("bskform"); if(f) f.remove(); toast(x.active?"Saved. It shows on the dinner page within a minute.":"Saved. It's off, so it won't show on the dinner page yet.","info"); await loadBaskets(); }
   if(a==="bskall") bkDo("admin_basket_show",{p_id:null,p_on:v==="1"},v==="1"?"All baskets are on the dinner page.":"All baskets are hidden.");
@@ -2300,21 +2304,26 @@ document.addEventListener("click",async e=>{
     bkDo("admin_basket_given",{p_id:id,p_given:v==="1",p_name:name},v==="1"?"Marked as given.":"Basket is open again."); }
   if(a==="bskdel"){ if(ui.bskDel!==id){ ui.bskDel=id; render(); setTimeout(()=>{ if(ui.bskDel===id){ ui.bskDel=null; render(); } },4000); return; }
     ui.bskDel=null; const b=ui.bsk.find(x=>x.id===id); const r=await bkDo("admin_basket_delete",{p_id:id},"Basket deleted.");
-    if(!r.err&&b&&b.photo&&!b.photo.startsWith("img/")){ try{ await sb.storage.from("photos").remove([b.photo]); }catch(err){} } }
+    const gone=bskPhotos(b).filter(x=>!x.startsWith("img/")); if(!r.err&&gone.length){ try{ await sb.storage.from("photos").remove(gone); }catch(err){} } }
 });
 document.addEventListener("change",async e=>{
   if(!isAdmin) return;
   const t=e.target;
   if(t.dataset&&t.dataset.bkshow){ bkDo("admin_basket_show",{p_id:t.dataset.bkshow,p_on:t.checked},t.checked?"On the dinner page within a minute.":"Hidden from the dinner page."); return; }
-  if(t.id==="bsk-file"&&t.files&&t.files[0]){ bkGrab(); ui.bskUp=true; ui.bskMsg=""; render();
-    try{ const b=await withTimeout(compress(t.files[0]),20000,"read"); if(!b) throw new Error("read");
-      const path=`baskets/${Date.now()}-${rid()}.jpg`;
-      const {error}=await withTimeout(sb.storage.from("photos").upload(path,b,{contentType:"image/jpeg",cacheControl:"31536000"}),45000,"slow");
-      if(error){ console.error("basket photo",error); throw new Error("Upload refused: "+(error.message||error.error||"unknown")); }
-      ui.bskEdit.photo=path; }
-    catch(err){ console.error("basket photo",err); ui.bskMsg=err.message==="read"?"That photo couldn't be read. Try saving it as a JPEG or PNG first.":err.message==="slow"?"The photo upload took too long. Check your connection and try again.":err.message; }
-    t.value="";
-    ui.bskUp=false; render(); }
+  if(t.id==="bsk-file"&&t.files&&t.files.length){ bkGrab(); const files=[...t.files]; t.value=""; ui.bskMsg="";
+    const room=10-bskPhotos(ui.bskEdit).length, todo=files.slice(0,room); let failed=0, why="";
+    for(const [i,f] of todo.entries()){
+      ui.bskUp=todo.length>1?`Uploading photo ${i+1} of ${todo.length}…`:"Uploading photo…"; render();
+      try{ const b=await withTimeout(compress(f),20000,"read"); if(!b) throw new Error("read");
+        const path=`baskets/${Date.now()}-${rid()}.jpg`;
+        const {error}=await withTimeout(sb.storage.from("photos").upload(path,b,{contentType:"image/jpeg",cacheControl:"31536000"}),45000,"slow");
+        if(error){ console.error("basket photo",error); throw new Error("Upload refused: "+(error.message||error.error||"unknown")); }
+        const l=bskPhotos(ui.bskEdit).slice(); l.push(path); ui.bskEdit.photos=l; ui.bskEdit.photo=l[0]; }
+      catch(err){ console.error("basket photo",err); failed++; why=err.message==="read"?"A photo couldn't be read. Try saving it as a JPEG or PNG first.":err.message==="slow"?"An upload took too long. Check your connection and try again.":err.message; }
+    }
+    ui.bskUp=false;
+    ui.bskMsg=(failed?`${todo.length-failed} added, ${failed} didn't upload. ${why}`:"")+(files.length>room?` Only 10 photos fit; ${files.length-room} left out.`:"");
+    render(); }
 });
 /* ---------- Events ---------- */
 document.addEventListener("click",async e=>{

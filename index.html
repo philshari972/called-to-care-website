@@ -105,6 +105,35 @@ img{max-width:100%}
 .bk-photo.none{display:grid;place-items:center;background:var(--relief);color:var(--gold);font-family:var(--engraved);letter-spacing:.2em;font-size:.8rem}
 #baskets .tier.given{opacity:.82}
 #baskets .given-tag{font-family:var(--engraved);letter-spacing:.16em;font-size:.76rem;color:var(--gold);border:1px solid var(--gold-line);padding:14px 20px;width:100%;text-align:center;margin-top:auto}
+#baskets .bk-open{background:none;border:0;padding:0;cursor:pointer;display:block;width:100%;color:inherit;font:inherit;text-align:inherit}
+#baskets .bk-open:focus-visible{outline:2px solid var(--gold);outline-offset:4px}
+#baskets .bk-more{font-family:var(--book);font-style:italic;font-size:1.05rem;color:var(--gold);background:none;border:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:2px}
+#baskets .bk-count{position:absolute;right:8px;bottom:8px;background:rgba(20,19,21,.82);color:var(--ivory);font-family:var(--engraved);font-size:.7rem;letter-spacing:.14em;padding:5px 9px}
+.bkd{position:fixed;inset:0;z-index:200;display:grid;place-items:center;padding:16px}
+.bkd[hidden]{display:none}
+.bkd .bkd-scrim{position:absolute;inset:0;background:rgba(10,9,10,.78);border:0;cursor:pointer}
+.bkd .bkd-panel{position:relative;background:#1A1918;color:#F3ECDD;width:min(980px,100%);max-height:calc(100vh - 32px);overflow:auto;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);box-shadow:inset 0 0 0 1px rgba(221,182,90,.55),inset 0 0 0 7px #1A1918,inset 0 0 0 8px rgba(221,182,90,.3)}
+.bkd .bkd-gal{padding:28px 0 28px 28px;display:grid;gap:10px;align-content:start}
+.bkd .bkd-main{position:relative;overflow:hidden;min-width:0;background:#0F0E0D;aspect-ratio:4/3;display:grid;place-items:center;border:1px solid rgba(221,182,90,.45)}
+.bkd .bkd-main img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+.bkd .bkd-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:1px solid rgba(221,182,90,.6);background:rgba(20,19,21,.8);color:#DDB65A;font-size:22px;cursor:pointer;display:grid;place-items:center}
+.bkd .bkd-nav.bkd-prev{left:10px}.bkd .bkd-nav.bkd-next{right:10px}
+.bkd .bkd-thumbs{display:flex;gap:8px;flex-wrap:wrap}
+.bkd .bkd-thumbs button{width:64px;height:48px;padding:0;border:1px solid rgba(221,182,90,.3);background:#0F0E0D;cursor:pointer;opacity:.6}
+.bkd .bkd-thumbs button[aria-current="true"]{opacity:1;border-color:#DDB65A;box-shadow:0 0 0 1px #DDB65A}
+.bkd .bkd-thumbs img{width:100%;height:100%;object-fit:cover;display:block}
+.bkd .bkd-info{padding:36px 32px 32px;display:flex;flex-direction:column;gap:14px}
+.bkd .bkd-lbl{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:1.15rem;color:#DDB65A}
+.bkd .bkd-info h2{font-family:Cinzel,Georgia,serif;font-weight:500;letter-spacing:.06em;font-size:clamp(1.4rem,2.6vw,1.9rem);line-height:1.2;margin:0;color:#F3ECDD}
+.bkd .bkd-price{font-family:Cinzel,Georgia,serif;color:#DDB65A;font-size:1.8rem;letter-spacing:.04em}
+.bkd .bkd-info ul{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.bkd .bkd-info li{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.15rem;line-height:1.45;padding:7px 0;border-top:1px solid rgba(221,182,90,.16);color:#E6DECD}
+.bkd .bkd-info li:first-child{border-top:0}
+.bkd .bkd-give{margin-top:auto;background:#DDB65A;color:#141315;border:1px solid #DDB65A;font-family:Cinzel,Georgia,serif;font-weight:600;letter-spacing:.16em;font-size:.8rem;padding:16px 20px;cursor:pointer;width:100%}
+.bkd .bkd-give:hover{background:#E9C978}
+.bkd .bkd-x{position:absolute;right:12px;top:10px;width:44px;height:44px;background:none;border:0;color:#DDB65A;font-size:30px;cursor:pointer;z-index:2}
+.bkd :focus-visible{outline:2px solid #DDB65A;outline-offset:3px}
+@media (max-width:760px){.bkd{padding:0;place-items:stretch}.bkd .bkd-panel{grid-template-columns:1fr;max-height:100vh;height:100%}.bkd .bkd-gal{padding:56px 16px 0}.bkd .bkd-info{padding:20px 20px 0}.bkd .bkd-give{position:sticky;bottom:0;box-shadow:0 -14px 0 #1A1918,0 14px 0 #1A1918}.bkd .bkd-info>.given-tag{margin-bottom:20px}}
 #baskets .given-tag b{display:block;font-family:var(--book);font-style:italic;letter-spacing:0;font-size:1.05rem;font-weight:500;color:var(--ivory);margin-top:4px;text-transform:none}
 .masq .hint{font-family:var(--book);font-style:italic;font-size:1.05rem}
 .masq .pill.p-hot,.masq .pill.p-navy,.masq .pill.p-pink{background:var(--gold);color:#141315;border-color:var(--gold)}
@@ -1068,6 +1097,7 @@ html.tickets-on .tix-off{display:none!important}
     <div class="wrap center vstack" style="gap:14px;margin-bottom:44px"><img class="mq-div" src="masq/divider.svg" alt="" aria-hidden="true"><span class="label">Donor baskets</span><h2 class="d2 c-navy">Give an auction basket.</h2><p style="max-width:640px;margin-inline:auto">Choose a basket and cover its cost. We put it together for the auction, and every dollar it raises goes to foster and adoptive families. You'll get a receipt for your gift.</p></div>
     <div class="wrap tiers" id="basketGrid"></div>
   </section>
+  <div class="bkd" id="bkDetail" hidden role="dialog" aria-modal="true" aria-labelledby="bkdTitle"><button class="bkd-scrim" type="button" data-bkd-close aria-label="Close"></button><div class="bkd-panel" id="bkdPanel"></div></div>
 
   <div class="split b-teal" id="monthly">
     <div class="photo has-img" style="--pos:center"><img src="assets/kids-living-room.jpg" alt="Four kids hugging and smiling at the camera in a living room" loading="lazy" width="1800" height="1200"></div>
@@ -1935,12 +1965,39 @@ html.tickets-on .tix-off{display:none!important}
     C2C.renderBaskets=function(){const list=(C2C.cfg&&C2C.cfg.baskets)||[], sec=$('baskets'), nav=$('basketNav'); if(!sec) return;
       sec.hidden=!list.length; if(nav) nav.hidden=!list.length; if(!list.length) return;
       $('basketGrid').innerHTML=list.map(b=>{const lines=String(b.description||'').split(/\n+/).map(x=>x.trim()).filter(Boolean);
-        return `<div class="lab tier${b.given?' given':''}">${b.photo?`<img class="bk-photo" src="${esc(b.photo)}" alt="${esc(b.title)}" loading="lazy">`:'<div class="bk-photo none" aria-hidden="true">BASKET</div>'}
+        const pics=(b.photos&&b.photos.length?b.photos:b.photo?[b.photo]:[]), more=lines.length>3||pics.length>1;
+        return `<div class="lab tier${b.given?' given':''}"><button type="button" class="bk-open" data-bkd="${esc(b.id)}" aria-label="See details for ${esc(b.title)}" style="position:relative">${pics.length?`<img class="bk-photo" src="${esc(pics[0])}" alt="${esc(b.title)}" loading="lazy">${pics.length>1?`<span class="bk-count">${pics.length} PHOTOS</span>`:''}`:'<div class="bk-photo none" aria-hidden="true">BASKET</div>'}</button>
         <div class="tier-top"><span class="label">${esc(b.title)}</span><span class="price">${fmt(b.cost)}</span></div>
-        ${lines.length?`<ul class="perks">${lines.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>`:''}
+        ${lines.length?`<ul class="perks">${lines.slice(0,3).map(l=>`<li>${esc(l)}</li>`).join('')}</ul>`:''}
+        ${more||lines.length?`<button type="button" class="bk-more" data-bkd="${esc(b.id)}">See details${lines.length>3?` (${lines.length-3} more)`:''}</button>`:''}
         ${b.given?`<span class="given-tag">GIVEN${b.givenBy?`<b>Thank you, ${esc(b.givenBy)}</b>`:'<b>Thank you!</b>'}</span>`
           :`<button type="button" class="pill p-navy pick-basket" data-basket="${esc(b.id)}" style="width:100%;margin-top:auto">Give This Basket</button>`}</div>`}).join('');};
     C2C.ready.then(()=>C2C.renderBaskets());
+    // Basket details: every photo and the full description
+    let bkd=null, bkdN=0, bkdFrom=null;
+    function drawDetail(){const b=bkd, pics=(b.photos&&b.photos.length?b.photos:b.photo?[b.photo]:[]), lines=String(b.description||'').split(/\n+/).map(x=>x.trim()).filter(Boolean);
+      $('bkdPanel').innerHTML=`<button class="bkd-x" type="button" data-bkd-close aria-label="Close">×</button>
+       <div class="bkd-gal">${pics.length?`<div class="bkd-main"><img src="${esc(pics[bkdN])}" alt="${esc(b.title)}, photo ${bkdN+1} of ${pics.length}">${pics.length>1?`<button class="bkd-nav bkd-prev" type="button" data-bkd-step="-1" aria-label="Previous photo">‹</button><button class="bkd-nav bkd-next" type="button" data-bkd-step="1" aria-label="Next photo">›</button>`:''}</div>
+        ${pics.length>1?`<div class="bkd-thumbs">${pics.map((u,i)=>`<button type="button" data-bkd-pic="${i}" aria-label="Photo ${i+1}" aria-current="${i===bkdN}"><img src="${esc(u)}" alt=""></button>`).join('')}</div>`:''}`:'<div class="bkd-main" aria-hidden="true" style="color:#DDB65A;font-family:Cinzel,serif;letter-spacing:.2em">BASKET</div>'}</div>
+       <div class="bkd-info"><span class="bkd-lbl">Donor basket</span><h2 id="bkdTitle">${esc(b.title)}</h2><span class="bkd-price">${fmt(b.cost)}</span>
+        ${lines.length?`<ul>${lines.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>`:''}
+        ${b.given?`<span class="given-tag" style="font-family:Cinzel,serif;letter-spacing:.16em;font-size:.8rem;color:#DDB65A;border:1px solid rgba(221,182,90,.5);padding:14px;text-align:center;margin-top:auto">GIVEN<b style="display:block;font-family:'Cormorant Garamond',serif;font-style:italic;letter-spacing:0;font-size:1.1rem;font-weight:500;color:#F3ECDD;margin-top:4px">${b.givenBy?`Thank you, ${esc(b.givenBy)}`:'Thank you!'}</b></span>`
+          :`<button class="bkd-give" type="button" data-bkd-give>Give This Basket</button>`}</div>`;}
+    function openDetail(id,from){bkd=(C2C.cfg.baskets||[]).find(x=>x.id===id); if(!bkd) return; if($('bkDetail').parentNode!==document.body) document.body.appendChild($('bkDetail')); bkdN=0; bkdFrom=from; drawDetail(); $('bkDetail').hidden=false; document.body.classList.add('locked'); setTimeout(()=>$('bkdPanel').querySelector('.bkd-x').focus(),30);}
+    function closeDetail(){ $('bkDetail').hidden=true; document.body.classList.remove('locked'); if(bkdFrom&&bkdFrom.isConnected) bkdFrom.focus(); }
+    document.addEventListener('click',e=>{
+      const o=e.target.closest('[data-bkd]'); if(o){ openDetail(o.dataset.bkd,o); return; }
+      if($('bkDetail').hidden) return;
+      if(e.target.closest('[data-bkd-close]')){ closeDetail(); return; }
+      const st=e.target.closest('[data-bkd-step]'); if(st){ const n=(bkd.photos||[]).length||1; bkdN=(bkdN+(+st.dataset.bkdStep)+n)%n; drawDetail(); $('bkdPanel').querySelector('[data-bkd-step="'+st.dataset.bkdStep+'"]').focus(); return; }
+      const pc=e.target.closest('[data-bkd-pic]'); if(pc){ bkdN=+pc.dataset.bkdPic; drawDetail(); $('bkdPanel').querySelector('[data-bkd-pic="'+bkdN+'"]').focus(); return; }
+      if(e.target.closest('[data-bkd-give]')){ const b=bkd; closeDetail(); C2C.openCheckout({kind:'basket',item:b.id,name:b.title,price:b.cost,title:'Give a Basket',eyebrow:'<span class="nw">Charity Dinner &amp; Auction</span><span style="display:block">Donor Baskets</span>'}); }
+    });
+    document.addEventListener('keydown',e=>{ if($('bkDetail').hidden) return;
+      if(e.key==='Escape'){ closeDetail(); }
+      else if((e.key==='ArrowRight'||e.key==='ArrowLeft')&&(bkd.photos||[]).length>1){ const n=bkd.photos.length; bkdN=(bkdN+(e.key==='ArrowRight'?1:-1)+n)%n; drawDetail(); }
+      else if(e.key==='Tab'){ const f=[...$('bkdPanel').querySelectorAll('button')]; if(!f.length) return; const first=f[0], last=f[f.length-1];
+        if(e.shiftKey&&document.activeElement===first){ e.preventDefault(); last.focus(); } else if(!e.shiftKey&&document.activeElement===last){ e.preventDefault(); first.focus(); } } });
     document.addEventListener('click',e=>{const a=e.target.closest('[data-basket]'); if(!a) return; const b=(C2C.cfg.baskets||[]).find(x=>x.id===a.dataset.basket); if(!b||b.given) return;
       C2C.openCheckout({kind:'basket',item:b.id,name:b.title,price:b.cost,title:'Give a Basket',eyebrow:'<span class="nw">Charity Dinner &amp; Auction</span><span style="display:block">Donor Baskets</span>'});});
     // Monthly amount chooser (Charity Dinner monthly partners)

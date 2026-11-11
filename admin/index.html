@@ -962,9 +962,10 @@ const selBox=id=>`<input type="checkbox" aria-label="Select for letters" data-sp
 const selAll=ids=>{const u=[...new Set(ids)];return`<input type="checkbox" aria-label="Select all shown" title="Select all shown" data-spselall="${u.join(',')}" ${u.length&&u.every(i=>SPSEL.has(i))?'checked':''}>`};
 const SL_DEFAULT={paragraphs:['Thank you so much for sponsoring our Charity Dinner & Auction in {years}. Your generosity means the world to us, and even more to the foster, adoptive, and kinship families we walk alongside.','Because of sponsors like you, families who say yes to children in need never have to do it alone. Your support helps make Support Nights for foster and adoptive moms, Care Closet bags for children arriving in new homes, camp scholarships, and Christmas gifts for kids in care possible.',"We are so excited about our 6th annual Charity Dinner & Auction on {dinner_date} at Whitetail Ridge Golf Club in Yorkville. We would be honored to have you with us again as a sponsor this year. You can see this year's sponsor options at wearecalledtocare.com, or simply reach out and I will be glad to help."],closing:'With gratitude,'};
 let SLT=null;
-const slText=()=>{const t=SETTINGS.sponsor_letter||{};return{paragraphs:(t.paragraphs&&t.paragraphs.length?t.paragraphs:SL_DEFAULT.paragraphs).slice(),closing:t.closing||SL_DEFAULT.closing}};
+const slText=()=>{const t=SETTINGS.sponsor_letter||{},ds=SETTINGS.letter_signer||{};const sg=t.signer&&t.signer.name?t.signer:{name:ds.name||'Shari Chapman',title:ds.title||'Executive Director'};
+ return{paragraphs:(t.paragraphs&&t.paragraphs.length?t.paragraphs:SL_DEFAULT.paragraphs).slice(),closing:t.closing||SL_DEFAULT.closing,signer:{name:sg.name,title:sg.title||''}}};
 const hasAddr=c=>!!(c&&c.street&&c.city&&c.zip);
-function slGrab(){if(!SLT)return;const ps=[...document.querySelectorAll('[data-slp]')];if(ps.length)SLT.paragraphs=ps.map(x=>x.value);const cl=$('#sl-close');if(cl)SLT.closing=cl.value;const sk=$('#sl-skip');if(sk)SLT.skip=sk.checked}
+function slGrab(){if(!SLT)return;const ps=[...document.querySelectorAll('[data-slp]')];if(ps.length)SLT.paragraphs=ps.map(x=>x.value);const cl=$('#sl-close');if(cl)SLT.closing=cl.value;const sn=$('#sl-sname');if(sn)SLT.signer={name:sn.value,title:$('#sl-stitle').value};const sk=$('#sl-skip');if(sk)SLT.skip=sk.checked}
 function sponLettersDrawer(keep){if(!keep)SLT={...slText(),skip:true};const ids=[...SPSEL],cs=ids.map(cById).filter(Boolean),noAddr=cs.filter(c=>!hasAddr(c));
  const canSave=(ME.roles||[]).includes('owner')||PERMS.sponsors==='edit';const n=SLT.skip?cs.length-noAddr.length:cs.length;
  layer(`<div class="drawer"><button class="scrim" data-close aria-label="Close"></button><form class="sheet" id="slForm" role="dialog" aria-modal="true" aria-label="Sponsor thank-you letters" novalidate>
@@ -980,9 +981,10 @@ function sponLettersDrawer(keep){if(!keep)SLT={...slText(),skip:true};const ids=
    ${SLT.paragraphs.map((t,i)=>`<label class="field" for="sl-p${i}">Paragraph ${i+1}<textarea id="sl-p${i}" data-slp rows="4">${esc(t)}</textarea></label>`).join('')}
    <div style="display:flex;gap:8px;flex-wrap:wrap">${SLT.paragraphs.length<5?'<button class="btn" type="button" data-sladd>Add a paragraph</button>':''}${SLT.paragraphs.length>1?'<button class="btn" type="button" data-sldel>Remove last paragraph</button>':''}</div>
    <label class="field" for="sl-close">Closing<input id="sl-close" value="${esc(SLT.closing)}"></label>
-   <p class="note" style="margin:0">Signed by ${esc((SETTINGS.letter_signer||{}).name||'Shari Chapman')}, ${esc((SETTINGS.letter_signer||{}).title||'Executive Director')} (change this under Donations → Letter settings).</p></div>
+   <div class="formgrid"><label class="field" for="sl-sname">Signed by (name)<input id="sl-sname" value="${esc(SLT.signer.name)}" placeholder="Shari Chapman"></label><label class="field" for="sl-stitle">Title<input id="sl-stitle" value="${esc(SLT.signer.title)}" placeholder="Executive Director"></label></div>
+   <p class="note" style="margin:0">This is only for sponsor letters. Donor thank-you letters keep their own signer under Donations.</p></div>
   <p class="err" id="sl-err" role="alert"></p>
-  <div style="display:flex;gap:8px;flex-wrap:wrap">${cs.length?`<button class="btn primary" type="button" data-sldown ${n?'':'disabled'}>${ic('down')}Download ${n} Letter${n===1?'':'s'} (PDF)</button>`:''}<button class="btn" type="button" data-slsample>Preview Sample</button>${canSave?'<button class="btn" type="button" data-slsave>Save Wording</button>':''}</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">${cs.length?`<button class="btn primary" type="button" data-sldown ${n?'':'disabled'}>${ic('down')}Download ${n} Letter${n===1?'':'s'} (PDF)</button>`:''}<button class="btn" type="button" data-slsample>Preview Sample</button>${canSave?'<button class="btn" type="button" data-slsave>Save Wording &amp; Signer</button>':''}</div>
  </form></div>`)}
 async function sponLetterPdf(body,name){const res=await letterFn({action:'sponsors',...body});if(!res.ok){const j=await res.json().catch(()=>({}));throw new Error(j.error||'Could not make the letters')}
  const url=URL.createObjectURL(await res.blob());const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);return +(res.headers.get('x-letters')||0)}
@@ -993,12 +995,12 @@ document.addEventListener('click',async e=>{
  if(e.target.closest('[data-slclear]')){SPSEL.clear();slGrab();render();sponLettersDrawer(true);return}
  if(e.target.closest('[data-sladd]')){slGrab();SLT.paragraphs.push('');sponLettersDrawer(true);return}
  if(e.target.closest('[data-sldel]')){slGrab();SLT.paragraphs.pop();sponLettersDrawer(true);return}
- const text=()=>{slGrab();return{paragraphs:SLT.paragraphs.filter(x=>x.trim()),closing:SLT.closing}};
+ const text=()=>{slGrab();return{paragraphs:SLT.paragraphs.filter(x=>x.trim()),closing:SLT.closing,signer:{name:SLT.signer.name.trim(),title:SLT.signer.title.trim()}}};
  const err=$('#sl-err');
  const smp=e.target.closest('[data-slsample]');if(smp){bbusy(smp,true);try{await sponLetterPdf({sample:true,text:text()},'Sample sponsor letter.pdf')}catch(x){err.textContent=x.message}bbusy(smp,false);return}
  const dl=e.target.closest('[data-sldown]');if(dl){bbusy(dl,true);err.textContent='';try{const n=await sponLetterPdf({contact_ids:[...SPSEL],text:text(),skip_no_address:!!SLT.skip},`Sponsor thank-you letters (${SPSEL.size}).pdf`);toast(`${n} letter${n===1?'':'s'} downloaded`)}catch(x){err.textContent=x.message}bbusy(dl,false);return}
- const sv=e.target.closest('[data-slsave]');if(sv){const t=text();if(!t.paragraphs.length){err.textContent='Add at least one paragraph.';return}bbusy(sv,true);const r=await SB.from('settings').upsert({key:'sponsor_letter',value:t});bbusy(sv,false);
-  if(r.error){err.textContent='Not saved: '+r.error.message;return}SETTINGS.sponsor_letter=t;toast('Letter wording saved for everyone')}});
+ const sv=e.target.closest('[data-slsave]');if(sv){const t=text();if(!t.paragraphs.length){err.textContent='Add at least one paragraph.';return}if(!t.signer.name){err.textContent='Add the name of the person signing.';$('#sl-sname').focus();return}bbusy(sv,true);const r=await SB.from('settings').upsert({key:'sponsor_letter',value:t});bbusy(sv,false);
+  if(r.error){err.textContent='Not saved: '+r.error.message;return}SETTINGS.sponsor_letter=t;toast('Letter wording and signer saved for everyone')}});
 document.addEventListener('change',e=>{if(e.target.id==='sl-skip'){slGrab();sponLettersDrawer(true)}});
 /* ---------------- sponsors wiring ---------------- */
 document.addEventListener('click',e=>{if(VIEW!=='sponsors')return;
