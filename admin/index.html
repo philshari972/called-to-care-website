@@ -1086,7 +1086,7 @@ document.addEventListener('click',async e=>{
   if(act==='letters')letterDrawer();
   if(act==='auction-admin'){const w=window.open('','_blank');if(w)w.document.write('<p style="font:16px system-ui;padding:24px;color:#1D4766">Opening the auction…</p>');const r=await SB.rpc('auction_admin_link');
     if(r.error||!r.data){if(w)w.close();toast(r.error&&/permission|Only/i.test(r.error.message)?'You need edit access to the Auction to open admin.':'Could not open the auction admin. Ask Phil to run auction-admin-link.sql in Supabase.',true);}
-    else{const u='https://auction.wearecalledtocare.com/?preview='+encodeURIComponent(r.data.preview)+'#admin='+encodeURIComponent(r.data.admin);if(w)w.location.href=u;else location.href=u;}}
+    else{const u='https://auction.wearecalledtocare.com/?preview='+encodeURIComponent(r.data.preview)+'#admin='+encodeURIComponent(r.data.admin)+'&n='+encodeURIComponent((ME&&ME.name)||'');if(w)w.location.href=u;else location.href=u;}}
   if(act==='lt-add'){LT=readLetterForm();LT.updates.push({title:'',text:'',on:true,until:''});letterDrawer(true);setTimeout(()=>{const t=document.querySelectorAll('.lt-item');const last=t[t.length-1];if(last)last.querySelector('input').focus()},40)}
   if(act==='lt-del'){LT=readLetterForm();LT.updates.splice(Number(a.dataset.i),1);letterDrawer(true)}
   if(act==='lt-up'){LT=readLetterForm();const i=Number(a.dataset.i);if(i>0){const x=LT.updates.splice(i,1)[0];LT.updates.splice(i-1,0,x)}letterDrawer(true)}

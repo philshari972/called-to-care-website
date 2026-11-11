@@ -2536,7 +2536,10 @@ async function start(){
   if(pv){ try{ await sb.rpc("enter_preview",{p_code:pv}); }catch(e){} history.replaceState(null,"",location.pathname+location.hash); }
   // Admin link from the website admin: #admin=CODE unlocks admin on this device, then the code is removed from the address
   const am=location.hash.match(/^#admin(?:=(.+))?$/);
-  if(am){ ui.view="admin"; if(am[1]){ try{ const r=await sb.rpc("become_admin",{p_code:decodeURIComponent(am[1])}); if(r.data) ui.adminLink=true; }catch(e){} } history.replaceState(null,"",location.pathname+"#admin"); }
+  let adminName="";
+  if(am){ ui.view="admin"; if(am[1]){ const [code,nm]=am[1].split("&n="); adminName=nm?decodeURIComponent(nm).slice(0,40):"";
+      try{ const r=await sb.rpc("become_admin",{p_code:decodeURIComponent(code)}); if(r.data) ui.adminLink=true; }catch(e){} }
+    history.replaceState(null,"",location.pathname+"#admin"); }
   // If the access check fails for any reason, show the coming-soon page (never the auction).
   let acc=null; for(let i=0;i<2&&!acc;i++){ try{ const r=await sb.rpc("my_access"); acc=r.error?null:r.data; }catch(e){} }
   if(!acc||(!acc.open&&!acc.admin&&!acc.tester)) return comingSoon();
@@ -2546,6 +2549,8 @@ async function start(){
   catch(e){ return stop(`<h2>Database not set up</h2><p>Run <b>setup.sql</b> in the Supabase SQL editor, then reload.</p>`); }
   loadL(); if(!L.acting) L.acting=myUid;
   await loadAll(); listen(); botLease();
+  // Admins coming from the website admin skip the bidder sign-up and land on the admin screens (Items first when no test is running).
+  if(ui.adminLink&&isAdmin){ if(!items().length) ui.adm="items"; if(!registered()) await register(adminName||"Auction Admin"); else { ui.view="admin"; render(); } }
   setInterval(()=>{ refreshItems(); loadMeta().then(render).catch(()=>{}); },20000);  // safety net if live updates drop
 }
 start();
