@@ -339,7 +339,8 @@ begin
   if not is_admin() then raise exception 'Only auction admins can do that.'; end if;
   update auction set run = run + 1, phase = 'live', paused_at = null, launched_at = t, dur = p_dur, live_lot = null where id = 1
     returning run into r;
-  delete from maxes; delete from history; delete from items;
+  -- "where true": Supabase refuses a DELETE with no WHERE when it comes from the website
+  delete from maxes where true; delete from history where true; delete from items where true;
   update drawings set data = data - 'lot' where data ? 'lot';   -- Golden Ticket picks belong to the old run   -- gifts and payments stay, tagged with their run
   insert into items (id, run, price, ends_at, live)
     select id, r, start, t + p_dur * 60000 + case when mode = 'live' then 7 * 86400000 else 0 end, mode = 'live' from catalog;
