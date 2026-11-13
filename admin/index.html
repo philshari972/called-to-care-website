@@ -390,7 +390,7 @@ const A_TABS={a_items:['Auction Items','Auction','gavel','items'],a_baskets:['Do
   const keep=k=>SECTIONS[k];
   if(DASH){ const n={dashboard:{title:'Overview',group:'Charity Dinner',icon:'grid'},
       sponsors:{...keep('sponsors'),group:'Guests & Sponsors'},dinner:{...keep('dinner'),group:'Guests & Sponsors'}};
-    Object.entries(A_TABS).forEach(([k,[t,g,i]])=>n[k]={title:t,group:g,icon:i});
+    Object.entries(A_TABS).forEach(([k,[t,g,i]])=>{ if(k==='a_live') n.checkin={title:'Check-in & Bidder #s',group:'Night Of',icon:'ticket'}; n[k]={title:t,group:g,icon:i}; });
     Object.keys(SECTIONS).forEach(k=>delete SECTIONS[k]); Object.assign(SECTIONS,n);
     document.body.classList.add('dash'); document.title='Charity Dinner Dashboard · We Are Called to Care'; }
   else { const n={}; Object.entries(SECTIONS).forEach(([k,v])=>{ if(['dinner','sponsors','auction'].includes(k)) return; n[k]=v;
@@ -458,6 +458,7 @@ async function start(session){
   $('#li-err').innerHTML=`<b>${esc(session.user.email)}</b> isn't set up for admin access${data===null?'':' right now'}. Ask an Owner to add you under Users &amp; Roles, then sign in again.`;
   await SB.auth.signOut();ME=null;return}
  ME=data;PERMS={dashboard:'view',...data.perms};
+ if(PERMS.auction||PERMS.dinner) PERMS.checkin=(PERMS.auction==='edit'||PERMS.auction==='clerk'||PERMS.dinner==='edit')?'edit':'view';
  Object.keys(A_TABS).forEach(k=>{ if(PERMS.auction) PERMS[k]=PERMS.auction; });
  if(PERMS.dinner||PERMS.sponsors||PERMS.auction) PERMS.cdd='view';
  const r=await SB.from('roles').select('*');(r.data||[]).forEach(x=>ROLES[x.key]={name:x.name,desc:x.description,perms:x.perms});
@@ -606,7 +607,7 @@ function go(k){if(!PERMS[k])k='dashboard';VIEW=k;Q='';SF='all';closeSide();
 function render(){const c=$('#content');
  if(A_TABS[VIEW]){c.hidden=true;c.innerHTML='';showAuction(A_TABS[VIEW][3]);return}
  c.hidden=false;$('#auwrap').hidden=true;
- const pages={dashboard:DASH?dinnerOverview:dashboard,sponsors:sponsorsPage,auction:auctionPage,events:eventsPage,users:usersPage,settings:settingsPage};
+ const pages={checkin:checkinPage,dashboard:DASH?dinnerOverview:dashboard,sponsors:sponsorsPage,auction:auctionPage,events:eventsPage,users:usersPage,settings:settingsPage};
  c.innerHTML=pages[VIEW]?pages[VIEW]():listPage(VIEW)}
 
 /* The auction's admin screens, inside the dashboard. One frame stays open, so switching screens is instant. */
@@ -623,6 +624,67 @@ async function showAuction(tab){
  w.innerHTML=''; w.appendChild(AUF);
 }
 
+
+/* ---------------- Check-in & bidder numbers (Charity Dinner Dashboard) ----------------
+   Bidder numbers live with the auction. A couple can share one number; each phone joins with the number and last name. */
+const CI={q:'',sel:new Set(),bidders:null,err:'',busy:false,walk:false};
+const AU=()=>SB.schema('public');
+async function ciLoad(){const r=await AU().from('people').select('uid,name,paddle,contact_ids,assigned,bot').eq('bot',false).order('paddle');
+ CI.bidders=r.error?[]:r.data;CI.err=r.error?'The bidder list could not load. Ask Phil to run bidder-numbers.sql in Supabase.':'';if(VIEW==='checkin')render()}
+function ciPaddleOf(cid){return(CI.bidders||[]).find(b=>(b.contact_ids||[]).includes(cid))}
+function ciNext(){const used=new Set((CI.bidders||[]).map(b=>b.paddle));let n=101;while(used.has(n))n++;return n}
+function ciCardName(cs){const ps=cs.map(c=>({f:(c.first||'').trim(),l:(c.last||'').trim(),n:c.type!=='Person'?c.name:''}));
+ if(ps.length===2&&ps[0].l&&ps[0].l===ps[1].l)return`${ps[0].f} & ${ps[1].f} ${ps[0].l}`;
+ return ps.map(p=>p.n||[p.f,p.l].filter(Boolean).join(' ')).join(' & ')}
+function checkinPage(){
+ if(CI.bidders===null){ciLoad();return`<div class="ph"><div><span class="label">Night of</span><h1>Check-in &amp; Bidder Numbers</h1></div></div><p class="note">Loading the bidder list…</p>`}
+ const edit=PERMS.checkin==='edit',q=CI.q.toLowerCase();
+ const guests=DIN.att.filter(a=>a.year===CUR).map(a=>({a,c:cById(a.cid)})).filter(x=>!q||(x.c.name+' '+(x.c.email||'')+' '+(x.a.table||'')).toLowerCase().includes(q))
+   .sort((x,y)=>(x.a.table||'zz').localeCompare(y.a.table||'zz',undefined,{numeric:true})||x.c.name.localeCompare(y.c.name));
+ const all=DIN.att.filter(a=>a.year===CUR),numbered=all.filter(a=>ciPaddleOf(a.cid)).length;
+ const sel=[...CI.sel].map(cById);
+ const others=(CI.bidders||[]).filter(b=>!(b.contact_ids||[]).length);
+ return`<div class="ph"><div><span class="label">Night of</span><h1>Check-in &amp; Bidder Numbers</h1><p>Give each guest (or couple) a bidder number as they arrive. They join the auction on their phone with that number and their last name; a couple can both join with the same number.</p></div>
+  <div class="actions">${edit?`<button class="btn" data-ci="walk">${ic('plus')}Walk-in guest</button>`:''}</div></div>
+  ${CI.err?`<div class="panel"><div style="padding:16px">${esc(CI.err)}</div></div>`:''}
+  <div class="summary"><div><b>${numbered}</b><span>of ${all.length} guests have a number</span></div><div><b>${(CI.bidders||[]).length}</b><span>Bidder numbers given out</span></div><div><b>#${ciNext()}</b><span>Next free number</span></div></div>
+  ${CI.walk?`<div class="panel"><header><h2>Walk-in guest</h2></header><div style="padding:16px;display:grid;gap:12px;max-width:560px">
+    <label class="field">Name on the bidder card<input id="ci-wname" placeholder="e.g. Pat & Jamie Lee"></label>
+    <label class="field">Bidder # <span class="note">leave blank for #${ciNext()}</span><input id="ci-wno" inputmode="numeric" placeholder="${ciNext()}"></label>
+    <div style="display:flex;gap:10px"><button class="btn primary" data-ci="walkgo">Give number</button><button class="btn" data-ci="walkno">Cancel</button></div></div></div>`:''}
+  ${sel.length?`<div class="panel" style="border-color:var(--teal)"><div style="padding:14px 16px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+    <div style="flex:1 1 260px"><b>${sel.length===1?'1 guest':sel.length+' guests'} selected</b><div class="note">${sel.length>1?'They will share one bidder number.':'Pick a second guest to give a couple one number.'}</div></div>
+    <label class="field" style="flex:1 1 220px">Name on the card<input id="ci-name" value="${esc(ciCardName(sel))}"></label>
+    <label class="field" style="flex:0 1 140px">Bidder #<input id="ci-no" inputmode="numeric" placeholder="${ciNext()}"></label>
+    <button class="btn primary" data-ci="give" ${CI.busy?'disabled':''}>${sel.length>1?'Give them one number':'Give number'}</button><button class="btn" data-ci="clear">Clear</button></div></div>`:''}
+  <div class="toolbar"><label class="search" for="ciq">${ic('search')}<input id="ciq" placeholder="Search guests or tables" value="${esc(CI.q)}"></label></div>
+  <div class="panel"><div class="tablewrap"><table><thead><tr>${edit?'<th class="selc"></th>':''}<th>Guest</th><th>Table</th><th>Ticket</th><th>Bidder #</th><th></th></tr></thead><tbody>
+  ${guests.length?guests.map(({a,c})=>{const b=ciPaddleOf(c.id),mates=b?(b.contact_ids||[]).filter(x=>x!==c.id).map(cById).map(m=>m.first||m.name):[];
+    return`<tr>${edit?`<td class="selc">${b?'':`<input type="checkbox" data-cisel="${c.id}" ${CI.sel.has(c.id)?'checked':''} aria-label="Select ${esc(c.name)}">`}</td>`:''}<td><b>${esc(c.name)}</b>${c.email?`<span class="sub">${esc(c.email)}</span>`:''}</td><td>${esc(a.table||'—')}</td><td>${esc(a.ticket||'')}</td>
+    <td>${b?`<b style="font-size:1.15rem">#${b.paddle}</b>${mates.length?`<span class="sub">shared with ${esc(mates.join(', '))}</span>`:''}`:'<span class="note">none yet</span>'}</td>
+    <td class="r">${edit?(b?`<button class="btn ghost" data-ci="release" data-p="${b.paddle}">Take back</button>`:`<button class="btn" data-ci="one" data-c="${c.id}">Give number</button>`):''}</td></tr>`}).join('')
+    :`<tr><td colspan="6" class="note" style="padding:18px">${all.length?'No guests match your search.':`No ${CUR} guests yet. Guests from Tickets &amp; Tables show up here. Use Walk-in guest for anyone else.`}</td></tr>`}
+  </tbody></table></div></div>
+  ${others.length?`<div class="panel"><header><h2>Other bidder numbers</h2></header><div class="tablewrap"><table><thead><tr><th>Bidder #</th><th>Name</th><th>How</th><th></th></tr></thead><tbody>${others.map(b=>`<tr><td><b>#${b.paddle}</b></td><td>${esc(b.name)}</td><td>${b.assigned?'Walk-in':'Joined on their phone'}</td><td class="r">${edit&&b.assigned?`<button class="btn ghost" data-ci="release" data-p="${b.paddle}">Take back</button>`:''}</td></tr>`).join('')}</tbody></table></div></div>`:''}`}
+async function ciGive(cids,name,no){
+ if(!name.trim()){toast('Enter the name for the bidder card.',true);return}
+ CI.busy=true;render();const r=await AU().rpc('admin_assign_paddle',{p:{paddle:no||'',name:name.trim(),contact_ids:cids}});CI.busy=false;
+ const res=r.data||{};if(r.error||res.err){toast(res.err||(/function|does not exist/i.test(r.error.message)?'Ask Phil to run bidder-numbers.sql in Supabase first.':r.error.message),true);render();return}
+ for(const cid of cids){const a=DIN.att.find(x=>x.cid===cid&&x.year===CUR);if(a){a.bid=res.paddle;SB.from('attendance').update({bid_number:res.paddle}).eq('id',a.id).then(()=>{})}}
+ CI.sel.clear();CI.walk=false;toast(`Bidder #${res.paddle} · ${name.trim()}. Write it on their card.`);await ciLoad()}
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-ci]');if(!b)return;const a=b.dataset.ci;
+ if(a==='walk'){CI.walk=true;render();setTimeout(()=>{const x=$('#ci-wname');if(x)x.focus()},30)}
+ if(a==='walkno'){CI.walk=false;render()}
+ if(a==='walkgo')ciGive([],$('#ci-wname').value,$('#ci-wno').value.trim());
+ if(a==='clear'){CI.sel.clear();render()}
+ if(a==='give')ciGive([...CI.sel],$('#ci-name').value,$('#ci-no').value.trim());
+ if(a==='one'){CI.sel=new Set([b.dataset.c]);render();setTimeout(()=>{const x=$('#ci-no');if(x)x.focus()},30)}
+ if(a==='release'){const p=Number(b.dataset.p);if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='Tap again to take back';setTimeout(()=>{b.dataset.sure='';b.textContent='Take back'},4000);return}
+  const r=await AU().rpc('admin_release_paddle',{p_paddle:p});const res=r.data||{};if(r.error||res.err){toast(res.err||r.error.message,true);return}
+  DIN.att.forEach(x=>{if(x.year===CUR&&x.bid===p){x.bid=null;SB.from('attendance').update({bid_number:null}).eq('id',x.id).then(()=>{})}});toast(`Bidder #${p} is free again.`);await ciLoad()}});
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.cisel){t.checked?CI.sel.add(t.dataset.cisel):CI.sel.delete(t.dataset.cisel);render()}});
+document.addEventListener('input',e=>{if(e.target.id==='ciq'){CI.q=e.target.value;const pos=e.target.selectionStart;render();const x=$('#ciq');if(x){x.focus();x.setSelectionRange(pos,pos)}}});
+
 /* Dashboard home: the evening at a glance */
 function dinnerOverview(){
  const first=(ME.name||'there').split(' ')[0];
@@ -633,7 +695,7 @@ function dinnerOverview(){
    card('dinner','Tickets & Tables',money(sales.reduce((a,r)=>a+r.amount,0)),`${sales.length} purchases`)].join('');
  const go=(k,t,d)=>PERMS[k]?`<a class="kpi" data-go="${k}"><span class="label">${t}</span><span class="sub" style="font-size:.95rem;color:var(--ink)">${d}</span></a>`:'';
  const tools=[go('a_items','Auction Items','Add items, photos and premium Buy It Now; print bid sheets'),go('a_baskets','Donor Baskets','Baskets donors give or claim on the dinner page'),
-   go('a_run','Practice Auction','Run a fake auction and text your group the link'),go('a_live','Live Auction','Clerk screen for the auctioneer'),
+   go('a_run','Practice Auction','Run a fake auction and text your group the link'),go('checkin','Check-in & Bidder Numbers','Give guests and couples their bidder numbers as they arrive'),go('a_live','Live Auction','Clerk screen for the auctioneer'),
    go('a_raffles','Raffles & Big Screen','Record winners and reveal them on the LED walls'),go('a_pickup','Pickup','Hand out won items at the end of the night')].join('');
  return`<div class="ph"><div><span class="label">${greet()}</span><h1>Charity Dinner Dashboard</h1><p>Hi, ${esc(first)}. Everything for the ${CUR} Charity Dinner &amp; Auction lives here.</p></div></div>
  ${tiles?`<div class="kpis">${tiles}</div>`:''}${tools?`<div class="panel"><header><h2>Auction &amp; night of</h2></header><div class="kpis" style="padding:16px">${tools}</div></div>`:''}`}
