@@ -98,6 +98,7 @@ body.idle .hint{opacity:0}
 .gt-cap .big.on{opacity:1}
 .wrap{transition:opacity .55s ease}
 .wrap.out{opacity:0}
+.hold-logo{display:block;width:min(50vw,960px);height:auto;margin:3.4vh 0 .6vh;filter:drop-shadow(3px 5px 8px rgba(0,0,0,.85))}
 .hold-title{margin:1.6vh 0 0;font-family:Cinzel,serif;font-weight:500;font-size:clamp(40px,6.4vw,120px);line-height:1.04;letter-spacing:.06em;color:var(--gold);text-shadow:-1px -1px 0 rgba(255,240,210,.15),3px 4px 6px rgba(0,0,0,.9)}
 .hold-sub{margin:1.4vh 0 0;font-style:italic;font-size:clamp(20px,2.3vw,40px);color:var(--pewter)}
 .prizes{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.6vh 4vw;width:min(1300px,82vw);text-align:left}
@@ -228,10 +229,10 @@ function result(d){ if(isGolden(d)) return goldenResult(d); const w=d.winner; cl
     <div class="winner"><p class="congrats on">Congratulations</p><p class="name">${esc(w.name||"")}</p></div>`; }
 function holding(list){ clear(); running=false; shown=null; draw=null;
   const done=new Set((stage&&stage.done)||[]), ds=list.slice().sort((a,b)=>(a.data.no||0)-(b.data.no||0)).filter(x=>x.data.kind!=="golden"||x.data.prize);
-  app.innerHTML=`<p class="eyebrow">Charity Dinner &amp; Auction</p><h1 class="hold-title">Raffle Drawings</h1>
-    <p class="hold-sub">${ds.length?"Listen for your ticket number":"Good luck tonight"}</p><img class="div" src="masq/divider.svg" alt="">
-    ${ds.length?`<ul class="prizes${ds.length<=4?" one":""}">${ds.slice(0,14).map(x=>{ const w=x.data.winner, won=done.has(x.id)&&w&&w.ticket;
-      return `<li class="${won?"done":""}">${esc(x.data.prize||x.data.name)}${won?`<small>${esc(w.name||(x.data.kind==="golden"?"No. "+pad3(w.ticket):"Ticket #"+w.ticket))}</small>`:""}</li>`; }).join("")}</ul>`:""}`;
+  // The holding screen: just the logo, in the evening's black and gold
+  app.innerHTML=`<p class="eyebrow">Charity Dinner &amp; Auction</p>
+    <img class="hold-logo" src="masq/logo-gold.svg" alt="We Are Called to Care" width="778" height="188">
+    <img class="div" src="masq/divider.svg" alt="">`;
   holdSig=sig(list); }
 const sig=list=>JSON.stringify(list.map(x=>[x.id,x.data.prize,x.data.name,x.data.winner&&x.data.winner.ticket,x.data.winner&&x.data.winner.name]))+JSON.stringify((stage&&stage.done)||[]);
 let fadeT=0; function fade(fn){ if(PREVIEW||still){ fn(); return; } clearTimeout(fadeT); app.classList.add("out"); fadeT=setTimeout(()=>{ fn(); app.classList.remove("out"); },560); }
