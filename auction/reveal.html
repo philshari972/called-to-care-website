@@ -52,6 +52,9 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
   text-shadow:3px 4px 6px rgba(0,0,0,.9)}
 .name .s{color:rgba(221,182,90,.55)}
 .foot{position:fixed;left:0;right:0;bottom:5.4vmin;z-index:1;text-align:center;font-family:Cinzel,serif;font-size:clamp(11px,1vw,16px);letter-spacing:.36em;text-transform:uppercase;color:rgba(185,177,162,.7)}
+.status{position:fixed;left:5vmin;bottom:5vmin;z-index:2;font:13px/1.4 system-ui,sans-serif;color:var(--pewter);background:rgba(14,13,12,.85);border:1px solid rgba(221,182,90,.3);padding:8px 12px;max-width:46vw;transition:opacity .6s}
+.status.bad{color:#F3B4A8;border-color:rgba(243,180,168,.5)}
+body.idle .status:not(.bad){opacity:0}
 .hint{position:fixed;right:5vmin;top:5vmin;z-index:2;font:13px/1.4 system-ui,sans-serif;color:var(--pewter);background:rgba(14,13,12,.8);border:1px solid rgba(221,182,90,.3);padding:10px 14px;transition:opacity .6s}
 body.idle .hint{opacity:0}
 .pick{display:grid;gap:10px;margin-top:3vh;min-width:min(560px,80vw)}
@@ -59,6 +62,18 @@ body.idle .hint{opacity:0}
 .pick a:hover,.pick a:focus-visible{border-color:var(--gold);color:var(--gold-hi);outline:none}
 .pick small{display:block;font-family:'Cormorant Garamond',serif;font-style:italic;letter-spacing:0;color:var(--pewter);font-size:.8em}
 .msg{font-size:clamp(20px,2vw,30px);color:var(--pewter);font-style:italic}
+.wrap{transition:opacity .55s ease}
+.wrap.out{opacity:0}
+.hold-title{margin:1.6vh 0 0;font-family:Cinzel,serif;font-weight:500;font-size:clamp(40px,6.4vw,120px);line-height:1.04;letter-spacing:.06em;color:var(--gold);text-shadow:-1px -1px 0 rgba(255,240,210,.15),3px 4px 6px rgba(0,0,0,.9)}
+.hold-sub{margin:1.4vh 0 0;font-style:italic;font-size:clamp(20px,2.3vw,40px);color:var(--pewter)}
+.prizes{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.6vh 4vw;width:min(1300px,82vw);text-align:left}
+.prizes.one{grid-template-columns:1fr;width:min(800px,70vw)}
+.prizes li{display:flex;align-items:baseline;gap:1.2vw;border-bottom:1px solid rgba(221,182,90,.18);padding-bottom:1.1vh;font-family:Cinzel,serif;font-size:clamp(16px,1.7vw,32px);letter-spacing:.05em;color:var(--ivory)}
+.prizes li::before{content:"";flex:none;width:.5em;height:.5em;transform:rotate(45deg) translateY(-.1em);background:var(--gold)}
+.prizes li small{margin-left:auto;font-family:'Cormorant Garamond',serif;font-style:italic;letter-spacing:0;font-size:.85em;color:var(--gold-hi);white-space:nowrap}
+.prizes li.done{color:var(--pewter)}
+body.preview .hint,body.preview .status,body.preview .foot{display:none}
+body.preview{cursor:default}
 @media (prefers-reduced-motion:reduce){.slot.lock span,.slot.flash{animation:none}.label.wait{animation:none}}
 </style>
 </head>
@@ -73,7 +88,8 @@ body.idle .hint{opacity:0}
   <main class="wrap" id="app" aria-live="polite"><p class="msg">Loading…</p></main>
 </div>
 <p class="foot">We Are Called to Care · Charity Dinner &amp; Auction</p>
-<div class="hint" id="hint">Click for full screen · R to replay</div>
+<div class="hint" id="hint">Click for full screen · R to replay · Space to check now</div>
+<div class="status" id="status" hidden></div>
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
@@ -83,14 +99,17 @@ const $=id=>document.getElementById(id), app=$("app");
 const esc=v=>String(v??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const KINDS={raffle:"Raffle drawing",golden:"Golden Ticket drawing",bucket:"Bucket drawing"};
 const still=matchMedia("(prefers-reduced-motion: reduce)").matches;
-const id=new URLSearchParams(location.search).get("d");
-let sb=null, draw=null, shown=null, timers=[], scramble=null, running=false;
+const P=new URLSearchParams(location.search), id=P.get("d"), SHOW=P.has("show"), PREVIEW=P.has("preview");
+if(PREVIEW) document.body.classList.add("preview");
+let sb=null, draw=null, shown=null, timers=[], scramble=null, running=false, lastOk=0, fails=0;
+function status(t,bad){ const el=$("status"); el.hidden=!t; el.textContent=t||""; el.classList.toggle("bad",!!bad); }
 
 // ---------- idle cursor, full screen, replay ----------
 let idleT; const wake=()=>{ document.body.classList.remove("idle"); clearTimeout(idleT); idleT=setTimeout(()=>document.body.classList.add("idle"),2500); };
 ["mousemove","keydown","click"].forEach(e=>addEventListener(e,wake)); wake();
-addEventListener("click",e=>{ if(e.target.closest("a")) return; if(!document.fullscreenElement&&document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{}); });
-addEventListener("keydown",e=>{ if(e.key==="r"||e.key==="R"){ if(draw&&draw.data.winner){ shown=null; play(); } }
+addEventListener("click",e=>{ if(e.target.closest("a")||PREVIEW) return; if(!document.fullscreenElement&&document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{}); });
+addEventListener("keydown",e=>{ if(e.key==="r"||e.key==="R"){ if(draw&&draw.data.winner&&draw.data.winner.ticket){ shown=null; play(); } }
+  if(e.key===" "||e.key==="Enter"){ e.preventDefault(); SHOW?checkShow():check(); }
   if(e.key==="f"||e.key==="F"){ if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{}); } });
 
 // ---------- gold sparks ----------
@@ -115,8 +134,8 @@ function startScramble(){ clearInterval(scramble);
   scramble=setInterval(()=>{ document.querySelectorAll(".slot:not(.lock) span").forEach(s=>{ s.textContent=Math.floor(Math.random()*10); }); },still?400:55); }
 function waiting(d){ clear(); running=false; shown=null;
   app.innerHTML=`${header(d)}<p class="label wait">Drawing the winning ticket</p>${slotsHTML(4)}<div class="winner"></div>`; startScramble(); }
-function play(){ const d=draw.data, w=d.winner; clear(); running=true;
-  const digits=String(w.ticket).replace(/\D/g,"").split(""); shown=JSON.stringify(w);
+function play(){ const d=draw.data, w=d.winner; clear(); running=true; status("");
+  let digits=String(w.ticket).replace(/\D/g,"").split(""); if(!digits.length) digits=String(w.ticket).trim().toUpperCase().split("").slice(0,8); shown=JSON.stringify(w);
   app.innerHTML=`${header(d)}<p class="label">Winning ticket</p>${slotsHTML(digits.length||1)}
     <div class="winner"><p class="congrats" id="cg">Congratulations</p><p class="name" id="nm" aria-label="${esc(w.name||"")}"></p></div>`;
   startScramble();
@@ -136,9 +155,23 @@ function decodeName(name){ const el=$("nm"), A="ABCDEFGHIJKLMNOPQRSTUVWXYZ", up=
     el.innerHTML=esc(name.slice(0,locked))+[...up.slice(locked)].map(ch=>/\s/.test(ch)?ch:`<span class="s">${A[Math.floor(Math.random()*26)]}</span>`).join("");
     if(locked>=name.length){ clearInterval(iv); el.textContent=name; running=false; } },still?20:60);
   timers.push(setTimeout(()=>clearInterval(iv),20000)); }
+// The finished result, with no animation (used when the show screen is reloaded mid-event, or in the operator's preview).
+function result(d){ const w=d.winner; clear(); running=false; shown=JSON.stringify(w);
+  let digits=String(w.ticket).replace(/\D/g,"").split(""); if(!digits.length) digits=String(w.ticket).trim().toUpperCase().split("").slice(0,8);
+  app.innerHTML=`${header(d)}<p class="label">Winning ticket</p><div class="digits" id="digits">${digits.map(x=>`<div class="slot lock"><span style="animation:none">${esc(x)}</span></div>`).join("")}</div>
+    <div class="winner"><p class="congrats on">Congratulations</p><p class="name">${esc(w.name||"")}</p></div>`; }
+function holding(list){ clear(); running=false; shown=null; draw=null;
+  const done=new Set((stage&&stage.done)||[]), ds=list.slice().sort((a,b)=>(a.data.no||0)-(b.data.no||0)).filter(x=>x.data.kind!=="golden"||x.data.prize);
+  app.innerHTML=`<p class="eyebrow">Charity Dinner &amp; Auction</p><h1 class="hold-title">Raffle Drawings</h1>
+    <p class="hold-sub">${ds.length?"Listen for your ticket number":"Good luck tonight"}</p><img class="div" src="masq/divider.svg" alt="">
+    ${ds.length?`<ul class="prizes${ds.length<=4?" one":""}">${ds.slice(0,14).map(x=>{ const w=x.data.winner, won=done.has(x.id)&&w&&w.ticket;
+      return `<li class="${won?"done":""}">${esc(x.data.prize||x.data.name)}${won?`<small>${esc(w.name||"Ticket #"+w.ticket)}</small>`:""}</li>`; }).join("")}</ul>`:""}`;
+  holdSig=sig(list); }
+const sig=list=>JSON.stringify(list.map(x=>[x.id,x.data.prize,x.data.name,x.data.winner&&x.data.winner.ticket,x.data.winner&&x.data.winner.name]))+JSON.stringify((stage&&stage.done)||[]);
+let fadeT=0; function fade(fn){ if(PREVIEW||still){ fn(); return; } clearTimeout(fadeT); app.classList.add("out"); fadeT=setTimeout(()=>{ fn(); app.classList.remove("out"); },560); }
 function pickList(list){ clear();
   app.innerHTML=`<p class="eyebrow">Charity Dinner &amp; Auction</p><h1 class="prize">Winner reveal</h1><img class="div" src="masq/divider.svg" alt="">
-    ${list.length?`<p class="msg" style="margin:0">Choose a drawing to put on the screen.</p><div class="pick">${list.map(x=>`<a href="?d=${encodeURIComponent(x.id)}">${esc(x.data.prize||x.data.name)}<small>${esc(KINDS[x.data.kind]||"")}${x.data.name&&x.data.prize?` · ${esc(x.data.name)}`:""}${x.data.winner?" · winner recorded":""}</small></a>`).join("")}</div>`
+    ${list.length?`<p class="msg" style="margin:0">Choose a drawing to put on the screen.</p><div class="pick"><a href="?show=1">Show screen for the whole night<small>The auction admin's Raffles tab sends each reveal here</small></a>${list.map(x=>`<a href="?d=${encodeURIComponent(x.id)}">${esc(x.data.prize||x.data.name)}<small>${esc(KINDS[x.data.kind]||"")}${x.data.name&&x.data.prize?` · ${esc(x.data.name)}`:""}${x.data.winner?" · winner recorded":""}</small></a>`).join("")}</div>`
       :`<p class="msg">No drawings yet. Add them in the auction admin, under Raffles.</p>`}`; }
 function stop(msg){ clear(); app.innerHTML=`<p class="eyebrow">Charity Dinner &amp; Auction</p><p class="msg">${msg}</p>`; }
 
@@ -150,16 +183,58 @@ function apply(row){
   if(JSON.stringify(w)!==shown) play();
 }
 async function load(){ const {data,error}=await sb.from("drawings").select("*").eq("id",id).maybeSingle(); if(error) throw error; return data; }
+// Look for the winner now. Runs every two seconds, when the screen comes back into view, on Space, and the moment the admin saves.
+let checking=false;
+async function check(){ if(running||checking||!sb||!id) return; checking=true;
+  try{ const row=await load(); lastOk=Date.now(); fails=0; apply(row);
+    if(row&&!(row.data.winner&&row.data.winner.ticket)) status(`Watching “${row.data.prize||row.data.name}” · no winner recorded for this drawing yet`);
+    else status(""); }
+  catch(e){ fails++; if(fails>=3) status("Can't reach the auction right now. Check this computer's internet connection. Still trying…",true); }
+  finally{ checking=false; } }
+// ---------- show mode: one screen for the night, driven from the auction admin ----------
+let stage=null, stageN=undefined, holdSig="", list=[];
+async function loadShow(){
+  const [a,ds]=await Promise.all([sb.from("auction").select("settings").eq("id",1).maybeSingle(),sb.from("drawings").select("*")]);
+  if(a.error) throw a.error; if(ds.error) throw ds.error;
+  return {st:(a.data&&a.data.settings&&a.data.settings.stage)||null, list:ds.data||[]}; }
+function applyShow(r,first){
+  stage=r.st; list=r.list; const n=stage?stage.n:0, d=stage&&stage.d?list.find(x=>x.id===stage.d):null;
+  if(n!==stageN){ stageN=n;
+    if(!d) return first?holding(list):fade(()=>holding(list));
+    draw=d; const w=d.data.winner;
+    if(first) return w&&w.ticket?result(d.data):waiting(d.data);
+    return fade(()=>{ if(w&&w.ticket) play(); else waiting(d.data); });
+  }
+  if(!d){ if(!running&&sig(list)!==holdSig) holding(list); return; }
+  draw=d; const w=d.data.winner;
+  if(w&&w.ticket&&!running&&JSON.stringify(w)!==shown) play();
+  if((!w||!w.ticket)&&shown) waiting(d.data);
+}
+let showBusy=false;
+async function checkShow(){ if(showBusy) return; showBusy=true;
+  try{ applyShow(await loadShow(),false); fails=0; status(""); }
+  catch(e){ fails++; if(fails>=3&&!PREVIEW) status("Can't reach the auction right now. Check this computer's internet connection. Still trying…",true); }
+  finally{ showBusy=false; } }
+async function startShow(){
+  try{ applyShow(await loadShow(),true); }catch(e){ return stop("This screen couldn't load the drawings. Reload to try again."); }
+  setInterval(checkShow,1500);
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden) checkShow(); });
+  try{ sb.channel("show-"+Math.random().toString(36).slice(2)).on("postgres_changes",{event:"*",schema:"public",table:"auction"},()=>checkShow())
+    .on("postgres_changes",{event:"*",schema:"public",table:"drawings"},()=>checkShow()).subscribe(); }catch(e){}
+}
 async function start(){
   const cfg=window.AUCTION_CONFIG||{};
   if(!cfg.supabaseUrl||!window.supabase) return stop("This screen couldn't connect. Check the internet connection and reload.");
   sb=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey);
   let s=null; try{ s=(await sb.auth.getSession()).data.session; }catch(e){}
   if(!s){ const r=await sb.auth.signInAnonymously(); if(r.error) return stop("This screen couldn't sign in. Ask the auction team to check the setup."); }
+  if(SHOW) return startShow();
   if(!id){ try{ const {data}=await sb.from("drawings").select("*"); const l=(data||[]).sort((a,b)=>(a.data.no||0)-(b.data.no||0)); return pickList(l); }catch(e){ return stop("This screen couldn't load the drawings. Reload to try again."); } }
-  try{ apply(await load()); }catch(e){ return stop("This screen couldn't load the drawing. Reload to try again."); }
-  // Watch for the winner being recorded (or changed): a quick check every two seconds.
-  setInterval(async()=>{ if(running) return; try{ apply(await load()); }catch(e){} },2000);
+  try{ const row=await load(); apply(row); if(row&&!(row.data.winner&&row.data.winner.ticket)) status(`Watching “${row.data.prize||row.data.name}” · no winner recorded for this drawing yet`); }
+  catch(e){ return stop("This screen couldn't load the drawing. Reload to try again."); }
+  setInterval(check,2000);
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden) check(); });
+  try{ sb.channel("reveal-"+id).on("postgres_changes",{event:"*",schema:"public",table:"drawings",filter:"id=eq."+id},()=>check()).subscribe(); }catch(e){}
 }
 start();
 })();

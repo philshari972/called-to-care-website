@@ -581,7 +581,7 @@ let MODE=null, sb=null, myUid=null, isAdmin=false, canWrite=true, botHost=false;
 const clientId=rid();
 const S={meta:null,items:{},people:{},orders:{},anns:{},feedback:{},photos:{},catalog:{},config:null,donations:{},drawings:{},pools:{},maxes:[],hist:{}};
 let L={acting:null,watch:{},inbox:[],seenAnn:{},reminded:{}};
-const ui={view:"browse",sheet:null,cat:"all",filter:"all",sort:"closing",q:"",layout:"grid",err:"",confirm:null,aud:"all",ann:"",don:0,fee:true,card:"4242",paying:false,busy:false,resetConfirm:false,binConfirm:false,live:{},closing:{},lDur:10};
+const ui={view:"browse",sheet:null,cat:"all",filter:"all",sort:"closing",q:"",layout:"grid",err:"",confirm:null,aud:"all",ann:"",don:0,fee:true,card:"4242",paying:false,busy:false,resetConfirm:false,binConfirm:false,live:{},closing:{},lDur:60};
 const LKEY=()=>"ctc-auction-viewer-"+MODE;
 const saveL=()=>lsSet(LKEY(),L);
 const saveLocal=()=>{ if(MODE==="local") lsSet("ctc-auction-local-v2",S); };
@@ -776,15 +776,35 @@ function vRegister(){
    </form></div>`;
 }
 function vWaiting(){
-  return `<section class="sec hero"><span class="pill test">Committee test</span><h2>The test auction hasn't started yet</h2>
-    <p class="muted">${isAdmin?"Start a run when the committee is ready. Everyone with the link sees the same items, bids, and countdown.":"The organizer will start it shortly. This page updates on its own."}</p>
-    ${isAdmin?launchControls():""}</section>${isAdmin?publicCard():""}${peopleSec()}`;
+  return `<section class="sec hero"><span class="pill test">Fake auction</span><h2>${isAdmin?"Run a fake auction":"The practice auction hasn't started yet"}</h2>
+    <p class="muted">${isAdmin?"A practice run with only your own people: no simulated bidders. Start it, text your group the invite link below, and everyone sees the same items, bids, and countdown.":"The organizer will start it shortly. This page updates on its own."}</p>
+    ${isAdmin?launchControls():""}</section>${isAdmin?inviteCard()+publicCard():""}${peopleSec()}`;
 }
+const durLabel=m=>m>=1440?`${m/1440} day${m>1440?"s":""}`:m>=60?`${m/60} hour${m>60?"s":""}`:`${m} minute`+(m===1?"":"s");
 function launchControls(){
   return `<div class="row" style="align-items:flex-end;flex-wrap:wrap;width:100%">
-    <label class="field" style="flex:1 1 160px">Test length<select id="dur">${[5,10,20,30,60].map(m=>`<option value="${m}" ${ui.lDur===m?"selected":""}>${m} minutes</option>`).join("")}</select></label>
-    <button class="btn primary" type="button" data-act="launch" ${ui.busy?"disabled":""}>${ui.busy?"Starting…":"Launch test auction"}</button></div>`;
+    <label class="field" style="flex:1 1 160px">Bidding stays open for<select id="dur">${[10,20,30,60,120,240,1440,4320].map(m=>`<option value="${m}" ${ui.lDur===m?"selected":""}>${durLabel(m)}</option>`).join("")}</select></label>
+    <button class="btn primary" type="button" data-act="launch" ${ui.busy?"disabled":""}>${ui.busy?"Starting…":"Run Fake Auction"}</button></div>`;
 }
+// The link to text your group for a fake auction (it carries the private preview code)
+function inviteCard(){
+  if(ui.invite===undefined){ ui.invite=null; rpc("admin_invite_code").then(r=>{ ui.invite=r.err?{err:r.err}:{code:typeof r==="string"?r:r.data}; if(ui.view==="admin"||!items().length) render(); }); }
+  const v=ui.invite;
+  if(!v) return `<section class="sec"><h2>Invite your group</h2><p class="small muted" style="margin:0">Getting your link…</p></section>`;
+  if(v.err||!v.code) return `<section class="sec"><h2>Invite your group</h2><p class="small muted" style="margin:0">The invite link isn't set up yet. Run fake-auction.sql in Supabase, then reload this page.</p></section>`;
+  const url=`${cfg().siteUrl.replace(/\/$/,"")}/?preview=${encodeURIComponent(v.code)}`;
+  const msg=`You're invited to our practice auction for the We Are Called to Care Charity Dinner! Open this link, sign up with your name, bid on anything you like, and check out with the test card. It's all pretend, so no real money changes hands: ${url}`;
+  return `<section class="sec" style="border-color:var(--test)"><div class="row"><h2>Invite your group</h2><span class="pill test">Fake auction</span></div>
+    <p class="small muted" style="margin:0">Text this link to the people you want to practice with. They sign up with their name, bid, and pay with the test card at checkout. No real money changes hands and no real receipts go out. Only people with this link can get in.</p>
+    <div class="note mono small" style="word-break:break-all">${esc(url)}</div>
+    <div class="btnrow"><button class="btn small primary" type="button" data-act="invcopy">Copy invite message</button><button class="btn small" type="button" data-act="invlink">Copy link only</button><a class="btn small" style="text-decoration:none;color:inherit" href="sms:?&body=${encodeURIComponent(msg)}">Text it from this phone</a></div>
+    ${/^CHANGE-/.test(v.code)?`<p class="small" style="margin:0;color:var(--test)">This link still uses the starter preview code from setup, which isn't secret. That's fine for practice, but change the preview code in Supabase before your real auction.</p>`:""}
+  </section>`;
+}
+document.addEventListener("click",async e=>{ const el=e.target.closest('[data-act="invcopy"],[data-act="invlink"]'); if(!el||!ui.invite||!ui.invite.code) return;
+  const url=`${cfg().siteUrl.replace(/\/$/,"")}/?preview=${encodeURIComponent(ui.invite.code)}`;
+  const text=el.dataset.act==="invlink"?url:`You're invited to our practice auction for the We Are Called to Care Charity Dinner! Open this link, sign up with your name, bid on anything you like, and check out with the test card. It's all pretend, so no real money changes hands: ${url}`;
+  const label=el.textContent; try{ await navigator.clipboard.writeText(text); el.textContent="Copied"; setTimeout(()=>{ el.textContent=label; },1500); }catch(err){ prompt("Copy this:",text); } });
 function peopleSec(){
   const h=humans();
   return `<section class="sec"><div class="row"><h2>Who's joined</h2><span class="muted num">${h.length}</span></div>
@@ -875,9 +895,9 @@ function vMine(){
   return `
   <section class="sec">
     <div><div class="eyebrow">Bidding as</div><h2>${esc(u.name)} <span class="mono muted" style="font-size:15px">#${u.paddle}</span></h2></div>
-    <label class="field">Play as a simulated bidder (test only)
+    ${opts.length>1?`<label class="field">Play as a simulated bidder (test only)
       <select id="switchme">${opts.map(id=>{const p=person(id);return `<option value="${id}" ${id===me()?"selected":""}>${esc(p.name)} · #${p.paddle}${p.bot?" (simulated)":" (you)"}</option>`;}).join("")}</select></label>
-    <p class="small muted">Switch to a simulated bidder to watch automatic bidding from the other side. While you play one, it stops bidding on its own.</p>
+    <p class="small muted">Switch to a simulated bidder to watch automatic bidding from the other side. While you play one, it stops bidding on its own.</p>`:""}
   </section>
   ${sec("Winning",g.winning,"No items yet. Place a maximum bid to start.",()=>'<span class="pill win">Winning</span>')}
   ${sec("Outbid",g.outbid,"Nothing here. Good news.",()=>'<span class="pill out">Outbid</span>')}
@@ -912,8 +932,8 @@ function report(){
   const st=stats(), all=items(), sold=all.filter(i=>i.winner);
   const rev=runOrders().filter(o=>o.status==="paid").reduce((a,o)=>a+o.total,0);
   return [`CALLED TO CARE · TEST AUCTION REPORT (run ${run()})`,
-   `Started ${new Date(S.meta.launchedAt).toLocaleString()} · ${S.meta.dur} minute test`,
-   `Participants: ${humans().length} committee + ${BOTS.length} simulated`,
+   `Started ${new Date(S.meta.launchedAt).toLocaleString()} · ${durLabel(S.meta.dur)} fake auction`,
+   `Participants: ${humans().length} people${BOTS.filter(b=>S.people[b.id]).length?` + ${BOTS.filter(b=>S.people[b.id]).length} simulated`:""}`,
    `Bids placed: ${st.bids} · automatic bids: ${st.proxy}`,
    `Times someone was outbid: ${st.outbid} · soft-close extensions: ${st.ext}`,
    `Items closed: ${all.filter(i=>i.closed).length}/${all.length} · sold: ${sold.length}`,
@@ -1530,8 +1550,8 @@ function admRun(){
   return `
   ${publicCard()}
   <section class="sec" style="border-color:var(--test)">
-    <div class="row"><div><div class="eyebrow" style="color:var(--test)">Test auction · run ${run()}</div><h2>Committee rehearsal</h2></div>${pp}</div>
-    <p class="small muted" style="margin:0">An isolated copy of the event's ${all.length} items, ${API.where}. Nothing here touches real payments or real messages.</p>
+    <div class="row"><div><div class="eyebrow" style="color:var(--test)">Fake auction · run ${run()}</div><h2>Practice with your people</h2></div>${pp}</div>
+    <p class="small muted" style="margin:0">A practice copy of the event's ${all.length} items. Only the people you invite bid: no simulated bidders. Payments use a test card, so no real money or receipts.</p>
     <div class="btnrow">
       ${ph==="live"?'<button class="btn small" type="button" data-act="pause">Pause bidding</button>':ph==="paused"?'<button class="btn small primary" type="button" data-act="resume">Resume bidding</button>':""}
       ${open.length?'<button class="btn small" type="button" data-act="closeall">Close all items now</button>':""}
@@ -1539,10 +1559,11 @@ function admRun(){
       <button class="btn small" type="button" data-act="screen">Open big screen</button>
     </div>
     ${ui.resetConfirm?`<div class="note" style="color:var(--test)">Start a fresh run? All test bids, gifts, payments, pickups, and alerts from run ${run()} are left behind. Items, photos, settings, and feedback carry over.</div>
-      ${launchControls().replace('data-act="launch"','data-act="reset"').replace("Launch test auction","Yes, start a fresh run")}
+      ${launchControls().replace('data-act="launch"','data-act="reset"').replace("Run Fake Auction","Yes, start a new fake auction")}
       <button class="btn small" type="button" data-act="resetno">Cancel</button>`
-      :'<button class="btn small" type="button" data-act="resetask">Reset test auction</button>'}
+      :'<button class="btn small primary" type="button" data-act="resetask">Run a new fake auction</button>'}
   </section>
+  ${inviteCard()}
   <section class="sec"><h2>Live numbers</h2>
     <div class="stats">
       ${stat(money(raisedSoFar()),"Raised so far")}${stat(bidders,"Active bidders")}${stat(st.bids,"Bids placed")}
@@ -1552,7 +1573,6 @@ function admRun(){
   </section>
   ${peopleSec()}
   <section class="sec"><h2>Bidding settings</h2>
-    <label class="check"><input type="checkbox" id="botscb" ${set.bots?"checked":""}><span><b>Simulated committee bidders</b><br><span class="small muted">Sarah, Marcus, Dana, and Pastor Jim bid on their own so a small group still feels real competition.</span></span></label>
     <div class="row" style="flex-wrap:wrap;align-items:flex-end">
       <label class="field" style="flex:1 1 140px">Soft close: bids in the last<select id="softwin">${[30,60,120].map(v=>`<option value="${v}" ${set.softWin===v?"selected":""}>${v<120?v+" seconds":"2 minutes"}</option>`).join("")}</select></label>
       <label class="field" style="flex:1 1 140px">extend the item by<select id="softext">${[30,60,120].map(v=>`<option value="${v}" ${set.softExt===v?"selected":""}>${v<120?v+" seconds":"2 minutes"}</option>`).join("")}</select></label>
@@ -1567,11 +1587,26 @@ function admRun(){
     <div class="row"><span class="small muted num">Goes to ${audN} participant${audN===1?"":"s"} · in-app only</span><button class="btn small primary" type="button" data-act="send" ${audN&&ui.ann.trim()?"":"disabled"}>Send announcement</button></div>
   </section>`;
 }
+// The 10 sample items from setup (ids i1 to i10) can be hidden and brought back with one button.
+const SAMPLE_IDS=["i1","i2","i3","i4","i5","i6","i7","i8","i9","i10"];
+function sampleBtn(){
+  if(ui.sampleHidden===undefined){ ui.sampleHidden=0; rpc("admin_sample_items",{p_on:null}).then(r=>{ if(!r.err){ ui.sampleHidden=r.hidden||0; if(ui.view==="admin"&&ui.adm==="items") render(); } }); }
+  const showing=catList().filter(c=>SAMPLE_IDS.includes(c.id)).length;
+  if(showing) return `<button class="btn small" type="button" data-act="sampleoff">${ui.sampleAsk?"Tap again to hide them":`Hide the ${showing} sample item${showing===1?"":"s"}`}</button>`;
+  return ui.sampleHidden?`<button class="btn small" type="button" data-act="sampleon">Show the ${ui.sampleHidden} sample item${ui.sampleHidden===1?"":"s"} again</button>`:"";
+}
+document.addEventListener("click",async e=>{ const el=e.target.closest('[data-act="sampleoff"],[data-act="sampleon"]'); if(!el||!isAdmin) return;
+  const on=el.dataset.act==="sampleon";
+  if(!on&&!ui.sampleAsk){ ui.sampleAsk=true; render(); setTimeout(()=>{ if(ui.sampleAsk){ ui.sampleAsk=false; render(); } },4000); return; }
+  ui.sampleAsk=false; el.disabled=true; const r=await rpc("admin_sample_items",{p_on:on});
+  if(r.err){ el.disabled=false; toast(r.err,"outbid"); return; }
+  ui.sampleHidden=r.hidden||0; await loadCatalog(); await loadPhotos(); await refreshItems(); render();
+  toast(on?(r.skipped&&r.skipped.length?`Sample items are back, except #${r.skipped.join(", #")}: a real item uses that number now.`:"The sample items are back, with their photos."):"Sample items hidden. Bidders won't see them. Show them again any time.","info"); });
 function admItems(){
   const list=catList();
   return `<section class="sec">
     <div class="row"><h2>Items</h2><span class="muted num">${list.length}</span></div>
-    <div class="btnrow"><button class="btn small primary" type="button" data-act="edit">Add item</button><button class="btn small" type="button" data-act="import">Import spreadsheet</button>${list.length?`<button class="btn small" type="button" data-act="shopen">Print bid sheets</button>`:""}</div>
+    <div class="btnrow"><button class="btn small primary" type="button" data-act="edit">Add item</button><button class="btn small" type="button" data-act="import">Import spreadsheet</button>${list.length?`<button class="btn small" type="button" data-act="shopen">Print bid sheets</button>`:""}${sampleBtn()}</div>
     <div class="row small" style="flex-wrap:wrap;gap:8px"><span class="muted">Buy It Now is off for every item unless you make it premium. <b>${list.filter(c=>c.premium).length} of ${cfg().premiumMax}</b> premium spots used.</span>
       <label class="row" style="gap:6px">Limit<select id="premmax">${[1,2,3,4,5,6,8,10].map(n=>`<option value="${n}" ${cfg().premiumMax===n?"selected":""}>${n}</option>`).join("")}</select></label></div>
     <p class="small muted" style="margin:0">${list.filter(c=>photoCount(c.id)).length} of ${list.length} items have photos. Changes to titles, values and descriptions show up for everyone right away.</p>
@@ -1976,6 +2011,46 @@ function drLookup(d){
 }
 function drPaddleLine(){ const p=String(ui.drPaddle||"").replace(/\D/g,""); if(!p) return ""; const u=byPaddle(p); return u?`<span class="okc">#${p} · ${esc(S.people[u].name)}</span>`:`<span class="muted">No bidder #${p} in the system yet.</span>`; }
 
+/* ---------- Big screen show: one full-screen page on the LED walls, run from here ---------- */
+const showUrl=()=>`${cfg().siteUrl.replace(/\/$/,"")}/reveal.html?show=1`;
+const stageNow=()=>(S.auSettings&&S.auSettings.stage)||{d:null,n:0,done:[]};
+let PV=null;   // the preview frame is kept alive between redraws so it never reloads
+function showControl(l){
+  const st=stageNow(), on=st.d?l.find(d=>d.id===st.d):null, done=new Set(st.done||[]);
+  const k=Math.min(560,Math.max(260,window.innerWidth-90))/1920;
+  return `<section class="sec" style="border-color:#B8902F">
+    <div class="row"><div><div class="eyebrow">Big screen show</div><h2>${on?`On screen: ${esc(on.prize||on.name)}`:"On screen: holding screen"}</h2></div>${on?'<span class="pill win">Showing a winner</span>':'<span class="pill closed">Holding</span>'}</div>
+    <p class="small muted" style="margin:0">Open the show screen once on the computer that feeds the LED walls and click it to go full screen. Then run every drawing from here: tap <b>Reveal</b> and the big screen fades straight into it. No switching windows, no reloading.</p>
+    <div class="btnrow"><a class="btn small primary" style="text-decoration:none" href="${esc(showUrl())}" target="_blank" rel="noopener">Open show screen</a><button class="btn small" type="button" data-act="showcopy">Copy show screen link</button>
+      <button class="btn small" type="button" data-act="showhold" ${on?"":"disabled"}>Back to holding screen</button></div>
+    <div style="display:grid;gap:6px"><span class="small muted">What the big screen shows right now</span>
+      <div id="showpv" style="width:${Math.round(1920*k)}px;height:${Math.round(1080*k)}px;max-width:100%;overflow:hidden;position:relative;border:1px solid var(--line);border-radius:8px;background:#0E0D0C" data-k="${k}"></div></div>
+    ${l.length?`<div class="rows">${l.map(d=>{ const w=d.winner, live=on&&on.id===d.id;
+      return `<div class="row" style="flex-wrap:wrap;gap:8px"><div><b>${esc(d.prize||d.name)}</b>${d.prize&&d.name!==d.prize?` <span class="small muted">${esc(d.name)}</span>`:""}
+        <div class="small ${w?"okc":"muted"}">${w?`Ticket #${esc(w.ticket)}${w.name?` · ${esc(w.name)}`:""}${done.has(d.id)?" · revealed":""}`:"Record the winner below first"}</div></div>
+        <div class="btnrow">${live?'<span class="pill win">On screen</span>':""}<button class="btn small ${live?"":"primary"}" type="button" data-act="showgo" data-id="${d.id}" ${w?"":"disabled"}>${live?"Reveal again":done.has(d.id)?"Reveal again":"Reveal"}</button></div></div>`; }).join("")}</div>`:""}
+  </section>`;
+}
+// The preview frame lives outside the page content (moving an iframe reloads it), and is laid over its spot after each redraw.
+function mountPreview(){
+  const box=document.getElementById("showpv");
+  if(!box){ if(PV) PV.style.display="none"; return; }
+  const k=+box.dataset.k, r=box.getBoundingClientRect();
+  if(!PV){ PV=document.createElement("iframe"); PV.title="Big screen preview"; PV.src="reveal.html?show=1&preview=1";   // same site as this page, so the browser allows the frame PV.setAttribute("tabindex","-1"); PV.setAttribute("aria-hidden","true");
+    PV.style.cssText="position:absolute;width:1920px;height:1080px;border:0;transform-origin:0 0;pointer-events:none;z-index:1;border-radius:8px";
+    document.body.appendChild(PV); setInterval(()=>{ if(PV.style.display!=="none") mountPreview(); },400); addEventListener("resize",mountPreview); }
+  PV.style.display=document.querySelector(".overlay")?"none":"block";
+  PV.style.left=(r.left+scrollX)+"px"; PV.style.top=(r.top+scrollY)+"px"; PV.style.transform=`scale(${Math.min(k,r.width/1920)})`;
+}
+document.addEventListener("click",async e=>{ const el=e.target.closest('[data-act="showgo"],[data-act="showhold"],[data-act="showcopy"]'); if(!el||!isAdmin) return;
+  const a=el.dataset.act, st=stageNow();
+  if(a==="showcopy"){ try{ await navigator.clipboard.writeText(showUrl()); el.textContent="Copied"; setTimeout(()=>{ el.textContent="Copy show screen link"; },1500); }catch(err){ prompt("Copy this link:",showUrl()); } return; }
+  const next=a==="showgo"?{d:el.dataset.id,n:Date.now(),done:[...new Set([...(st.done||[]),el.dataset.id])]}:{d:null,n:Date.now(),done:st.done||[]};
+  el.disabled=true; const r=await rpc("admin_settings",{p:{stage:next}}); el.disabled=false;
+  if(r.err){ toast(r.err,"outbid"); return; }
+  S.auSettings={...(S.auSettings||{}),stage:next}; render();
+  if(a==="showgo"){ const d=S.drawings[el.dataset.id]; toast(`Revealing ${d?(d.prize||d.name):"the winner"} on the big screen.`,"win"); }
+});
 const revealUrl=d=>`${cfg().siteUrl.replace(/\/$/,"")}/reveal.html?d=${encodeURIComponent(d.id)}`;
 function admRaffles(){
   const l=drawList(), cur=currentDraw();
@@ -2014,10 +2089,10 @@ function admRaffles(){
     </section>`;
   }
   const group=k=>l.filter(d=>d.kind===k);
-  return `${card}
+  return `${showControl(l)}${card}
   <section class="sec"><div class="row"><h2>Drawings</h2><span class="muted num small">${l.filter(d=>d.winner).length} of ${l.length} drawn</span></div>
     <div class="btnrow"><button class="btn small primary" type="button" data-act="dredit">Add drawing</button><button class="btn small" type="button" data-act="drbuckets">Add buckets from a list</button></div>
-    ${l.length?["golden","raffle","bucket"].filter(k=>group(k).length).map(k=>`<div class="eyebrow" style="margin-top:4px">${DRAW_KINDS[k]}${k==="bucket"?"s":""}</div><div class="rows">${group(k).map(d=>`<div class="row"><div><b>${esc(d.name)}</b><div class="small ${d.winner?"okc":"muted"}">${d.winner?`Ticket #${esc(d.winner.ticket)}${d.winner.name?` · ${esc(d.winner.name)}`:""}`:esc(d.prize||"Not drawn yet")}</div></div>${cur&&d.id===cur.id?'<span class="pill win">Current</span>':`<button class="btn small" type="button" data-act="drsel" data-id="${d.id}">Select</button>`}</div>`).join("")}</div>`).join("")
+    ${l.length?["golden","raffle","bucket"].filter(k=>group(k).length).map(k=>`<div class="eyebrow" style="margin-top:4px">${DRAW_KINDS[k]}${k==="bucket"?"s":""}</div><div class="rows">${group(k).map(d=>`<div class="row"><div><b>${esc(d.name)}</b><div class="small ${d.winner?"okc":"muted"}">${d.winner?`Ticket #${esc(d.winner.ticket)}${d.winner.name?` · ${esc(d.winner.name)}`:""}`:esc(d.prize||"Not drawn yet")}</div></div><div class="btnrow" style="flex-wrap:nowrap"><a class="btn small" style="text-decoration:none;color:inherit" href="${esc(revealUrl(d))}" target="_blank" rel="noopener" title="Open this drawing's reveal screen">Reveal</a>${cur&&d.id===cur.id?'<span class="pill win">Current</span>':`<button class="btn small" type="button" data-act="drsel" data-id="${d.id}">Select</button>`}</div></div>`).join("")}</div>`).join("")
       :`<p class="small muted" style="margin:0">Add your raffle, the Golden Ticket drawing, and each bucket prize. Then record winners here as tickets are pulled.</p>`}
   </section>
   <section class="sec"><h2>Ticket lists</h2>
@@ -2203,6 +2278,7 @@ function render(){
   v.innerHTML=({browse:vBrowse,mine:vMine,alerts:vAlerts,checkout:vCheckout,admin:vAdmin})[ui.view]();
   restore(v,keep); renderNav();
   if(ui.sheet&&document.querySelector(".sheet")) renderSheet();
+  mountPreview();
   tick();
 }
 function renderHeader(){
@@ -2623,7 +2699,7 @@ function mapItem(row){
     maxes:S.maxes.filter(m=>m.item_id===row.id).map(m=>({u:m.uid,max:m.max,t:Number(m.t),bid:m.bid||0}))};
 }
 async function loadMeta(){
-  const a=(await q("auction",t=>t.select("*").eq("id",1)))[0];
+  const a=(await q("auction",t=>t.select("*").eq("id",1)))[0]; S.auSettings=(a&&a.settings)||{};
   S.meta=a&&a.phase!=="none"?{run:a.run,phase:a.phase,pausedAt:a.paused_at?Number(a.paused_at):null,launchedAt:Number(a.launched_at),dur:a.dur,settings:a.settings,liveLot:a.live_lot||null,drawing:a.drawing||null}:null;
 }
 let gotItems=false, gotAnns=false;
