@@ -97,6 +97,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 .side .foot a:hover,.side .foot button:hover{color:#fff}
 
 .main{min-width:0;display:flex;flex-direction:column}
+.auwrap{flex:1;display:flex;min-height:calc(100vh - 64px)}
+.auwrap iframe{flex:1;width:100%;border:0;min-height:calc(100vh - 64px);background:var(--bg)}
+body.dash .side .brand .label{color:#E7C66B}
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:12px max(24px,env(safe-area-inset-right,0px)) 12px 28px}
 .top .crumb{color:var(--muted);font-size:.85rem}
 .top .spacer{flex:1}
@@ -305,7 +308,7 @@ td.selc,th.selc{width:36px;padding-right:0}.selc input{width:18px;height:18px;cu
 <!-- ============ APP ============ -->
 <div id="app" hidden>
   <aside class="side" id="side">
-    <div class="brand"><img src="/assets/logo-white.png" alt="We Are Called to Care" width="778" height="189"><span class="label">Admin</span></div>
+    <div class="brand"><img src="/assets/logo-white.png" alt="We Are Called to Care" width="778" height="189"><span class="label" id="brandLabel">Admin</span></div>
     <div class="me" id="me"></div>
     <nav class="nav" id="nav" aria-label="Admin sections"></nav>
     <div class="foot">
@@ -321,6 +324,7 @@ td.selc,th.selc{width:36px;padding-right:0}.selc input{width:18px;height:18px;cu
       <button class="btn ghost" type="button" id="refresh" title="Load the latest">Refresh</button>
     </div>
     <div class="content" id="content"></div>
+    <div class="auwrap" id="auwrap" hidden></div>
   </div>
 </div>
 
@@ -373,6 +377,31 @@ const SECTIONS={
  users:{title:'Users & Roles',group:'Admin',icon:'key'},
  settings:{title:'Settings',group:'Admin',icon:'gear'}
 };
+/* ---------------- Charity Dinner Dashboard ----------------
+   The same sign-in and staff roles as the admin, showing only what belongs to the dinner.
+   Opens at dashboard.wearecalledtocare.com, or wearecalledtocare.com/dashboard. */
+const DASH=location.hostname.startsWith('dashboard.')||new URLSearchParams(location.search).has('dashboard');
+const DASH_URL=location.hostname.startsWith('dashboard.')?'/admin/':'/admin/?dashboard=1';
+const AUCTION_ORIGIN='https://auction.wearecalledtocare.com';
+// Auction screens, shown inside the dashboard: [title, menu group, icon, auction tab]
+const A_TABS={a_items:['Auction Items','Auction','gavel','items'],a_baskets:['Donor Baskets','Auction','heart','baskets'],a_run:['Run a Practice Auction','Auction','gavel','run'],a_setup:['Auction Setup','Auction','gear','setup'],
+  a_live:['Live Auction','Night Of','gavel','live'],a_raffles:['Raffles & Big Screen','Night Of','star','raffles'],a_pickup:['Pickup','Night Of','ticket','pickup'],a_reports:['Auction Reports','Results','grid','reports']};
+(function(){
+  const keep=k=>SECTIONS[k];
+  if(DASH){ const n={dashboard:{title:'Overview',group:'Charity Dinner',icon:'grid'},
+      sponsors:{...keep('sponsors'),group:'Guests & Sponsors'},dinner:{...keep('dinner'),group:'Guests & Sponsors'}};
+    Object.entries(A_TABS).forEach(([k,[t,g,i]])=>n[k]={title:t,group:g,icon:i});
+    Object.keys(SECTIONS).forEach(k=>delete SECTIONS[k]); Object.assign(SECTIONS,n);
+    document.body.classList.add('dash'); document.title='Charity Dinner Dashboard · We Are Called to Care'; }
+  else { const n={}; Object.entries(SECTIONS).forEach(([k,v])=>{ if(['dinner','sponsors','auction'].includes(k)) return; n[k]=v;
+      if(k==='emaillist') n.cdd={title:'Charity Dinner Dashboard',group:'Charity Dinner',icon:'star',href:DASH_URL}; });
+    Object.keys(SECTIONS).forEach(k=>delete SECTIONS[k]); Object.assign(SECTIONS,n); }
+})();
+if(DASH){ const bl=document.getElementById('brandLabel'); if(bl) bl.textContent='Charity Dinner Dashboard';
+  const lh=document.querySelector('.login-art h1'); if(lh) lh.innerHTML='Charity Dinner <em>Dashboard</em>';
+  const lp=document.querySelector('.login-art p'); if(lp) lp.textContent='Sponsors, guests, tickets, the auction, raffles and every night-of screen, with the same sign-in as the admin.';
+  const ln=document.querySelector('.login-art .note'); if(ln) ln.textContent=location.hostname.startsWith('dashboard.')?'dashboard.wearecalledtocare.com':'wearecalledtocare.com/dashboard';
+  const ft=document.querySelector('.side .foot'); if(ft) ft.insertAdjacentHTML('afterbegin','<a href="/admin/">Main admin ↗</a>'); }
 const FORM_OF={support:'support',placements:'placement',christmas:'christmas',camp:'camp',volunteers:'volunteer',messages:'message'};
 
 /* ---------------- helpers ---------------- */
@@ -413,7 +442,7 @@ async function sendLink(){
  const em=$('#li-email').value.trim().toLowerCase();
  if(!/^\S+@\S+\.\S+$/.test(em)){$('#li-err').textContent='Enter your email address.';return}
  $('#li-err').textContent='';const b=$('#li-btn');b.disabled=true;b.textContent='Sending…';
- const {error}=await SB.auth.signInWithOtp({email:em,options:{emailRedirectTo:location.origin+'/admin/',shouldCreateUser:true}});
+ const {error}=await SB.auth.signInWithOtp({email:em,options:{emailRedirectTo:location.origin+'/admin/'+(DASH&&!location.hostname.startsWith('dashboard.')?'?dashboard=1':''),shouldCreateUser:true}});
  b.disabled=false;b.textContent='Email Me a Sign-In Link';
  if(error){$('#li-err').textContent=/rate|seconds/i.test(error.message)?'Please wait a minute before asking for another link.':error.message;return}
  $('#li-to').textContent=em;$('#li-ask').hidden=true;$('#li-sent').hidden=false;
@@ -422,13 +451,15 @@ $('#loginForm').addEventListener('submit',e=>{e.preventDefault();sendLink()});
 $('#li-again').addEventListener('click',e=>{e.preventDefault();$('#li-ask').hidden=false;$('#li-sent').hidden=true});
 
 async function start(session){
- if(location.hash.includes('access_token'))history.replaceState(null,'',location.pathname);
+ if(location.hash.includes('access_token'))history.replaceState(null,'',location.pathname+location.search);
  const {data,error}=await SB.rpc('me');
  if(error||!data){
   $('#li-ask').hidden=false;$('#li-sent').hidden=true;
   $('#li-err').innerHTML=`<b>${esc(session.user.email)}</b> isn't set up for admin access${data===null?'':' right now'}. Ask an Owner to add you under Users &amp; Roles, then sign in again.`;
   await SB.auth.signOut();ME=null;return}
  ME=data;PERMS={dashboard:'view',...data.perms};
+ Object.keys(A_TABS).forEach(k=>{ if(PERMS.auction) PERMS[k]=PERMS.auction; });
+ if(PERMS.dinner||PERMS.sponsors||PERMS.auction) PERMS.cdd='view';
  const r=await SB.from('roles').select('*');(r.data||[]).forEach(x=>ROLES[x.key]={name:x.name,desc:x.description,perms:x.perms});
  $('#login').hidden=true;$('#app').hidden=false;
  await loadAll();renderShell();
@@ -561,7 +592,7 @@ function counts(k){const rows=DATA[k];if(!rows||CFG[k]?.noStatusEdit)return 0;re
 function renderShell(){
  $('#me').innerHTML=`<div class="avatar">${esc(initials(ME.name||ME.email))}</div><div style="min-width:0"><b>${esc(ME.name||ME.email)}</b>${roleChips(ME.roles)}</div>`;
  const groups={};Object.entries(SECTIONS).forEach(([k,s])=>{if(PERMS[k]){(groups[s.group]=groups[s.group]||[]).push(k)}});
- $('#nav').innerHTML=Object.entries(groups).map(([g,ks])=>`<div class="nav-group"><span class="label">${g}</span>${ks.map(k=>{const c=counts(k);return`<a href="#${k}" data-go="${k}">${ic(SECTIONS[k].icon)}<span>${SECTIONS[k].title}</span>${c?`<span class="count">${c}</span>`:''}</a>`}).join('')}</div>`).join('');
+ $('#nav').innerHTML=Object.entries(groups).map(([g,ks])=>`<div class="nav-group"><span class="label">${g}</span>${ks.map(k=>{const c=counts(k);if(SECTIONS[k].href)return`<a href="${SECTIONS[k].href}">${ic(SECTIONS[k].icon)}<span>${SECTIONS[k].title}</span></a>`;return`<a href="#${k}" data-go="${k}">${ic(SECTIONS[k].icon)}<span>${SECTIONS[k].title}</span>${c?`<span class="count">${c}</span>`:''}</a>`}).join('')}</div>`).join('');
 }
 $('#nav').addEventListener('click',e=>{const a=e.target.closest('[data-go]');if(!a)return;e.preventDefault();go(a.dataset.go)});
 $('#menuToggle').addEventListener('click',()=>{$('#side').classList.add('open');const sh=document.createElement('div');sh.className='shade';sh.id='shade';sh.onclick=closeSide;document.body.appendChild(sh)});
@@ -573,8 +604,39 @@ function go(k){if(!PERMS[k])k='dashboard';VIEW=k;Q='';SF='all';closeSide();
  history.replaceState(null,'','#'+k);markNav();
  $('#crumb').textContent=(SECTIONS[k].group==='Overview'?'':SECTIONS[k].group+' / ')+SECTIONS[k].title;render();window.scrollTo(0,0)}
 function render(){const c=$('#content');
- const pages={dashboard,sponsors:sponsorsPage,auction:auctionPage,events:eventsPage,users:usersPage,settings:settingsPage};
+ if(A_TABS[VIEW]){c.hidden=true;c.innerHTML='';showAuction(A_TABS[VIEW][3]);return}
+ c.hidden=false;$('#auwrap').hidden=true;
+ const pages={dashboard:DASH?dinnerOverview:dashboard,sponsors:sponsorsPage,auction:auctionPage,events:eventsPage,users:usersPage,settings:settingsPage};
  c.innerHTML=pages[VIEW]?pages[VIEW]():listPage(VIEW)}
+
+/* The auction's admin screens, inside the dashboard. One frame stays open, so switching screens is instant. */
+let AUF=null, AUTAB='items', AUREADY=false;
+async function showAuction(tab){
+ AUTAB=tab;const w=$('#auwrap');w.hidden=false;
+ if(AUF){ if(AUREADY) AUF.contentWindow.postMessage({c2c:'tab',tab},AUCTION_ORIGIN); return; }
+ w.innerHTML='<p class="note" style="padding:28px">Opening the auction tools…</p>';
+ const r=await SB.rpc('auction_admin_link');
+ if(r.error||!r.data){ w.innerHTML=`<div class="content"><div class="panel"><div style="padding:20px">${r.error&&/permission|Only/i.test(r.error.message)?'You need edit access to the Auction to use these screens. Ask an Owner to add the Auction Admin role.':'The auction tools could not open. Ask Phil to run auction-admin-link.sql in Supabase.'}</div></div></div>`; return; }
+ AUF=document.createElement('iframe'); AUF.title='Auction tools'; AUF.allow='clipboard-write';
+ AUF.src=`${AUCTION_ORIGIN}/?embed=1&tab=${encodeURIComponent(tab)}&preview=${encodeURIComponent(r.data.preview)}#admin=${encodeURIComponent(r.data.admin)}&n=${encodeURIComponent((ME&&ME.name)||'')}`;
+ AUF.addEventListener('load',()=>{ AUREADY=true; setTimeout(()=>AUF.contentWindow.postMessage({c2c:'tab',tab:AUTAB},AUCTION_ORIGIN),400); });
+ w.innerHTML=''; w.appendChild(AUF);
+}
+
+/* Dashboard home: the evening at a glance */
+function dinnerOverview(){
+ const first=(ME.name||'there').split(' ')[0];
+ const com=(DIN&&DIN.spons||[]).filter(s=>s.year===CUR&&COUNTS_AS(s.status));
+ const sales=(DATA.dinner||[]).filter(r=>r.status==='Paid');
+ const card=(k,label,big,sub)=>PERMS[k]?`<a class="kpi" data-go="${k}"><span class="label">${label}</span><span class="big">${big}</span><span class="sub">${sub}</span></a>`:'';
+ const tiles=[card('sponsors',`${CUR} Sponsors`,money(com.reduce((a,s)=>a+s.amount,0)),`${com.length} committed`),
+   card('dinner','Tickets & Tables',money(sales.reduce((a,r)=>a+r.amount,0)),`${sales.length} purchases`)].join('');
+ const go=(k,t,d)=>PERMS[k]?`<a class="kpi" data-go="${k}"><span class="label">${t}</span><span class="sub" style="font-size:.95rem;color:var(--ink)">${d}</span></a>`:'';
+ const tools=[go('a_items','Auction Items','Add items, photos and premium Buy It Now; print bid sheets'),go('a_baskets','Donor Baskets','Baskets donors give or claim on the dinner page'),
+   go('a_run','Practice Auction','Run a fake auction and text your group the link'),go('a_live','Live Auction','Clerk screen for the auctioneer'),
+   go('a_raffles','Raffles & Big Screen','Record winners and reveal them on the LED walls'),go('a_pickup','Pickup','Hand out won items at the end of the night')].join('');
+ return`<div class="ph"><div><span class="label">${greet()}</span><h1>Charity Dinner Dashboard</h1><p>Hi, ${esc(first)}. Everything for the ${CUR} Charity Dinner &amp; Auction lives here.</p></div></div>
+ ${tiles?`<div class="kpis">${tiles}</div>`:''}${tools?`<div class="panel"><header><h2>Auction &amp; night of</h2></header><div class="kpis" style="padding:16px">${tools}</div></div>`:''}`}
 
 /* ---------------- dashboard ---------------- */
 function greet(){const h=NOW().getHours();return h<12?'Good morning':h<17?'Good afternoon':'Good evening'}
@@ -585,7 +647,7 @@ function snPanel(){const sn=nextSN();if(!sn||!DATA.support)return'';const d=D(sn
  <div class="bars">${BANDS.map((b,i)=>`<div class="bar"><span>${b}</span><i><b style="width:${cnt[i]/mx*100}%"></b></i><span class="num">${cnt[i]} <small style="color:var(--muted)">· ${workers(kids).per[i]} vol.</small></span></div>`).join('')}${other?`<p class="note">${other} child${other>1?'ren':''} with no age given</p>`:''}</div></div></div>`}
 function dashboard(){
  const first=(ME.name||'there').split(' ')[0];const ym=monthKey(NOW());
- const ks=Object.keys(CFG).filter(k=>PERMS[k]&&DATA[k]);
+ const ks=Object.keys(CFG).filter(k=>SECTIONS[k]&&PERMS[k]&&DATA[k]);
  const kpis=ks.map(k=>{const rows=DATA[k];const n=counts(k);const thisM=rows.filter(r=>monthKey(r.created)===ym).length;
   let big=rows.length,sub=n?`<b>${n} new</b> · ${thisM} this month`:`${thisM} this month`;
   if(['dinner','payments','donations'].includes(k)){const paid=rows.filter(r=>r.status==='Paid');big=money(paid.reduce((s,r)=>s+r.amount,0));sub=`${paid.length} ${k==='donations'?'gifts':k==='dinner'?'purchases':'payments'}`}
@@ -596,7 +658,7 @@ function dashboard(){
  const spK=PERMS.sponsors?(()=>{const com=DIN.spons.filter(s=>s.year===CUR&&COUNTS_AS(s.status));return`<a class="kpi" data-go="sponsors"><span class="label">${CUR} Sponsors</span><span class="big">${money(com.reduce((a,s)=>a+s.amount,0))}</span><span class="sub">${com.length} committed</span></a>`})():'';
  const attn=ks.filter(k=>!CFG[k].noStatusEdit).flatMap(k=>DATA[k].filter(r=>r.status==='New').map(r=>({k,r}))).sort((a,b)=>b.r.created-a.r.created).slice(0,8);
  const feed=attn.length?`<ul class="feed">${attn.map(({k,r})=>`<li data-open="${k}:${r.id}"><span class="avatar" style="width:34px;height:34px;font-size:.8rem;background:var(--sky-pale);color:var(--teal)">${ic(SECTIONS[k].icon).replace('<svg','<svg width="17" height="17"')}</span><span class="what"><b>${esc(r.youth||r.name)}</b><span>${SECTIONS[k].title} · ${fmtDT(r.created)}</span></span>${pill('New')}</li>`).join('')}</ul>`:`<p class="empty">You're all caught up.</p>`;
- const side=PERMS.support?snPanel():PERMS.auction?`<div class="panel"><header><h2>Auction night</h2></header><div class="sn"><p class="note">The auction runs on its own site with its own tools.</p><a class="btn primary" data-go="auction" style="justify-self:start">Open auction tools</a></div></div>`:'';
+ const side=PERMS.support?snPanel():PERMS.auction?`<div class="panel"><header><h2>Auction night</h2></header><div class="sn"><p class="note">Sponsors, tickets, the auction and the night-of screens now live in the Charity Dinner Dashboard.</p><a class="btn primary" href="${DASH_URL}" style="justify-self:start">Open the dashboard</a></div></div>`:'';
  return`<div class="ph"><div><span class="label">${greet()}</span><h1>Hi, ${esc(first)}</h1><p>Here's what's happening in the areas you can see.</p></div></div>
  ${kpis||spK?`<div class="kpis">${kpis}${spK}</div>`:''}
  <div class="grid2">${ks.some(k=>!CFG[k].noStatusEdit)?`<div class="panel"><header><h2>Needs attention</h2></header>${feed}</div>`:''}${side}</div>`}

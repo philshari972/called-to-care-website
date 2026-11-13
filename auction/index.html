@@ -504,6 +504,11 @@ body.wide .nav-in{max-width:760px}
 body.wide .list .grid{grid-template-columns:1fr}
 @media (min-width:1180px){ body.wide .list .grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
 .toasts{top:calc(env(safe-area-inset-top,0px) + 120px)}
+/* Inside the Charity Dinner Dashboard: no bidder header, menus or tab row; the dashboard's menu picks the tab */
+body.embed .top,body.embed #nav,body.embed .adm-tabs{display:none!important}
+body.embed main{padding-top:0}
+body.embed .wrap{padding-top:16px}
+body.embed .toasts{top:16px}
 </style>
 <div class="top">
   <div class="banner" role="status">
@@ -543,6 +548,12 @@ body.wide .list .grid{grid-template-columns:1fr}
 "use strict";
 /* ---------- Event catalog: the items copied into each test run ---------- */
 const CATS={travel:"Travel",dining:"Dining",sports:"Sports",home:"Home",kids:"Kids",exp:"Experiences"};
+// Shown inside the Charity Dinner Dashboard (an iframe on wearecalledtocare.com or dashboard.wearecalledtocare.com)
+const EMBED=new URLSearchParams(location.search).has("embed")&&window.top!==window;
+const DASH_ORIGIN=o=>/^https:\/\/((dashboard|www)\.)?wearecalledtocare\.com$/.test(o)||/^http:\/\/localhost(:\d+)?$/.test(o);
+if(EMBED){ document.body.classList.add("embed");
+  addEventListener("message",e=>{ if(!DASH_ORIGIN(e.origin)||!e.data||e.data.c2c!=="tab") return;
+    ui.embedTab=String(e.data.tab||"items"); if(isAdmin){ ui.view="admin"; ui.adm=ui.embedTab; closeSheet&&closeSheet(); render(); window.scrollTo(0,0); } }); }
 let CATALOG=[];
 const BOTS=[
  {id:"bot-sarah",name:"Sarah K.",paddle:912,bot:true},
@@ -2811,7 +2822,9 @@ async function start(){
   loadL(); if(!L.acting) L.acting=myUid;
   await loadAll(); listen(); botLease();
   // Admins coming from the website admin skip the bidder sign-up and land on the admin screens (Items first when no test is running).
-  if(ui.adminLink&&isAdmin){ if(!items().length) ui.adm="items"; if(!registered()) await register(adminName||"Auction Admin"); else { ui.view="admin"; render(); } }
+  if(ui.adminLink&&isAdmin){ if(!items().length) ui.adm="items"; if(EMBED) ui.adm=ui.embedTab||new URLSearchParams(location.search).get("tab")||ui.adm;
+    if(!registered()) await register(adminName||"Auction Admin"); else { ui.view="admin"; render(); } }
+  if(EMBED&&isAdmin&&registered()){ ui.view="admin"; render(); }
   openPending();
   setInterval(()=>{ refreshItems(); loadMeta().then(render).catch(()=>{}); },20000);  // safety net if live updates drop
 }

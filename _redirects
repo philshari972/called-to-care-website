@@ -3,6 +3,9 @@ https://auction.wearecalledtocare.com/config.js  /.netlify/functions/auction-con
 https://auction.wearecalledtocare.com/*  /auction/:splat  200!
 /auction/config.js  /.netlify/functions/auction-config  200!
 /admin  /admin/  301
+# Charity Dinner Dashboard: dashboard.wearecalledtocare.com (and wearecalledtocare.com/dashboard) open the admin in dashboard mode
+https://dashboard.wearecalledtocare.com/  https://dashboard.wearecalledtocare.com/admin/  301!
+/dashboard  /admin/?dashboard=1  302
 # Old Amazon wish list address
 /amazon  https://www.amazon.com/hz/wishlist/ls/38RK52RW3Q2M9  301
 # keep project files private (only the website is public)

@@ -4,7 +4,8 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options = "SAMEORIGIN"
+    # Only our own sites may show these pages in a frame (the Charity Dinner Dashboard shows the auction tools this way)
+    Content-Security-Policy = "frame-ancestors 'self' https://wearecalledtocare.com https://www.wearecalledtocare.com https://dashboard.wearecalledtocare.com"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
