@@ -73,19 +73,19 @@ body.idle .hint{opacity:0}
 .gt-face.back{background:repeating-linear-gradient(45deg,#3B2E12 0 14px,#2E2410 14px 28px);display:grid;place-items:center}
 .gt-face.back::after{content:"";position:absolute;inset:4%;border:2px solid rgba(240,213,140,.45);border-radius:1vw}
 .gt-face.back b{font-family:Cinzel,serif;font-weight:600;font-size:clamp(28px,3.6vw,68px);letter-spacing:.3em;color:#C9A24A;text-shadow:0 2px 0 #1a1408}
-.gt-face.front{transform:rotateY(180deg);display:grid;grid-template-columns:1fr 23%;
+.gt-face.front{transform:rotateY(180deg);display:grid;grid-template-columns:1fr 31%;
   background:linear-gradient(115deg,#8A6420 0%,#E9C46A 18%,#FFF0B8 30%,#D9AE4C 44%,#9C7426 60%,#F2D27A 76%,#B8892E 100%)}
 .gt-face.front::before{content:"";position:absolute;inset:3.5%;border:2px solid rgba(70,48,10,.55);border-radius:.9vw;pointer-events:none}
 .gt-sheen{position:absolute;inset:-20%;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.75) 50%,transparent 60%);transform:translateX(-120%);pointer-events:none}
 .gt.shine .gt-sheen{animation:sheen 1.4s ease-in-out}
 @keyframes sheen{to{transform:translateX(120%)}}
 .gt-main{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:.6vw;color:#3A2808;text-align:center;padding:0 3vw}
-.gt-main .k{font-family:Cinzel,serif;font-weight:600;font-size:clamp(14px,1.25vw,24px);letter-spacing:.42em;text-transform:uppercase;color:#5A3F0E}
+.gt-main .k{font-family:Cinzel,serif;font-weight:600;font-size:clamp(12px,1.05vw,20px);letter-spacing:.3em;white-space:nowrap;text-transform:uppercase;color:#5A3F0E}
 .gt-main .t{font-family:Cinzel,serif;font-weight:700;font-size:clamp(30px,3.7vw,70px);letter-spacing:.08em;line-height:1;color:#2E1F05;text-shadow:0 1px 0 rgba(255,240,190,.7)}
 .gt-main .e{font-style:italic;font-size:clamp(16px,1.5vw,28px);color:#4A340C}
 .gt-stub{border-left:3px dashed rgba(58,40,8,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4vw;color:#2E1F05}
 .gt-stub .k{font-family:Cinzel,serif;font-size:clamp(11px,.95vw,18px);letter-spacing:.3em;color:#5A3F0E}
-.gt-no{font-family:Cinzel,serif;font-weight:700;font-size:clamp(60px,7.4vw,150px);line-height:1;font-variant-numeric:tabular-nums;color:#2A1B03;text-shadow:0 2px 0 rgba(255,244,200,.8),0 -1px 0 rgba(60,40,0,.4)}
+.gt-no{font-family:Cinzel,serif;font-weight:700;font-size:clamp(50px,5.8vw,118px);letter-spacing:.04em;line-height:1;font-variant-numeric:tabular-nums;color:#2A1B03;text-shadow:0 2px 0 rgba(255,244,200,.8),0 -1px 0 rgba(60,40,0,.4)}
 .gt-no.roll{filter:blur(1.2px);opacity:.75}
 .gt-no.land{animation:land .8s cubic-bezier(.2,1.6,.4,1) both}
 /* the glow sits on the face (a filter on the ticket itself would flatten the 3D turn) */
@@ -169,6 +169,7 @@ function startScramble(){ clearInterval(scramble);
 
 // ---------- Golden Ticket: a 7-second reveal of a number from 1 to 100 ----------
 const isGolden=d=>d&&d.kind==="golden";
+const pad3=t=>String(t||"").replace(/\D/g,"").padStart(3,"0");   // Golden Ticket 7 shows as 007
 // What the screen shows; adding a bidder # later does not replay the reveal
 const wkey=w=>w?JSON.stringify(isGolden(draw&&draw.data)?[String(w.ticket||"")]:[String(w.ticket||""),String(w.name||"")]):null;
 function gtHTML(d,no,flipped){ return `<p class="eyebrow">Golden Ticket Drawing</p>
@@ -181,21 +182,21 @@ function gtHTML(d,no,flipped){ return `<p class="eyebrow">Golden Ticket Drawing<
   <div class="gt-cap"><p class="label" id="gtlbl" style="opacity:0;transition:opacity .8s">The winning Golden Ticket</p><p class="big" id="gtbig"></p></div>`; }
 function goldenWaiting(d){ clear(); running=false; shown=null; app.innerHTML=gtHTML(d,"?",false).replace("Golden Ticket Drawing","Golden Ticket Drawing · drawing now"); }
 function goldenResult(d){ const w=d.winner; clear(); running=false; shown=wkey(w);
-  app.innerHTML=gtHTML(d,String(w.ticket),true); $("gtlbl").style.opacity=1; const b=$("gtbig"); b.textContent=`Ticket No. ${w.ticket}`; b.classList.add("on"); }
-function goldenPlay(){ const d=draw.data, w=d.winner, n=String(w.ticket).trim(); clear(); running=true; status(""); shown=wkey(w);
+  app.innerHTML=gtHTML(d,pad3(w.ticket),true); $("gtlbl").style.opacity=1; const b=$("gtbig"); b.textContent=`Golden Ticket No. ${pad3(w.ticket)}`; b.classList.add("on"); }
+function goldenPlay(){ const d=draw.data, w=d.winner, n=pad3(w.ticket); clear(); running=true; status(""); shown=wkey(w);
   app.innerHTML=gtHTML(d,"",false); const gt=$("gt"), no=$("gtno");
-  if(still){ gt.classList.add("flip"); no.textContent=n; $("gtlbl").style.opacity=1; $("gtbig").textContent=`Ticket No. ${n}`; $("gtbig").classList.add("on"); running=false; return; }
+  if(still){ gt.classList.add("flip"); no.textContent=n; $("gtlbl").style.opacity=1; $("gtbig").textContent=`Golden Ticket No. ${n}`; $("gtbig").classList.add("on"); running=false; return; }
   gt.classList.add("enter");                                         // 0.0s  the ticket rises out of the dark
   later(1300,()=>{ gt.classList.remove("enter"); gt.classList.add("flip"); });   // 1.3s  it turns over
   later(1900,()=>gt.classList.add("shine"));                         // 1.9s  a light passes across the foil
   // 2.0s to 6.0s: the number spins, slowing down the whole time
   let t=2000, step=45; no.classList.add("roll");
-  while(t<5900){ later(t,()=>{ no.textContent=1+Math.floor(Math.random()*100); }); t+=step; step=Math.min(step*1.085,520); }
+  while(t<5900){ later(t,()=>{ no.textContent=pad3(1+Math.floor(Math.random()*100)); }); t+=step; step=Math.min(step*1.085,520); }
   later(6000,()=>{ no.classList.remove("roll"); no.textContent=n; no.classList.add("land"); gt.classList.remove("shine"); void gt.offsetWidth; gt.classList.add("shine","won");
     const r=no.getBoundingClientRect(); burst(r.left+r.width/2,r.top+r.height/2,120,9);
     const ring=document.createElement("div"); ring.className="ring"; ring.style.left=(r.left+r.width/2)+"px"; ring.style.top=(r.top+r.height/2)+"px"; document.body.appendChild(ring); setTimeout(()=>ring.remove(),1600); });
   later(6600,()=>{ $("gtlbl").style.opacity=1; const r=gt.getBoundingClientRect(); burst(r.left+r.width*.15,r.top+r.height*.2,70,8); burst(r.left+r.width*.85,r.top+r.height*.2,70,8); });
-  later(7000,()=>{ const b=$("gtbig"); b.textContent=`Ticket No. ${n}`; b.classList.add("on"); running=false; });
+  later(7000,()=>{ const b=$("gtbig"); b.textContent=`Golden Ticket No. ${n}`; b.classList.add("on"); running=false; });
 }
 function waiting(d){ if(isGolden(d)) return goldenWaiting(d); clear(); running=false; shown=null;
   app.innerHTML=`${header(d)}<p class="label wait">Drawing the winning ticket</p>${slotsHTML(4)}<div class="winner"></div>`; startScramble(); }
@@ -230,7 +231,7 @@ function holding(list){ clear(); running=false; shown=null; draw=null;
   app.innerHTML=`<p class="eyebrow">Charity Dinner &amp; Auction</p><h1 class="hold-title">Raffle Drawings</h1>
     <p class="hold-sub">${ds.length?"Listen for your ticket number":"Good luck tonight"}</p><img class="div" src="masq/divider.svg" alt="">
     ${ds.length?`<ul class="prizes${ds.length<=4?" one":""}">${ds.slice(0,14).map(x=>{ const w=x.data.winner, won=done.has(x.id)&&w&&w.ticket;
-      return `<li class="${won?"done":""}">${esc(x.data.prize||x.data.name)}${won?`<small>${esc(w.name||"Ticket #"+w.ticket)}</small>`:""}</li>`; }).join("")}</ul>`:""}`;
+      return `<li class="${won?"done":""}">${esc(x.data.prize||x.data.name)}${won?`<small>${esc(w.name||(x.data.kind==="golden"?"No. "+pad3(w.ticket):"Ticket #"+w.ticket))}</small>`:""}</li>`; }).join("")}</ul>`:""}`;
   holdSig=sig(list); }
 const sig=list=>JSON.stringify(list.map(x=>[x.id,x.data.prize,x.data.name,x.data.winner&&x.data.winner.ticket,x.data.winner&&x.data.winner.name]))+JSON.stringify((stage&&stage.done)||[]);
 let fadeT=0; function fade(fn){ if(PREVIEW||still){ fn(); return; } clearTimeout(fadeT); app.classList.add("out"); fadeT=setTimeout(()=>{ fn(); app.classList.remove("out"); },560); }

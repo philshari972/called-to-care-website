@@ -2009,6 +2009,9 @@ document.addEventListener("input",e=>{
    Raffles, Golden Tickets and bucket prizes (drawn by hand, recorded here)
    ===================================================================== */
 const DRAW_KINDS={raffle:"Raffle",golden:"Golden Ticket",bucket:"Bucket prize"};
+const gtNo=t=>String(t||"").replace(/\D/g,"").padStart(3,"0");          // Golden Ticket 7 shows as 007
+// A fair random whole number from 1 to 100 (crypto, no bias)
+function gtRandom(){ const a=new Uint32Array(1); let x; do{ crypto.getRandomValues(a); x=a[0]; }while(x>=4294967200); return 1+(x%100); }
 const drawList=()=>Object.values(S.drawings||{}).sort((a,b)=>(a.kind===b.kind?0:a.kind==="golden"?-1:b.kind==="golden"?1:a.kind==="raffle"?-1:1)||a.no-b.no||a.name.localeCompare(b.name));
 const poolFor=kind=>kind==="golden"?"golden":kind==="raffle"?"raffle":null;
 function poolRows(pool){ return ((S.pools||{})[pool]||{}).rows||[]; }
@@ -2044,7 +2047,7 @@ function showControl(l){
       <div id="showpv" style="width:${Math.round(1920*k)}px;height:${Math.round(1080*k)}px;max-width:100%;overflow:hidden;position:relative;border:1px solid var(--line);border-radius:8px;background:#0E0D0C" data-k="${k}"></div></div>
     ${l.length?`<div class="rows">${l.map(d=>{ const w=d.winner, live=on&&on.id===d.id;
       return `<div class="row" style="flex-wrap:wrap;gap:8px"><div><b>${esc(d.prize||d.name)}</b>${d.prize&&d.name!==d.prize?` <span class="small muted">${esc(d.name)}</span>`:""}
-        <div class="small ${w?"okc":"muted"}">${w?`Ticket #${esc(w.ticket)}${w.name?` · ${esc(w.name)}`:""}${done.has(d.id)?" · revealed":""}`:"Record the winner below first"}</div></div>
+        <div class="small ${w?"okc":"muted"}">${w?`${d.kind==="golden"?`Golden Ticket No. ${gtNo(w.ticket)}`:`Ticket #${esc(w.ticket)}`}${w.name?` · ${esc(w.name)}`:""}${done.has(d.id)?" · revealed":""}`:"Record the winner below first"}</div></div>
         <div class="btnrow">${live?'<span class="pill win">On screen</span>':""}<button class="btn small ${live?"":"primary"}" type="button" data-act="showgo" data-id="${d.id}" ${w?"":"disabled"}>${live?"Reveal again":done.has(d.id)?"Reveal again":"Reveal"}</button></div></div>`; }).join("")}</div>`:""}
   </section>`;
 }
@@ -2081,17 +2084,22 @@ function admRaffles(){
       <div class="row"><div><div class="eyebrow">${DRAW_KINDS[cur.kind]} drawing</div><h2>${esc(cur.name)}</h2></div><button class="btn small" type="button" data-act="dredit" data-id="${cur.id}">Edit</button></div>
       <div class="small"><b>Prize:</b> ${esc(cur.prize||"—")}${cur.value?` · value ${money(cur.value)}`:""}</div>
       ${w2g(cur)?`<div class="note small"><b>Tax form may be needed.</b> A prize worth ${money(cur.value)} may require IRS Form W-2G. Your treasurer will collect the winner's details privately; don't enter them here.</div>`:""}
-      ${w?`<div class="status win" style="font-size:16px">Winner: Ticket #${esc(w.ticket)}${w.name?` · ${esc(w.name)}`:""}${w.paddle?` (Bidder #${w.paddle})`:""}</div>
+      ${w?`<div class="status win" style="font-size:16px">Winner: ${cur.kind==="golden"?`Golden Ticket No. ${gtNo(w.ticket)}`:`Ticket #${esc(w.ticket)}`}${w.name?` · ${esc(w.name)}`:""}${w.paddle?` (Bidder #${w.paddle})`:""}</div>
         ${cur.kind==="golden"?(lot?`<div class="note">Chose <b>Lot ${lot.no} · ${esc(lot.title)}</b>. It's out of the live auction and marked as theirs.</div><button class="btn small" type="button" data-act="drunlot">Undo lot choice</button>`
-          :!w.paddle?`<div class="note small" style="display:grid;gap:8px"><span><b>Who has Golden Ticket No. ${esc(w.ticket)}?</b> When the winner comes forward, enter their bidder # so their prize is tracked for pickup.</span>
-              <div class="row" style="gap:8px;flex-wrap:wrap"><input id="dr-gpaddle" inputmode="numeric" autocomplete="off" placeholder="Bidder #" style="max-width:140px"><button class="btn small primary" type="button" data-act="drgpaddle" data-id="${cur.id}">Save bidder #</button></div>
-              <span id="dr-gmatch" class="small muted"></span></div>`
+          :!w.paddle?`<div class="note small" style="display:grid;gap:8px"><span><b>Who has Golden Ticket No. ${gtNo(w.ticket)}?</b> When the winner comes forward, enter their name and bidder #, then pick the live lot they choose. That lot comes out of the live auction.</span>
+              <div class="row" style="gap:8px;flex-wrap:wrap"><input id="dr-gname" autocomplete="off" placeholder="Winner's name" style="flex:1 1 200px"><input id="dr-gpaddle" inputmode="numeric" autocomplete="off" placeholder="Bidder #" style="max-width:130px"><button class="btn small primary" type="button" data-act="drgpaddle" data-id="${cur.id}">Save winner</button></div></div>`
           :openLots.length?`<label class="field">Which live lot did they choose?<select id="dr-lot">${openLots.map(x=>`<option value="${x.id}">Lot ${x.no} · ${esc(x.title)} (value ${money(x.value)})</option>`).join("")}</select></label>
             <button class="btn primary" type="button" data-act="drlot">Give them this lot</button>`
           :`<div class="note small">No open live lots to choose from.</div>`):""}
         ${ui.drUndo===cur.id?`<div class="note" style="color:var(--test)">Remove this winner? Use this if the ticket was entered wrong or you need to redraw.</div>
           <div class="btnrow"><button class="btn danger" type="button" data-act="drundoyes" style="flex:1">Yes, remove winner</button><button class="btn" type="button" data-act="drundono">Keep</button></div>`
           :`<div class="btnrow">${(()=>{ const nx=l.find(x=>!x.winner&&x.id!==cur.id); return nx?`<button class="btn primary" type="button" data-act="drsel" data-id="${nx.id}" style="flex:1">Next: ${esc(nx.name)}</button>`:""; })()}<button class="btn" type="button" data-act="drundo">${cur.lot?"Remove winner":"Redraw"}</button></div>`}`
+      :cur.kind==="golden"?(ui.drConfirm?`<div class="note" style="text-align:center"><div class="eyebrow">The computer picked</div><div style="font-family:var(--f-display);font-size:64px;font-weight:800;letter-spacing:.08em">${gtNo(ui.drConfirm.ticket)}</div>
+            <div class="small">Golden Ticket No. ${gtNo(ui.drConfirm.ticket)}. Save it, then tap Reveal in the Big screen show above. To keep it fair, a number can't be picked again once it's shown.</div></div>
+          <div class="btnrow"><button class="btn primary" type="button" data-act="drconfirm" style="flex:1" ${ui.busy?"disabled":""}>Save this number</button><button class="btn" type="button" data-act="drchange">Cancel</button></div>`
+        :`<p class="small muted" style="margin:0">The winning Golden Ticket is picked at random from 1 to 100. After the reveal, add the winner's name and the live lot they choose.</p>
+          <button class="btn primary block" type="button" data-act="gtpick" style="font-size:18px;padding:16px">Pick the winning Golden Ticket</button>
+          ${ui.drErr?`<div class="err" role="alert">${esc(ui.drErr)}</div>`:""}`)
       :`<label class="field">Ticket # drawn<input id="dr-ticket" inputmode="numeric" autocomplete="off" placeholder="e.g. 1042" value="${esc(ui.drTicket||"")}" style="font-size:28px;font-weight:800;font-family:var(--f-display)"></label>
         <div id="dr-match" class="small" aria-live="polite">${m.html}</div>
         <label class="field">Winner's name <span class="hint">optional; shows on the reveal screen</span><input id="dr-name" autocomplete="off" placeholder="${m.row?esc(m.row.name):"Name on the ticket"}" value="${esc(ui.drName||"")}"></label>
@@ -2115,8 +2123,8 @@ function admRaffles(){
       :`<p class="small muted" style="margin:0">Add your raffle, the Golden Ticket drawing, and each bucket prize. Then record winners here as tickets are pulled.</p>`}
   </section>
   <section class="sec"><h2>Ticket lists</h2>
-    <p class="small muted" style="margin:0">Import the presale spreadsheets so the buyer's name appears when a ticket number is entered. Only ticket numbers, names, bidder numbers and amounts are kept.</p>
-    ${[["raffle","Raffle",rs],["golden","Golden Tickets",gs]].map(([k,lab,st])=>`<div class="row"><div><b>${lab}</b><div class="small muted num">${st.tickets?`${st.tickets} tickets · ${st.buyers} buyers${st.amount?` · ${money(st.amount)} sold`:""}`:"No list imported"}</div></div><button class="btn small" type="button" data-act="poolimp" data-v="${k}">${st.tickets?"Replace list":"Import list"}</button></div>`).join("")}
+    <p class="small muted" style="margin:0">Import the raffle presale list so the buyer's name appears when a ticket number is drawn. Golden Tickets don't need a list: the winning number is picked at random and you add the name after. Only ticket numbers, names, bidder numbers and amounts are kept.</p>
+    ${[["raffle","Raffle",rs]].map(([k,lab,st])=>`<div class="row"><div><b>${lab}</b><div class="small muted num">${st.tickets?`${st.tickets} tickets · ${st.buyers} buyers${st.amount?` · ${money(st.amount)} sold`:""}`:"No list imported"}</div></div><button class="btn small" type="button" data-act="poolimp" data-v="${k}">${st.tickets?"Replace list":"Import list"}</button></div>`).join("")}
   </section>
   ${l.some(d=>d.winner)?`<section class="sec"><h2>Rehearsal</h2><p class="small muted" style="margin:0">Clear all recorded winners after a practice run. Drawings and ticket lists stay.</p>
     ${ui.drClear?`<div class="btnrow"><button class="btn danger" type="button" data-act="drclearyes" style="flex:1">Clear all winners</button><button class="btn" type="button" data-act="drclearno">Cancel</button></div>`:`<button class="btn small" type="button" data-act="drclear">Clear all winners</button>`}</section>`:""}`;
@@ -2240,11 +2248,13 @@ document.addEventListener("click",async e=>{
       ui.drErr=!ticket?"Enter the ticket number you drew.":d.kind==="golden"&&!/^\d{1,3}$/.test(ticket)?"Golden Tickets are numbered 1 to 100. Enter just the number.":"";
       if(!ui.drErr) ui.drConfirm={ticket,name,paddle}; render(); break; }
     case "drchange": ui.drConfirm=null; render(); break;
+    case "gtpick": { ui.drConfirm={ticket:String(gtRandom()),name:"",paddle:null}; ui.drErr=""; render(); break; }
     case "drgpaddle": { const d=S.drawings[id], v=(document.getElementById("dr-gpaddle")||{}).value||"", pd=Number(v.trim()); if(!d||!d.winner) break;
       const pp=Object.values(S.people).find(x=>x.paddle===pd);
       if(!pd||!pp){ toast(pd?`No bidder has #${pd}. Check the number on their bidder card.`:"Enter the winner's bidder #.","outbid"); break; }
-      el.disabled=true; const r=await API.saveDrawing({...d,winner:{...d.winner,paddle:pd,name:d.winner.name||pp.name}}); el.disabled=false;
-      if(r&&r.err){ toast(r.err,"outbid"); break; } toast(`Golden Ticket No. ${d.winner.ticket} belongs to ${pp.name} (#${pd}). Now pick the lot they chose.`,"win"); render(); break; }
+      const gn=((document.getElementById("dr-gname")||{}).value||"").trim()||pp.name;
+      el.disabled=true; const r=await API.saveDrawing({...d,winner:{...d.winner,paddle:pd,uid:byPaddle(pd),name:gn}}); el.disabled=false;
+      if(r&&r.err){ toast(r.err,"outbid"); break; } toast(`Golden Ticket No. ${gtNo(d.winner.ticket)} belongs to ${gn} (#${pd}). Now pick the lot they chose.`,"win"); render(); break; }
     case "drreveal": { const d=S.drawings[id]; if(!d) break; const url=revealUrl(d);
       try{ await navigator.clipboard.writeText(url); el.textContent="Copied"; setTimeout(()=>{ el.textContent="Copy reveal link"; },1500); }catch(err){ prompt("Copy this link:",url); } break; }
     case "drconfirm": { const d=currentDraw(), c=ui.drConfirm; if(!c) break;
@@ -2821,7 +2831,7 @@ async function start(){
   }
   myUid=session.user.id;
   // A phone that joined with a bidder number from check-in bids as that number (a couple can share one)
-  try{ const {data,error}=await sb.rpc("me_bidder"); if(!error&&data) myUid=String(data); }catch(e){}
+  try{ const {data,error}=await sb.rpc("me_bidder"); if(!error&&typeof data==="string"&&data) myUid=data; }catch(e){}
   try{ const t0=Date.now(); const {data}=await sb.rpc("server_now"); const t1=Date.now(); if(data) OFFSET=Number(data)-(t0+t1)/2; }catch(e){}
   // Private preview link: ?preview=CODE unlocks this device before the auction goes live
   const pv=new URLSearchParams(location.search).get("preview");
