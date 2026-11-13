@@ -509,6 +509,20 @@ body.embed .top,body.embed #nav,body.embed .adm-tabs{display:none!important}
 body.embed main{padding-top:0}
 body.embed .wrap{padding-top:16px}
 body.embed .toasts{top:16px}
+/* Golden Ticket launch and restart cards */
+.gtl{display:grid;gap:12px;padding:20px;border-radius:16px;background:linear-gradient(120deg,#2A2010,#4A3712 45%,#2A2010);color:#F7EBC8;border:1px solid #B8902F}
+.gtl h3{margin:0;font-family:var(--f-display);font-size:22px;color:#F0D58C;letter-spacing:.02em}
+.gtl p{margin:0;color:#E6D9B5;font-size:14px}
+.gtl .go{appearance:none;border:0;border-radius:12px;padding:18px 20px;font:800 19px/1.1 var(--f-display);letter-spacing:.03em;color:#2A1B03;cursor:pointer;
+  background:linear-gradient(115deg,#B8892E,#F2D27A 35%,#FFF0B8 50%,#E2B85A 65%,#B8892E);box-shadow:0 8px 24px -10px #000,inset 0 1px 0 rgba(255,255,255,.6)}
+.gtl .go:hover{filter:brightness(1.06)}
+.gtl .go:disabled{opacity:.6;cursor:default}
+.gtl .num{font:800 54px/1 var(--f-display);letter-spacing:.08em;color:#FFE9A8}
+.rs-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.rs-card{border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:8px;align-content:start;background:var(--surface)}
+.rs-card b{font-size:16px}
+.rs-card.ask{border-color:var(--test);box-shadow:0 0 0 3px color-mix(in srgb,var(--test) 18%,transparent)}
+.rs-undo{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:12px;background:var(--win-bg);color:var(--win);font-weight:600}
 </style>
 <div class="top">
   <div class="banner" role="status">
@@ -2031,6 +2045,103 @@ function drLookup(d){
 }
 function drPaddleLine(){ const p=String(ui.drPaddle||"").replace(/\D/g,""); if(!p) return ""; const u=byPaddle(p); return u?`<span class="okc">#${p} · ${esc(S.people[u].name)}</span>`:`<span class="muted">No bidder #${p} in the system yet.</span>`; }
 
+/* ---------- Golden Ticket: one tap picks a hidden random number and reveals it on the big screen ---------- */
+const clearDrawForm=()=>{ ui.drTicket=""; ui.drName=""; ui.drPaddle=""; ui.drErr=""; ui.drConfirm=null; ui.drUndo=null; };
+function gtLaunchCard(l){
+  const g=l.find(d=>d.kind==="golden"), w=g&&g.winner, busy=ui.gtBusy, revealing=w&&ui.gtRevealUntil>Date.now();
+  if(!w) return `<div class="gtl"><h3>Golden Ticket</h3><p>One tap picks a random number from 1 to 100 and reveals it on the big screen right away. Nobody sees the number first. Make sure the show screen is up.</p>
+    <button class="go" type="button" data-act="gtlaunch" ${busy?"disabled":""}>${busy?"Launching…":"Launch Golden Ticket Selection"}</button></div>`;
+  return `<div class="gtl"><h3>Golden Ticket</h3>${revealing?`<p>Revealing on the big screen now…</p>`:`<div class="num">No. ${gtNo(w.ticket)}</div>
+    <p>${w.paddle?`Won by ${esc(w.name||"")} (#${w.paddle})${g.lot?` · chose Lot ${esc((item(g.lot)||{}).no||"")}`:" · pick their lot in the Golden Ticket card below"}`:"Add the winner's name and bidder # in the Golden Ticket card below, then the lot they choose."}</p>`}
+    <p style="font-size:12px;opacity:.8">To draw again, use Restart drawings at the bottom of this page.</p></div>`;
+}
+async function launchGolden(){
+  if(ui.gtBusy) return; ui.gtBusy=true; render();
+  try{
+    let g=drawList().find(d=>d.kind==="golden");
+    if(!g){ const r0=await API.saveDrawing({id:"dgolden",kind:"golden",no:0,name:"Golden Ticket",prize:"Choice of any live auction lot",value:0,price:100}); if(r0&&r0.err) throw new Error(r0.err); g=S.drawings.dgolden; }
+    if(g.winner){ toast("The Golden Ticket has already been drawn. Restart it at the bottom of this page to draw again.","outbid"); return; }
+    ui.gtRevealUntil=Date.now()+9000;   // keep the number off this screen until the big screen has shown it
+    const r=await API.saveDrawing({...g,winner:{ticket:String(gtRandom()),name:"",paddle:null,uid:null,t:now()}}); if(r&&r.err) throw new Error(r.err);
+    const st=stageNow(), next={d:g.id,n:Date.now(),done:[...new Set([...(st.done||[]),g.id])]};
+    const r2=await rpc("admin_settings",{p:{stage:next}}); if(r2&&r2.err) throw new Error(r2.err);
+    S.auSettings={...(S.auSettings||{}),stage:next}; ui.draw=g.id; clearDrawForm(); ui.gtRevealUntil=Date.now()+7500; setTimeout(()=>render(),7700);
+    toast("The Golden Ticket is being revealed on the big screen.","win");
+  }catch(e){ toast(e.message||"The Golden Ticket couldn't launch. Try again.","outbid"); }
+  finally{ ui.gtBusy=false; render(); }
+}
+
+/* ---------- Restart drawings: clear winners for one kind, or all, with confirm and undo ---------- */
+const RESTART_LABEL=k=>k==="delbuckets"?"Bucket drawings removed":(RESTART[k]?RESTART[k][0]+" restarted":"Drawings restarted");
+const RESTART={bucket:["Bucket prizes","Clears every bucket winner so you can draw them again."],golden:["Golden Ticket","Clears the Golden Ticket number and gives back any lot it took."],
+  raffle:["Raffle","Clears the raffle winner so you can draw again."],all:["All drawings","Clears every winner: buckets, Golden Ticket and raffle."]};
+const inRestart=(k,d)=>k==="all"||d.kind===k;
+function restartSec(l){
+  if(!l.length) return "";
+  const u=(S.auSettings||{}).drawUndo;
+  return `<section class="sec"><div class="row"><h2>Restart drawings</h2><span class="small muted">for practice runs or a mistake</span></div>
+    ${u&&u.items&&u.items.length?`<div class="rs-undo"><span>${esc(RESTART_LABEL(u.kind))} at ${new Date(u.at).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"})}. ${u.kind==="delbuckets"?`${u.items.length} drawing${u.items.length===1?"":"s"} removed.`:`${u.items.length} winner${u.items.length===1?" was":"s were"} cleared.`}</span>
+      <button class="btn small" type="button" data-act="rsundo" ${ui.rsBusy?"disabled":""}>Undo restart</button></div>`:""}
+    <div class="rs-grid">${Object.entries(RESTART).map(([k,[title,desc]])=>{ const n=l.filter(d=>inRestart(k,d)&&(d.winner||d.lot)).length, has=l.some(d=>inRestart(k,d)), ask=ui.rsAsk===k;
+      if(!has) return "";
+      return `<div class="rs-card${ask?" ask":""}"><b>${title}</b><span class="small muted">${n?`${n} winner${n===1?"":"s"} recorded`:"Nothing drawn yet"}</span>
+        ${ask?`<span class="small"><b>Restart ${k==="golden"?"the Golden Ticket":esc(title.toLowerCase())}?</b> ${desc} You can undo this.</span>
+          <div class="btnrow"><button class="btn small danger" type="button" data-act="rsyes" data-v="${k}" ${ui.rsBusy?"disabled":""}>Yes, restart</button><button class="btn small" type="button" data-act="rsno">Cancel</button></div>`
+        :`<button class="btn small" type="button" data-act="rsask" data-v="${k}" ${n?"":"disabled"}>Restart ${k==="all"?"everything":k==="golden"?"the Golden Ticket":esc(title.toLowerCase())}</button>`}</div>`; }).join("")}
+      ${l.some(d=>d.kind==="bucket")?`<div class="rs-card${ui.rsAsk==="delbuckets"?" ask":""}"><b>Remove bucket drawings</b><span class="small muted">${l.filter(d=>d.kind==="bucket").length} bucket drawing${l.filter(d=>d.kind==="bucket").length===1?"":"s"} in the list</span>
+        ${ui.rsAsk==="delbuckets"?`<span class="small"><b>Remove every bucket drawing from the list?</b> Use this to start your bucket list over. You can undo this.</span>
+          <div class="btnrow"><button class="btn small danger" type="button" data-act="rsyes" data-v="delbuckets" ${ui.rsBusy?"disabled":""}>Yes, remove them</button><button class="btn small" type="button" data-act="rsno">Cancel</button></div>`
+        :`<button class="btn small" type="button" data-act="rsask" data-v="delbuckets">Remove all buckets</button>`}</div>`:""}</div>
+  </section>`;
+}
+async function doRestart(k){
+  ui.rsBusy=true; render();
+  if(k==="delbuckets") return removeBuckets();
+  try{
+    const list=drawList().filter(d=>inRestart(k,d)&&(d.winner||d.lot)), ids=new Set(list.map(d=>d.id));
+    const snap=list.map(d=>({id:d.id,winner:d.winner||null,lot:d.lot||null}));
+    for(const d of list){ if(d.lot){ const r0=await API.unassignGolden(d.lot); if(r0&&r0.err) throw new Error(r0.err); } const r=await API.saveDrawing({...d,winner:null,lot:null}); if(r&&r.err) throw new Error(r.err); }
+    const st=stageNow(), next={d:st.d&&ids.has(st.d)?null:st.d||null,n:st.d&&ids.has(st.d)?Date.now():st.n||0,done:(st.done||[]).filter(x=>!ids.has(x))};
+    const r2=await rpc("admin_settings",{p:{stage:next,drawUndo:{kind:k,at:Date.now(),items:snap,stage:st}}}); if(r2&&r2.err) throw new Error(r2.err);
+    S.auSettings={...(S.auSettings||{}),stage:next,drawUndo:{kind:k,at:Date.now(),items:snap,stage:st}}; ui.rsAsk=null; clearDrawForm();
+    toast(`${RESTART[k][0]} restarted. You can undo this at the bottom of the Raffles page.`,"info");
+  }catch(e){ toast(e.message||"The restart didn't finish. Try again.","outbid"); }
+  finally{ ui.rsBusy=false; render(); }
+}
+async function removeBuckets(){
+  try{
+    const list=drawList().filter(d=>d.kind==="bucket"), ids=new Set(list.map(d=>d.id)), st=stageNow();
+    for(const d of list){ const r=await API.deleteDrawing(d.id); if(r&&r.err) throw new Error(r.err); }
+    const next={d:st.d&&ids.has(st.d)?null:st.d||null,n:st.d&&ids.has(st.d)?Date.now():st.n||0,done:(st.done||[]).filter(x=>!ids.has(x))};
+    const undo={kind:"delbuckets",at:Date.now(),items:list.map(d=>({id:d.id,full:{...d}})),stage:st};
+    await rpc("admin_settings",{p:{stage:next,drawUndo:undo}}); S.auSettings={...(S.auSettings||{}),stage:next,drawUndo:undo}; ui.rsAsk=null; clearDrawForm(); ui.draw=null;
+    toast(`${list.length} bucket drawing${list.length===1?"":"s"} removed. You can undo this at the bottom of the Raffles page.`,"info");
+  }catch(e){ toast(e.message||"Removing the buckets didn't finish. Try again.","outbid"); }
+  finally{ ui.rsBusy=false; render(); }
+}
+async function undoRestart(){
+  const u=(S.auSettings||{}).drawUndo; if(!u||!u.items) return; ui.rsBusy=true; render();
+  if(u.kind==="delbuckets"){ try{ for(const it of u.items){ const r=await API.saveDrawing(it.full); if(r&&r.err) throw new Error(r.err); }
+      await rpc("admin_settings",{p:{stage:u.stage||stageNow(),drawUndo:null}}); S.auSettings={...(S.auSettings||{}),stage:u.stage||stageNow(),drawUndo:null}; toast("The bucket drawings are back.","win"); }
+    catch(e){ toast(e.message||"Undo didn't finish. Try again.","outbid"); } finally{ ui.rsBusy=false; render(); } return; }
+  try{
+    for(const it of u.items){ const d=S.drawings[it.id]; if(!d) continue;
+      const r=await API.saveDrawing({...d,winner:it.winner,lot:null}); if(r&&r.err) throw new Error(r.err);
+      if(it.lot&&it.winner&&it.winner.paddle){ const r1=await API.assignGolden(it.lot,it.winner.paddle,it.winner.name); if(!(r1&&r1.err)) await API.saveDrawing({...S.drawings[it.id],lot:it.lot}); } }
+    const st=stageNow(), back={...st,done:[...new Set([...(st.done||[]),...((u.stage&&u.stage.done)||[]).filter(x=>u.items.some(i=>i.id===x))])]};
+    await rpc("admin_settings",{p:{stage:back,drawUndo:null}}); S.auSettings={...(S.auSettings||{}),stage:back,drawUndo:null};
+    toast("Restart undone. The winners are back.","win");
+  }catch(e){ toast(e.message||"Undo didn't finish. Try again.","outbid"); }
+  finally{ ui.rsBusy=false; render(); }
+}
+document.addEventListener("click",e=>{ const el=e.target.closest('[data-act="gtlaunch"],[data-act="rsask"],[data-act="rsno"],[data-act="rsyes"],[data-act="rsundo"]'); if(!el||!isAdmin) return;
+  const a=el.dataset.act;
+  if(a==="gtlaunch") launchGolden();
+  if(a==="rsask"){ ui.rsAsk=el.dataset.v; render(); }
+  if(a==="rsno"){ ui.rsAsk=null; render(); }
+  if(a==="rsyes") doRestart(el.dataset.v);
+  if(a==="rsundo") undoRestart(); });
+
 /* ---------- Big screen show: one full-screen page on the LED walls, run from here ---------- */
 const showUrl=()=>`${cfg().siteUrl.replace(/\/$/,"")}/reveal.html?show=1`;
 const stageNow=()=>(S.auSettings&&S.auSettings.stage)||{d:null,n:0,done:[]};
@@ -2045,6 +2156,7 @@ function showControl(l){
       <button class="btn small" type="button" data-act="showhold" ${on?"":"disabled"}>Back to holding screen</button></div>
     <div style="display:grid;gap:6px"><span class="small muted">What the big screen shows right now</span>
       <div id="showpv" style="width:${Math.round(1920*k)}px;height:${Math.round(1080*k)}px;max-width:100%;overflow:hidden;position:relative;border:1px solid var(--line);border-radius:8px;background:#0E0D0C" data-k="${k}"></div></div>
+    ${gtLaunchCard(l)}
     ${l.length?`<div class="rows">${l.map(d=>{ const w=d.winner, live=on&&on.id===d.id;
       return `<div class="row" style="flex-wrap:wrap;gap:8px"><div><b>${esc(d.prize||d.name)}</b>${d.prize&&d.name!==d.prize?` <span class="small muted">${esc(d.name)}</span>`:""}
         <div class="small ${w?"okc":"muted"}">${w?`${d.kind==="golden"?`Golden Ticket No. ${gtNo(w.ticket)}`:`Ticket #${esc(w.ticket)}`}${w.name?` · ${esc(w.name)}`:""}${done.has(d.id)?" · revealed":""}`:"Record the winner below first"}</div></div>
@@ -2084,7 +2196,7 @@ function admRaffles(){
       <div class="row"><div><div class="eyebrow">${DRAW_KINDS[cur.kind]} drawing</div><h2>${esc(cur.name)}</h2></div><button class="btn small" type="button" data-act="dredit" data-id="${cur.id}">Edit</button></div>
       <div class="small"><b>Prize:</b> ${esc(cur.prize||"—")}${cur.value?` · value ${money(cur.value)}`:""}</div>
       ${w2g(cur)?`<div class="note small"><b>Tax form may be needed.</b> A prize worth ${money(cur.value)} may require IRS Form W-2G. Your treasurer will collect the winner's details privately; don't enter them here.</div>`:""}
-      ${w?`<div class="status win" style="font-size:16px">Winner: ${cur.kind==="golden"?`Golden Ticket No. ${gtNo(w.ticket)}`:`Ticket #${esc(w.ticket)}`}${w.name?` · ${esc(w.name)}`:""}${w.paddle?` (Bidder #${w.paddle})`:""}</div>
+      ${w&&cur.kind==="golden"&&ui.gtRevealUntil>Date.now()?`<div class="status" style="font-size:16px">Revealing on the big screen…</div>`:w?`<div class="status win" style="font-size:16px">Winner: ${cur.kind==="golden"?`Golden Ticket No. ${gtNo(w.ticket)}`:`Ticket #${esc(w.ticket)}`}${w.name?` · ${esc(w.name)}`:""}${w.paddle?` (Bidder #${w.paddle})`:""}</div>
         ${cur.kind==="golden"?(lot?`<div class="note">Chose <b>Lot ${lot.no} · ${esc(lot.title)}</b>. It's out of the live auction and marked as theirs.</div><button class="btn small" type="button" data-act="drunlot">Undo lot choice</button>`
           :!w.paddle?`<div class="note small" style="display:grid;gap:8px"><span><b>Who has Golden Ticket No. ${gtNo(w.ticket)}?</b> When the winner comes forward, enter their name and bidder #, then pick the live lot they choose. That lot comes out of the live auction.</span>
               <div class="row" style="gap:8px;flex-wrap:wrap"><input id="dr-gname" autocomplete="off" placeholder="Winner's name" style="flex:1 1 200px"><input id="dr-gpaddle" inputmode="numeric" autocomplete="off" placeholder="Bidder #" style="max-width:130px"><button class="btn small primary" type="button" data-act="drgpaddle" data-id="${cur.id}">Save winner</button></div></div>`
@@ -2094,7 +2206,7 @@ function admRaffles(){
         ${ui.drUndo===cur.id?`<div class="note" style="color:var(--test)">Remove this winner? Use this if the ticket was entered wrong or you need to redraw.</div>
           <div class="btnrow"><button class="btn danger" type="button" data-act="drundoyes" style="flex:1">Yes, remove winner</button><button class="btn" type="button" data-act="drundono">Keep</button></div>`
           :`<div class="btnrow">${(()=>{ const nx=l.find(x=>!x.winner&&x.id!==cur.id); return nx?`<button class="btn primary" type="button" data-act="drsel" data-id="${nx.id}" style="flex:1">Next: ${esc(nx.name)}</button>`:""; })()}<button class="btn" type="button" data-act="drundo">${cur.lot?"Remove winner":"Redraw"}</button></div>`}`
-      :cur.kind==="golden"?(ui.drConfirm?`<div class="note" style="text-align:center"><div class="eyebrow">The computer picked</div><div style="font-family:var(--f-display);font-size:64px;font-weight:800;letter-spacing:.08em">${gtNo(ui.drConfirm.ticket)}</div>
+      :cur.kind==="golden"?(true?`<p class="small muted" style="margin:0">Use <b>Launch Golden Ticket Selection</b> in the Big screen show above. It picks a random number from 1 to 100 and reveals it on the big screen; nobody sees it first.</p>`:ui.drConfirm?`<div class="note" style="text-align:center"><div class="eyebrow">The computer picked</div><div style="font-family:var(--f-display);font-size:64px;font-weight:800;letter-spacing:.08em">${gtNo(ui.drConfirm.ticket)}</div>
             <div class="small">Golden Ticket No. ${gtNo(ui.drConfirm.ticket)}. Save it, then tap Reveal in the Big screen show above. To keep it fair, a number can't be picked again once it's shown.</div></div>
           <div class="btnrow"><button class="btn primary" type="button" data-act="drconfirm" style="flex:1" ${ui.busy?"disabled":""}>Save this number</button><button class="btn" type="button" data-act="drchange">Cancel</button></div>`
         :`<p class="small muted" style="margin:0">The winning Golden Ticket is picked at random from 1 to 100. After the reveal, add the winner's name and the live lot they choose.</p>
@@ -2126,8 +2238,7 @@ function admRaffles(){
     <p class="small muted" style="margin:0">Import the raffle presale list so the buyer's name appears when a ticket number is drawn. Golden Tickets don't need a list: the winning number is picked at random and you add the name after. Only ticket numbers, names, bidder numbers and amounts are kept.</p>
     ${[["raffle","Raffle",rs]].map(([k,lab,st])=>`<div class="row"><div><b>${lab}</b><div class="small muted num">${st.tickets?`${st.tickets} tickets · ${st.buyers} buyers${st.amount?` · ${money(st.amount)} sold`:""}`:"No list imported"}</div></div><button class="btn small" type="button" data-act="poolimp" data-v="${k}">${st.tickets?"Replace list":"Import list"}</button></div>`).join("")}
   </section>
-  ${l.some(d=>d.winner)?`<section class="sec"><h2>Rehearsal</h2><p class="small muted" style="margin:0">Clear all recorded winners after a practice run. Drawings and ticket lists stay.</p>
-    ${ui.drClear?`<div class="btnrow"><button class="btn danger" type="button" data-act="drclearyes" style="flex:1">Clear all winners</button><button class="btn" type="button" data-act="drclearno">Cancel</button></div>`:`<button class="btn small" type="button" data-act="drclear">Clear all winners</button>`}</section>`:""}`;
+  ${restartSec(l)}`;
 }
 function openDrawEdit(id){
   const d=id?{...S.drawings[id]}:{id:"d"+Date.now().toString(36),kind:"bucket",no:Math.max(0,...drawList().map(x=>x.no||0))+1,name:"",prize:"",value:"",price:""};
@@ -2248,6 +2359,9 @@ document.addEventListener("click",async e=>{
       ui.drErr=!ticket?"Enter the ticket number you drew.":d.kind==="golden"&&!/^\d{1,3}$/.test(ticket)?"Golden Tickets are numbered 1 to 100. Enter just the number.":"";
       if(!ui.drErr) ui.drConfirm={ticket,name,paddle}; render(); break; }
     case "drchange": ui.drConfirm=null; render(); break;
+    case "gtsetup": { if(drawList().some(d=>d.kind==="golden")) break; el.disabled=true;
+      const r=await API.saveDrawing({id:"dgolden",kind:"golden",no:0,name:"Golden Ticket",prize:"Choice of any live auction lot",value:0,price:100});
+      el.disabled=false; if(r&&r.err){ toast(r.err,"outbid"); break; } resetForm(); ui.draw="dgolden"; toast("Golden Ticket added. Tap Pick the winning Golden Ticket when it's time.","win"); render(); window.scrollTo(0,0); break; }
     case "gtpick": { ui.drConfirm={ticket:String(gtRandom()),name:"",paddle:null}; ui.drErr=""; render(); break; }
     case "drgpaddle": { const d=S.drawings[id], v=(document.getElementById("dr-gpaddle")||{}).value||"", pd=Number(v.trim()); if(!d||!d.winner) break;
       const pp=Object.values(S.people).find(x=>x.paddle===pd);
