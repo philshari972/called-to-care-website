@@ -177,7 +177,7 @@ export async function finalizePayment(payment, { method } = {}) {
     await db(`baskets?id=eq.${meta.basket_id}`, { method: 'PATCH', body: { claimed_at: new Date().toISOString(), claimed_payment: payment.id,
       claimed_contact: payment.contact_id, claimed_name: meta.display_name || '', claim_kind: 'paid', held_until: null, updated_at: new Date().toISOString() } }).catch((e) => console.error('basket', e.message));
   }
-  const c = payment.contact_id ? (await db(`contacts?id=eq.${payment.contact_id}&select=email,first_name`))[0] : null;
+  const c = payment.contact_id ? (await db(`contacts?id=eq.${payment.contact_id}&select=email,first_name,last_name,city,state`))[0] : null;
   if (c?.email) {
     const org = await setting('org', { legal_name: 'We Are Called to Care, NFP', ein: '86-2900453' });
     const what = payment.description || 'Your gift';
@@ -205,5 +205,11 @@ export async function finalizePayment(payment, { method } = {}) {
     await L.donorLetterOnGift({ ...payment, status: 'succeeded', receipt_no: receipt, paid_at: new Date().toISOString() });
     skip = (await L.letterSettings().catch(() => ({ recipients: [] }))).recipients;
   }
-  await alertStaff(`New ${payment.purpose}: ${money(payment.amount)}`, [esc(payment.description), `From: ${esc(c?.email || '')}`], `${SITE_URL()}/admin/#payments`, { skip }).catch(() => {});
+  const who = [c?.first_name, c?.last_name].map((x) => String(x || '').trim()).filter(Boolean).join(' ');
+  const where = [c?.city, c?.state].map((x) => String(x || '').trim()).filter(Boolean).join(', ');
+  const lines = [esc(payment.description)];
+  if (who) lines.push(`Name: ${esc(who)}`);
+  if (c?.email) lines.push(`Email: <a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`);
+  if (where) lines.push(`Location: ${esc(where)}`);
+  await alertStaff(`New ${payment.purpose}: ${money(payment.amount)}`, lines, `${SITE_URL()}/admin/#payments`, { skip }).catch(() => {});
 }

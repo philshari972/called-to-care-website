@@ -57,6 +57,10 @@ button,input,select,textarea{font:inherit;color:inherit}
 .login-art .ring{position:absolute;right:-120px;bottom:-120px;width:380px;height:380px;border-radius:50%;border:2px solid rgba(181,207,220,.25)}
 .login-art .ring.r2{right:-60px;bottom:-60px;width:260px;height:260px;border-color:rgba(246,195,218,.35)}
 .login-form{display:flex;flex-direction:column;justify-content:center;gap:28px;padding:48px max(28px,env(safe-area-inset-right,0px)) 48px max(28px,5vw);max-width:620px}
+.pw-wrap{position:relative;display:block}.pw-wrap input{width:100%;padding-right:64px}
+.pw-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--teal);font-weight:600;font-size:.85rem;padding:8px;cursor:pointer}
+.li-alt{display:grid;gap:6px;justify-items:start;padding:16px 18px;border:1px solid var(--line);border-radius:12px}.li-alt span{color:var(--muted);font-size:.92rem}.li-alt .btn{margin-top:6px}
+.pw-rules{margin:0;padding:0;list-style:none;display:grid;gap:4px;font-size:.88rem;color:var(--muted)}.pw-rules li::before{content:'○ ';color:var(--muted)}.pw-rules li.ok{color:var(--teal)}.pw-rules li.ok::before{content:'● ';color:var(--teal)}
 .login-form h2{font-family:var(--serif);font-weight:400;font-size:2.6rem;line-height:1;margin:0;color:var(--ink)}
 .field{display:grid;gap:6px;font-weight:600;font-size:.9rem}
 .field input,.field select,.field textarea{border:1.5px solid var(--line);border-radius:10px;background:var(--surface);padding:11px 13px;font-weight:400;width:100%}
@@ -293,9 +297,11 @@ td.selc,th.selc{width:36px;padding-right:0}.selc input{width:18px;height:18px;cu
   <form class="login-form" id="loginForm" novalidate>
     <div style="display:grid;gap:6px"><span class="label" style="color:var(--pink)">Sign in</span><h2>Welcome back</h2></div>
     <div id="li-ask" style="display:grid;gap:16px">
-      <label class="field" for="li-email">Your Email<input id="li-email" type="email" autocomplete="email" placeholder="you@wearecalledtocare.com" required></label>
-      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center"><button class="btn primary" type="submit" id="li-btn" style="padding:11px 24px">Email Me a Sign-In Link</button></div>
-      <p class="note">No password needed. We email you a link that signs you in on this device.</p>
+      <label class="field" for="li-email">Your Email<input id="li-email" name="username" type="email" autocomplete="username" placeholder="you@wearecalledtocare.com" required></label>
+      <label class="field" for="li-pw">Password<span class="pw-wrap"><input id="li-pw" name="password" type="password" autocomplete="current-password" required><button type="button" class="pw-eye" data-eye="li-pw" aria-label="Show password">Show</button></span></label>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center"><button class="btn primary" type="submit" id="li-btn" style="padding:11px 28px">Sign In</button></div>
+      <div class="li-alt"><b>First time, or forgot your password?</b><span>We'll email you a one-time sign-in link. Once you're in, you can set a password.</span><button type="button" class="btn" id="li-link">Email Me a Sign-In Link</button></div>
+      <p class="note">Your phone or browser can save your password, and you stay signed in on this device until you sign out.</p>
     </div>
     <div id="li-sent" hidden style="display:grid;gap:10px">
       <p style="margin:0">Check <b id="li-to"></b> for an email from Called to Care Admin and tap the link inside. It works once and expires in an hour.</p>
@@ -313,6 +319,7 @@ td.selc,th.selc{width:36px;padding-right:0}.selc input{width:18px;height:18px;cu
     <nav class="nav" id="nav" aria-label="Admin sections"></nav>
     <div class="foot">
       <a href="https://wearecalledtocare.com" target="_blank" rel="noopener">View website ↗</a>
+      <button type="button" id="pwBtn">Set a password</button>
       <button type="button" id="signOut">Sign out</button>
     </div>
   </aside>
@@ -438,16 +445,55 @@ async function boot(){
  const {data:{session}}=await SB.auth.getSession();
  if(session)start(session);
 }
+async function signInPw(){
+ const em=$('#li-email').value.trim().toLowerCase(),pw=$('#li-pw').value;
+ if(!/^\S+@\S+\.\S+$/.test(em)){$('#li-err').textContent='Enter your email address.';return}
+ if(!pw){$('#li-err').textContent='Enter your password, or use the email link below if you don\'t have one yet.';return}
+ $('#li-err').textContent='';const b=$('#li-btn');b.disabled=true;b.textContent='Signing in…';
+ const {error}=await SB.auth.signInWithPassword({email:em,password:pw});
+ b.disabled=false;b.textContent='Sign In';
+ if(error){$('#li-err').textContent=/invalid/i.test(error.message)?'That email and password don\'t match. If you haven\'t set a password yet, use the email link below.':/rate|many/i.test(error.message)?'Too many tries. Wait a few minutes, or use the email link below.':error.message;return}
+}
 async function sendLink(){
  const em=$('#li-email').value.trim().toLowerCase();
- if(!/^\S+@\S+\.\S+$/.test(em)){$('#li-err').textContent='Enter your email address.';return}
- $('#li-err').textContent='';const b=$('#li-btn');b.disabled=true;b.textContent='Sending…';
+ if(!/^\S+@\S+\.\S+$/.test(em)){$('#li-err').textContent='Enter your email address first.';$('#li-email').focus();return}
+ $('#li-err').textContent='';const b=$('#li-link');b.disabled=true;b.textContent='Sending…';
  const {error}=await SB.auth.signInWithOtp({email:em,options:{emailRedirectTo:location.origin+'/admin/'+(DASH&&!location.hostname.startsWith('dashboard.')?'?dashboard=1':''),shouldCreateUser:true}});
  b.disabled=false;b.textContent='Email Me a Sign-In Link';
  if(error){$('#li-err').textContent=/rate|seconds/i.test(error.message)?'Please wait a minute before asking for another link.':error.message;return}
  $('#li-to').textContent=em;$('#li-ask').hidden=true;$('#li-sent').hidden=false;
 }
-$('#loginForm').addEventListener('submit',e=>{e.preventDefault();sendLink()});
+$('#loginForm').addEventListener('submit',e=>{e.preventDefault();signInPw()});
+$('#li-link').addEventListener('click',sendLink);
+document.addEventListener('click',e=>{const t=e.target.closest('[data-eye]');if(!t)return;const i=document.getElementById(t.dataset.eye);const show=i.type==='password';i.type=show?'text':'password';t.textContent=show?'Hide':'Show';t.setAttribute('aria-label',show?'Hide password':'Show password')});
+const hasPw=()=>!!(SESSION_USER&&SESSION_USER.user_metadata&&SESSION_USER.user_metadata.has_password);
+let SESSION_USER=null;
+function pwRules(v){return[[v.length>=10,'At least 10 characters'],[/[a-z]/i.test(v)&&/[^a-z]/i.test(v),'Letters plus a number or symbol']]}
+function openPw(first){
+ layer(`<div class="drawer"><button class="scrim" data-close aria-label="Close"></button><form class="sheet" id="pwForm" role="dialog" aria-modal="true" aria-label="Password" novalidate>
+  <button class="x" type="button" data-close aria-label="Close">×</button>
+  <div><span class="label" style="color:var(--pink)">${hasPw()?'Change password':'Skip the email next time'}</span><h2>${hasPw()?'New password':'Set a password'}</h2><p class="note">${first?'You signed in with an email link. ':''}Set a password and sign in with your email and password from now on. Your phone or browser can save it for you.</p></div>
+  <input type="email" name="username" autocomplete="username" value="${esc(ME.email||'')}" readonly hidden>
+  <label class="field" for="pw-new">New password<span class="pw-wrap"><input id="pw-new" type="password" autocomplete="new-password" required><button type="button" class="pw-eye" data-eye="pw-new" aria-label="Show password">Show</button></span></label>
+  <ul class="pw-rules" id="pw-rules"></ul>
+  <label class="field" for="pw-again">Type it again<input id="pw-again" type="password" autocomplete="new-password" required></label>
+  <p class="err" id="pw-err" role="alert"></p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit">Save Password</button><button class="btn" type="button" data-close>${first?'Not now':'Cancel'}</button></div>
+ </form></div>`);
+ const paint=()=>{$('#pw-rules').innerHTML=pwRules($('#pw-new').value).map(([ok,t])=>`<li class="${ok?'ok':''}">${t}</li>`).join('')};paint();
+ $('#pw-new').addEventListener('input',paint);setTimeout(()=>$('#pw-new').focus(),50);
+}
+async function savePw(fm){
+ const v=$('#pw-new').value,a=$('#pw-again').value,err=$('#pw-err');
+ if(pwRules(v).some(([ok])=>!ok)){err.textContent='Use at least 10 characters with letters plus a number or symbol.';return}
+ if(v!==a){err.textContent='The two passwords don\'t match.';return}
+ err.textContent='';busy(fm,true);
+ const {data,error}=await SB.auth.updateUser({password:v,data:{has_password:true}});busy(fm,false);
+ if(error){err.textContent=/reauth|recent/i.test(error.message)?'For safety, sign out, sign in with an email link, then set your password right away.':/weak|pwned|leak/i.test(error.message)?'That password is too common or has shown up in a data breach. Pick another.':/same/i.test(error.message)?'That is already your password.':error.message;return}
+ SESSION_USER=data.user;try{localStorage.removeItem('c2c-pw-later')}catch(e){}
+ $('#pwBtn').textContent='Change password';closeLayer();toast('Password saved. Next time, sign in with your email and password.');
+}
+$('#pwBtn').addEventListener('click',()=>openPw(false));
 $('#li-again').addEventListener('click',e=>{e.preventDefault();$('#li-ask').hidden=false;$('#li-sent').hidden=true});
 
 async function start(session){
@@ -463,8 +509,11 @@ async function start(session){
  if(PERMS.dinner||PERMS.sponsors||PERMS.auction) PERMS.cdd='view';
  const r=await SB.from('roles').select('*');(r.data||[]).forEach(x=>ROLES[x.key]={name:x.name,desc:x.description,perms:x.perms});
  $('#login').hidden=true;$('#app').hidden=false;
+ SESSION_USER=session.user;$('#pwBtn').textContent=hasPw()?'Change password':'Set a password';
  await loadAll();renderShell();
  const want=location.hash.slice(1);go(PERMS[want]?want:'dashboard');
+ let later=null;try{later=localStorage.getItem('c2c-pw-later')}catch(e){}
+ if(!hasPw()&&(!later||Date.now()-Number(later)>7*864e5)){try{localStorage.setItem('c2c-pw-later',String(Date.now()))}catch(e){}setTimeout(()=>openPw(true),600)}
 }
 $('#signOut').addEventListener('click',async()=>{await SB.auth.signOut();location.href='/admin/'});
 $('#refresh').addEventListener('click',async()=>{Object.keys(LOADED).forEach(k=>delete LOADED[k]);await loadAll();renderShell();markNav();render();toast('Up to date')});
@@ -864,7 +913,7 @@ function usersPage(){const secs=Object.keys(SECTIONS).filter(k=>k!=='dashboard')
 function openUser(id){const u=id?STAFF.find(x=>x.id===id):{id:'',name:'',email:'',roles:[],active:true,expires_on:null};const isNew=!id;const self=u.email&&u.email.toLowerCase()===String(ME.email).toLowerCase();
  layer(`<div class="drawer"><button class="scrim" data-close aria-label="Close"></button><form class="sheet" id="userForm" data-uid="${u.id}" role="dialog" aria-modal="true" aria-label="Person" novalidate>
   <button class="x" type="button" data-close aria-label="Close">×</button>
-  <div><span class="label" style="color:var(--pink)">${isNew?'Add a person':'Edit access'}</span><h2>${isNew?'New login':esc(u.name||u.email)}</h2>${isNew?'<p class="note">After saving, tell them to go to wearecalledtocare.com/admin and enter this email.</p>':''}</div>
+  <div><span class="label" style="color:var(--pink)">${isNew?'Add a person':'Edit access'}</span><h2>${isNew?'New login':esc(u.name||u.email)}</h2>${isNew?'<p class="note">After saving, tell them to go to wearecalledtocare.com/admin, enter this email and tap Email Me a Sign-In Link. Once they're in, it asks them to set a password for next time.</p>':''}</div>
   <label class="field" for="uf-name">Full Name<input id="uf-name" value="${esc(u.name)}" required></label>
   <label class="field" for="uf-email">Email<input id="uf-email" type="email" value="${esc(u.email)}" required ${self?'readonly':''}></label>
   <div style="display:grid;gap:8px"><span class="field">Roles</span><div class="rolepick">${Object.entries(ROLES).map(([rk,r])=>`<label for="rp-${rk}"><input type="checkbox" id="rp-${rk}" value="${rk}" ${u.roles.includes(rk)?'checked':''} ${self&&rk==='owner'?'disabled':''}><span><b>${esc(r.name)}</b><small>${esc(r.desc)}</small></span></label>`).join('')}</div></div>
@@ -1186,6 +1235,7 @@ document.addEventListener('submit',async e=>{const fm=e.target;
   const placeEmails=$('#set-place-alerts').value.split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);if(placeEmails.some(x=>!/^\S+@\S+\.\S+$/.test(x))){toast('Check the care package alert emails',true);return}
   busy(fm,true);const ratios=[0,1,2].map(i=>Math.max(1,parseInt($('#set-r'+i).value,10)||1));const r=await SB.from('settings').upsert([{key:'staff_alert_email',value:emails},{key:'camp_alert_email',value:campEmails},{key:'placement_alert_email',value:placeEmails},{key:'tickets_on',value:$('#set-tix').checked},{key:'childcare_ratios',value:ratios}]);busy(fm,false);
   if(r.error){toast('Not saved: '+r.error.message,true);return}await loadAll();render();toast('Settings saved. The website picks this up within a minute.');return}
+ if(fm.id==='pwForm'){e.preventDefault();savePw(fm);return}
  if(fm.id==='userForm'){e.preventDefault();const err=$('#uf-err');const name=$('#uf-name').value.trim(),email=$('#uf-email').value.trim().toLowerCase();const roles=[...fm.querySelectorAll('.rolepick input:checked')].map(i=>i.value);
   if(!name||!/^\S+@\S+\.\S+$/.test(email)){err.textContent='Enter a name and a valid email.';return}
   if(!roles.length){err.textContent='Choose at least one role.';return}

@@ -397,6 +397,12 @@ section{padding-block:96px}
 .mv-card{background:var(--sky-pale);border-radius:22px;padding:34px 36px}
 .mv-card .label{color:var(--pink);display:block;margin-bottom:14px}
 .mv-card p{font-family:var(--serif);font-size:clamp(1.15rem,1.7vw,1.4rem);line-height:1.45;color:var(--navy);margin:0}
+.faith-creed{max-width:760px;margin:0 auto;background:var(--white);border-radius:22px;padding:clamp(28px,5vw,56px)}
+.faith-creed>p{font-family:var(--serif);font-size:clamp(1.2rem,1.9vw,1.5rem);line-height:1.45;color:var(--navy);max-width:none;margin:0 0 1.1em}
+.faith-creed>p.faith-note{font-family:var(--sans);font-size:.9rem;line-height:1.6;color:var(--muted);border-top:1px solid var(--line);padding-top:20px;margin:1.6em 0 0}
+.faith-star{color:var(--pink);padding:0 2px}
+.faith-more{margin-top:28px;display:flex;flex-wrap:wrap;gap:16px 24px;align-items:center;justify-content:space-between}
+.faith-more p{margin:0;max-width:34ch;color:var(--ink);font-size:1rem}
 .mv-vals{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px 36px}
 .mv-vals li{border-top:2px solid var(--line);padding-top:20px}
 .mv-n{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--navy);color:var(--white);font-family:var(--serif);font-size:1.25rem;margin-bottom:14px}
@@ -1638,7 +1644,7 @@ html.tickets-on .tix-off{display:none!important}
     <span class="label c-pinkl">About us</span>
     <h1 style="margin:0;line-height:0"><img src="assets/logo-white.png" alt="About We Are Called to Care" width="778" height="189" style="width:min(720px,100%);height:auto"></h1>
     <p class="statement" style="font-size:clamp(1.5rem,3.2vw,2.4rem);max-width:30ch;color:var(--sky)">We exist to provide <span class="c-pinkl">safety, healing, and hope</span> to vulnerable children.</p>
-    <nav class="subnav c-pinkl" style="justify-content:center" aria-label="On this page"><a href="#about" data-anchor="mission">Mission &amp; values</a><a href="#about" data-anchor="founder">From our founder</a><a href="#about" data-anchor="staff">Staff</a><a href="#about" data-anchor="whatwedo">What we do</a></nav>
+    <nav class="subnav c-pinkl" style="justify-content:center" aria-label="On this page"><a href="#about" data-anchor="mission">Mission &amp; values</a><a href="#about" data-anchor="faith">Statement of faith</a><a href="#about" data-anchor="founder">From our founder</a><a href="#about" data-anchor="staff">Staff</a><a href="#about" data-anchor="whatwedo">What we do</a></nav>
   </div></div>
 
   <section class="b-white mv" id="mission">
@@ -1657,6 +1663,21 @@ html.tickets-on .tix-off{display:none!important}
         <li><span class="mv-n" aria-hidden="true">5</span><h4>Relationships &amp; Belonging</h4><p>We believe meaningful relationships are essential to healing. We intentionally cultivate environments where children and families feel seen, heard, valued, and supported, fostering trust, connection, and a sense of belonging.</p></li>
         <li><span class="mv-n" aria-hidden="true">6</span><h4>Hope &amp; Purpose</h4><p>We believe every child is uniquely created by God, possesses immeasurable worth, and has a future filled with possibility. We are committed to helping children recognize their value, discover their strengths, and embrace opportunities for a brighter tomorrow.</p></li>
       </ol>
+    </div>
+  </section>
+
+  <section class="b-skypale faith" id="faith">
+    <div class="wrap center vstack" style="gap:14px;margin-bottom:40px"><span class="label" style="color:var(--teal)">What we believe</span><h2 class="d2 c-navy">Statement <em class="it c-pink">of faith</em></h2></div>
+    <div class="wrap">
+      <div class="faith-creed">
+        <p>We believe in one God, the Father, the Almighty, maker of heaven and earth, of all that is, seen and unseen.</p>
+        <p>We believe in one Lord, Jesus Christ, the only son of God, eternally begotten of the Father, God from God, Light from Light, true God from true God, begotten, not made, of one Being with the Father; through him all things were made.</p>
+        <p>For us and for our salvation, he came down from heaven, was incarnate of the Holy Spirit and the Virgin Mary and became truly human. For our sake he was crucified under Pontius Pilate; he suffered death and was buried. On the third day he rose again in accordance with the Scriptures; he ascended into heaven and is seated at the right hand of the Father. He will come again in glory to judge the living and the dead, and his kingdom will have no end.</p>
+        <p>We believe in the Holy Spirit, the Lord, the giver of life, who proceeds from the Father and the Son, who with the Father and the Son is worshipped and glorified, who has spoken through the prophets.</p>
+        <p>We believe in one holy catholic<span class="faith-star">*</span> and apostolic Church. We acknowledge one baptism for the forgiveness of sins. We look for the resurrection of the dead, and the life of the world to come.</p>
+        <p class="faith-note" id="faith-note">*Our Statement of Faith is taken directly from the Nicene Creed. The term catholic (small “c”) in the Nicene Creed does not refer to the Catholic Church, but to the global Christian church. It expresses the belief of the early Christians and believers ever since that there is a shared identity and fellowship of God’s people throughout history and across the world.</p>
+        <div class="faith-more"><p>Want the longer version, with Scripture references and how our faith shapes our care?</p><a class="pill p-navy" href="assets/what-we-believe.pdf" target="_blank" rel="noopener">What We Believe (PDF)</a></div>
+      </div>
     </div>
   </section>
 
