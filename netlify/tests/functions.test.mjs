@@ -9,7 +9,7 @@ Object.assign(process.env, {
 });
 
 // ---- tiny in-memory PostgREST ----
-const T = { baskets: [], donor_letters: [], contacts: [], submissions: [], payments: [], sponsorships: [], attendance: [], subscriptions: [], email_log: [], events: [], settings: [{ key: 'tickets_on', value: false }, { key: 'staff_alert_email', value: ['staff@example.org', 'boss@example.org'] }, { key: 'org', value: { legal_name: 'We Are Called to Care, NFP', ein: '86-2900453' } }] };
+const T = { baskets: [], donor_letters: [], contacts: [], submissions: [], payments: [], sponsorships: [], attendance: [], subscriptions: [], email_log: [], email_campaigns: [], email_sends: [], events: [], settings: [{ key: 'tickets_on', value: false }, { key: 'staff_alert_email', value: ['staff@example.org', 'boss@example.org'] }, { key: 'org', value: { legal_name: 'We Are Called to Care, NFP', ein: '86-2900453' } }] };
 let seq = 1001; const uid = () => crypto.randomUUID();
 function match(row, params) {
   for (const [k, v] of params) {
@@ -31,6 +31,14 @@ function rest(url, init) {
   const body = init.body ? JSON.parse(init.body) : null; const m = init.method || 'GET';
   if (path === 'rpc/next_receipt') return `C2C-2027-0${seq++}`;
   if (path === 'rpc/level_for') return init.headers.authorization === 'Bearer staff-jwt' ? 3 : 0;
+  if (path === 'rpc/email_start') { const c = T.email_campaigns.find((x) => x.id === body.p_campaign); if (c.status !== 'draft') return c.total;
+    const aud = T.contacts.filter((p) => p.email && p.email_ok !== false && !p.do_not_email && (c.audience.mode === 'all' || (p.tags || []).some((t) => c.audience.tags.includes(t))));
+    aud.forEach((p) => T.email_sends.push({ campaign_id: c.id, contact_id: p.id, email: p.email, status: 'queued' })); c.total = aud.length; if (aud.length) c.status = 'sending'; return aud.length; }
+  if (path === 'rpc/email_claim') { const q = T.email_sends.filter((x) => x.campaign_id === body.p_campaign && x.status === 'queued').slice(0, body.p_n); q.forEach((x) => { x.status = 'sending'; });
+    return q.map((x) => { const p = T.contacts.find((y) => y.id === x.contact_id); return { contact_id: x.contact_id, email: x.email, first_name: p.first_name, unsub_token: p.unsub_token }; }); }
+  if (path === 'rpc/email_tally') { const mine = T.email_sends.filter((x) => x.campaign_id === body.p_campaign); const c = T.email_campaigns.find((x) => x.id === body.p_campaign);
+    const t = { sent: mine.filter((x) => x.status === 'sent').length, failed: mine.filter((x) => x.status === 'failed').length, left: mine.filter((x) => ['queued', 'sending'].includes(x.status)).length };
+    Object.assign(c, { sent: t.sent, failed: t.failed }); if (c.status === 'sending' && !t.left) c.status = 'sent'; return t; }
   const tbl = T[path]; if (!tbl) throw new Error('no table ' + path);
   if (m === 'GET') { let rows = tbl.filter((r) => match(r, params)); const lim = u.searchParams.get('limit'); if (lim) rows = rows.slice(0, +lim); return rows; }
   if (m === 'POST') {
@@ -43,13 +51,18 @@ function rest(url, init) {
     }
     return init.headers.prefer?.includes('representation') ? rows : null;
   }
+  if (m === 'DELETE') { const hit = tbl.filter((r) => match(r, params)); hit.forEach((r) => tbl.splice(tbl.indexOf(r), 1)); return null; }
   if (m === 'PATCH') { const hit = tbl.filter((r) => match(r, params)); hit.forEach((r) => Object.assign(r, body)); return init.headers.prefer?.includes('representation') ? hit : null; }
 }
-const sent = []; const stripeCalls = []; const stored = [];
+const sent = []; const stripeCalls = []; const stored = []; const batches = []; let resendMode = '';
 globalThis.fetch = async (url, init = {}) => {
   url = String(url); const ok = (o, s = 200) => new Response(o == null ? '' : JSON.stringify(o), { status: s });
   if (url.startsWith('https://db.test/rest/v1/')) { try { return ok(rest(url, init)); } catch (e) { return ok({ message: e.message }, 409); } }
   if (url.startsWith('https://db.test/storage/v1/object/camp-photos/')) { stored.push(url); return ok({ Key: url }); }
+  if (url === 'https://api.resend.com/emails/batch') { const list = JSON.parse(init.body); batches.push(list);
+    if (resendMode === 'quota') return ok({ name: 'daily_quota_exceeded', message: 'You have reached your daily email sending quota' }, 429);
+    if (list.some((e) => e.to[0] === 'reject@x.com')) return ok({ name: 'validation_error', message: 'Invalid `to` field' }, 422);
+    list.forEach((e) => sent.push(e)); return ok({ data: list.map((_, i) => ({ id: `b${batches.length}_${i}` })) }); }
   if (url === 'https://api.resend.com/emails') { const b = JSON.parse(init.body); sent.push(b); return ok({ id: 'em_' + sent.length }); }
   if (url.startsWith('https://api.stripe.com/v1/')) {
     const p = url.replace('https://api.stripe.com/v1/', ''); stripeCalls.push([init.method, p, init.body]);
@@ -244,4 +257,109 @@ console.log('sponsor letters');
   r = await lpost({ action: 'sponsors', contact_ids: [spc.id] }, true); const sb3 = Buffer.from(await r.arrayBuffer()).toString('latin1');
   ok(sb3.includes('Jen Hall') && sb3.includes('Committee Director') && sb3.includes('Warmly,'), 'saved sponsor signer and wording are used');
   const dl = await (await import('../functions/_letter.mjs')).letterSettings(); ok(dl.signer.name !== 'Jen Hall', 'donor letters keep their own signer'); }
+console.log('weekly support night report');
+{ const rep = await import('../functions/support-report.mjs'); const keep = { ev: [...T.events], sub: [...T.submissions], set: [...T.settings] };
+  const now = new Date('2026-11-25T13:00:00Z');   // Wednesday, 7 AM in Illinois
+  const ev = { id: uid(), kind: 'support_night', title: 'Support Night', starts_at: '2026-12-04T00:30:00Z', location: 'Called to Care, Plano' };   // Thursday Dec 3, 6:30 PM
+  const later = { id: uid(), kind: 'support_night', title: 'Support Night', starts_at: '2027-01-15T00:30:00Z', location: 'Called to Care, Plano' };
+  T.events.length = 0; T.events.push(ev, later, { id: uid(), kind: 'support_night', starts_at: '2026-11-13T00:30:00Z' });
+  const reg = (kids, extra = {}) => T.submissions.push({ id: uid(), form: 'support', event_id: ev.id, status: 'New', created_at: '2026-11-10T12:00:00Z', data: { first_name: 'Secret', last_name: 'Name', email: 'mom@x.com', children: kids.map(([first, age_group]) => ({ first, age_group })) }, ...extra });
+  T.submissions.length = 0;
+  reg([['Ava', 'Newborn-2 years'], ['Ben', '3 years-5 years'], ['Cy', '3 years-5 years']]); reg([['Dee', '1st Grade - 5th Grade']], { created_at: '2026-11-22T12:00:00Z' }); reg([]); reg([['Eli', '']]);
+  const named = (i, f, l) => { T.submissions[i].data.first_name = f; T.submissions[i].data.last_name = l; }; named(0, 'Zoe', 'Young'); named(1, 'Amy', 'Baker'); named(2, 'Bea', 'adams'); named(3, 'Cat', 'Baker');
+  reg([['Gone', 'Newborn-2 years']], { status: 'Cancelled' }); T.submissions[4].data.first_name = 'Quit'; T.submissions[4].data.last_name = 'Person'; T.submissions.push({ id: uid(), form: 'contact', event_id: ev.id, status: 'New', created_at: '2026-11-28T12:00:00Z', data: {} });
+  T.settings.push({ key: 'childcare_ratios', value: [1, 2, 4] });
+  const t = rep.tally(T.submissions.filter((x) => x.form === 'support'), [1, 2, 4], now);
+  ok(t.moms === 4 && t.kids === 5 && t.cancelled === 1 && t.fresh === 1, 'counts moms and kids, leaving out cancellations');
+  ok(JSON.stringify(t.groups.map((g) => [g.label, g.kids, g.volunteers])) === JSON.stringify([['Newborn–2 years', 1, 1], ['3–5 years', 2, 1], ['1st–5th grade', 1, 1], ['Age not given', 1, 1]]) && t.volunteers === 4, 'kids are broken down by age group, with childcare volunteers from the Settings ratios');
+  const n0 = sent.length; r = await rep.run(now); const mine = sent.slice(n0);
+  ok(r.sent === 4 && mine.map((m) => m.to[0]).sort().join() === 'jen@wearecalledtocare.com,mattieellapatrick@gmail.com,phil@wearecalledtocare.com,shari@wearecalledtocare.com', 'goes to Shari, Mattie, Phil and Jen');
+  ok(mine[0].subject === 'Support Night December 3: 4 moms, 5 kids' && mine[0].html.includes('Thursday, December 3') && mine[0].html.includes('8 days away'), 'subject and date are for the next Support Night');
+  const h = mine[0].html; const order = ['Bea adams', 'Amy Baker', 'Cat Baker', 'Zoe Young'].map((n) => h.indexOf(n));
+  ok(order.every((x, i) => x > 0 && (i === 0 || x > order[i - 1])) && !h.includes('Quit Person'), 'lists who is registered, by last name, without anyone who cancelled');
+  ok(h.includes('3: Newborn–2 years, 2 × 3–5 years') && h.includes('1: age not given') && !h.includes('Ava') && !h.includes('Cy') && !h.includes('mom@x.com'), 'each mom shows how many kids and their age groups, never the children\'s names or her email');
+  ok(!h.includes('January 14'), 'a later night with nobody signed up is left off');
+  T.settings.push({ key: 'support_report_names', value: false }); const q0 = sent.length; await rep.run(now); const off = sent[q0].html;
+  ok(!off.includes('Zoe Young') && !off.includes('Who is registered') && off.includes('See Who Is Registered') && off.includes('Names are kept in the admin') && off.includes('Moms registered'), 'with the list switched off in Settings, it goes back to numbers and the button');
+  T.settings.pop();
+  const at = (iso) => rep.run(new Date(iso), true).then((x) => x.sent);
+  ok(await at('2026-11-25T13:00:00Z') === 4 && await at('2026-11-27T13:00:00Z') === 4, 'sends Wednesday and Friday at 7 AM');
+  ok(await at('2026-11-25T12:00:00Z') === 0 && await at('2026-11-25T14:00:00Z') === 0 && await at('2026-11-24T13:00:00Z') === 0, 'not at 6 AM or 8 AM, and not on other days');
+  ok(await at('2026-07-01T12:00:00Z') === 4 && await at('2026-07-01T13:00:00Z') === 0, 'still 7 AM after the clocks change for summer');
+  ok(await at('2026-11-26T13:00:00Z') === 0, 'a Thursday with no Support Night sends nothing');
+  const n3 = sent.length; ok(await at('2026-12-03T13:00:00Z') === 4 && sent[n3].html.includes('Support Night is tonight') && sent[n3].html.includes('(tonight)'), 'the Thursday of Support Night sends the final numbers that morning');
+  ok(await at('2026-12-04T13:00:00Z') === 0 || !sent[sent.length - 1].html.includes('December 3'), 'the Friday after reports the next Support Night, not the one that just happened');
+  T.settings.push({ key: 'support_report_email', value: ['wendy@wearecalledtocare.com', 'not an email'] }); const n1 = sent.length; r = await rep.run(now);
+  ok(r.sent === 1 && sent[n1].to[0] === 'wendy@wearecalledtocare.com', 'the list of who gets it can be changed in Settings');
+  T.events.length = 0; const n2 = sent.length; r = await rep.run(now); ok(r.sent === 0 && sent.length === n2, 'nothing is sent when no Support Night is on the calendar');
+
+  T.events.length = 0; T.events.push(...keep.ev); T.submissions.length = 0; T.submissions.push(...keep.sub); T.settings.length = 0; T.settings.push(...keep.set); }
+console.log('email list');
+{ const send = (await import('../functions/email-send.mjs')).default; const unsub = (await import('../functions/unsubscribe.mjs')).default;
+  const hook = await import('../functions/resend-webhook.mjs');
+  const epost = (body, staff = true) => send(new Request('https://x/', { method: 'POST', body: JSON.stringify(body), headers: staff ? { authorization: 'Bearer staff-jwt' } : {} }));
+  T.contacts.length = 0;
+  const mk = (email, first, tags, extra = {}) => { const c = { id: uid(), email, first_name: first, tags, email_ok: true, do_not_email: false, do_not_email_reason: '', unsub_token: uid(), ...extra }; T.contacts.push(c); return c; };
+  const amy = mk('amy@x.com', 'Amy Jo', ['Foster Parents']), ben = mk('ben@x.com', '', ['Foster Parents', 'Volunteer']); mk('cat@x.com', 'Cat', ['Volunteer']);
+  mk('gone@x.com', 'Gone', ['Foster Parents'], { do_not_email: true, do_not_email_reason: 'Unsubscribed', email_ok: false }); mk('reject@x.com', 'Rex', ['Foster Parents']);
+  const html = '<p>Hi {{first_name}},</p><p>News for you & yours.</p><a href="{{unsubscribe_url}}">Unsubscribe</a>' + ' '.repeat(40);
+  const camp = { id: uid(), name: 'Support Night', subject: 'Support Night, {{first_name}}', html, reply_to: 'jen@wearecalledtocare.com', audience: { mode: 'tags', tags: ['Foster Parents'], skip: [] }, status: 'draft', total: 0, sent: 0, failed: 0 };
+  T.email_campaigns.push(camp);
+  r = await epost({ action: 'start', id: camp.id }, false); ok(r.status === 403, 'only signed-in staff with edit access can send');
+  const before = sent.length;
+  r = await (await epost({ action: 'test', subject: camp.subject, html, to: ['phil@x.com', 'not-an-email'], first_name: 'Phil' })).json();
+  const test = sent[sent.length - 1];
+  ok(r.ok && r.sent === 1 && sent.length === before + 1 && test.subject === '[Test] Support Night, Phil' && test.html.includes('Hi Phil,') && !test.html.includes('{{'), 'test email goes only to the address typed, with the name filled in');
+  r = await (await epost({ action: 'start', id: camp.id })).json();
+  ok(r.ok && r.total === 3 && camp.status === 'sending' && !T.email_sends.some((x) => x.email === 'gone@x.com' || x.email === 'cat@x.com'), 'audience is the chosen tag, minus anyone unsubscribed');
+  r = await (await epost({ action: 'start', id: camp.id })).json(); ok(r.total === 3 && T.email_sends.length === 3, 'pressing Send twice does not line people up twice');
+  const b0 = sent.length;
+  r = await (await epost({ action: 'batch', id: camp.id })).json();
+  const toAmy = sent.find((e, i) => i >= b0 && e.to[0] === 'amy@x.com'), toBen = sent.find((e, i) => i >= b0 && e.to[0] === 'ben@x.com');
+  ok(r.done && r.sent === 2 && r.failed === 1 && camp.status === 'sent', 'everyone is sent to; the one address the mail service rejects is marked failed, not the whole group');
+  ok(toAmy.subject === 'Support Night, Amy' && toAmy.html.includes('Hi Amy,') && toBen.html.includes('Hi Friend,') && toAmy.reply_to === 'jen@wearecalledtocare.com', 'each email is personal: first name, or "Friend" when we have none');
+  ok(toAmy.html.includes(`https://example.org/unsubscribe?t=${amy.unsub_token}`) && toAmy.headers['List-Unsubscribe'] === `<https://example.org/unsubscribe?t=${amy.unsub_token}>` && toAmy.headers['List-Unsubscribe-Post'] === 'List-Unsubscribe=One-Click' && !toBen.html.includes(amy.unsub_token), 'every email carries that person\'s own unsubscribe link');
+  ok(T.email_sends.find((x) => x.email === 'amy@x.com').provider_id && T.email_sends.find((x) => x.email === 'reject@x.com').status === 'failed', 'each send is recorded');
+  const n = sent.length; r = await (await epost({ action: 'batch', id: camp.id })).json(); ok(r.done && sent.length === n, 'a finished email cannot be sent again');
+
+  const camp2 = { ...camp, id: uid(), audience: { mode: 'all' }, status: 'draft', total: 0, sent: 0, failed: 0 }; T.email_campaigns.push(camp2);
+  await epost({ action: 'start', id: camp2.id }); resendMode = 'quota';
+  r = await (await epost({ action: 'batch', id: camp2.id })).json();
+  ok(!r.done && /limit/i.test(r.stop) && r.left === 4 && T.email_sends.filter((x) => x.campaign_id === camp2.id).every((x) => x.status === 'queued'), 'when the mail service hits its limit, sending pauses and nobody is lost');
+  resendMode = ''; r = await (await epost({ action: 'cancel', id: camp2.id })).json();
+  ok(camp2.status === 'canceled' && !T.email_sends.some((x) => x.campaign_id === camp2.id), 'a send under way can be stopped');
+  const camp3 = { ...camp, id: uid(), html: '<p>No link</p>', status: 'draft' }; T.email_campaigns.push(camp3);
+  r = await epost({ action: 'start', id: camp3.id }); ok(r.status === 400 && camp3.status === 'draft', 'an email without an unsubscribe link is refused');
+
+  const page = (method, t, body) => unsub(new Request(`https://example.org/unsubscribe?t=${t}`, { method, body, headers: body ? { 'content-type': 'application/x-www-form-urlencoded' } : {} }));
+  r = await page('GET', amy.unsub_token); let txt = await r.text();
+  ok(r.status === 200 && txt.includes('amy@x.com') && /Yes, unsubscribe me/.test(txt) && !amy.do_not_email, 'opening the unsubscribe link asks first (mail scanners cannot unsubscribe anyone)');
+  r = await page('POST', amy.unsub_token, 'List-Unsubscribe=One-Click'); txt = await r.text();
+  ok(amy.do_not_email && amy.do_not_email_reason === 'Unsubscribed' && amy.email_ok === false && /unsubscribed/i.test(txt), 'confirming (or one-click in Gmail) unsubscribes');
+  r = await page('POST', amy.unsub_token, 'again=1'); ok(!amy.do_not_email && amy.email_ok === true, 'someone who unsubscribed by mistake can put themselves back');
+  ben.do_not_email = true; ben.do_not_email_reason = 'Bounced'; await page('POST', ben.unsub_token, 'again=1'); ok(ben.do_not_email, 'a bounced address cannot switch itself back on');
+  r = await page('GET', 'nope'); ok(r.status === 404, 'a broken unsubscribe link shows a helpful page');
+
+  process.env.RESEND_WEBHOOK_SECRET = 'whsec_' + Buffer.from('shhh-secret').toString('base64');
+  const hpost = (ev, good = true) => { const body = JSON.stringify(ev), id = 'msg_1', ts = String(Math.floor(Date.now() / 1000));
+    const sg = crypto.createHmac('sha256', Buffer.from('shhh-secret')).update(`${id}.${ts}.${body}`).digest('base64');
+    return hook.default(new Request('https://x/', { method: 'POST', body, headers: { 'svix-id': id, 'svix-timestamp': ts, 'svix-signature': good ? `v1,${sg}` : 'v1,AAAA' } })); };
+  const pid = T.email_sends.find((x) => x.email === 'amy@x.com').provider_id;
+  r = await hpost({ type: 'email.bounced', data: { to: ['amy@x.com'], email_id: pid, bounce: { type: 'Permanent' } } }, false); ok(r.status === 401 && !amy.do_not_email, 'a forged bounce notice is refused');
+  r = await hpost({ type: 'email.bounced', data: { to: ['Amy@X.com'], email_id: pid, bounce: { type: 'Permanent' } } });
+  ok(r.status === 200 && amy.do_not_email && amy.do_not_email_reason === 'Bounced' && T.email_sends.find((x) => x.provider_id === pid).status === 'failed', 'a bounced address is marked Do Not Email');
+  const cat = T.contacts.find((c) => c.email === 'cat@x.com'); await hpost({ type: 'email.complained', data: { to: ['cat@x.com'] } }); ok(cat.do_not_email_reason === 'Marked as spam', 'a spam complaint is marked Do Not Email');
+  const rex = T.contacts.find((c) => c.email === 'reject@x.com'); await hpost({ type: 'email.bounced', data: { to: ['reject@x.com'], bounce: { type: 'Transient' } } }); ok(!rex.do_not_email, 'a temporary bounce (full inbox) changes nothing'); }
+console.log('pages');
+{ // Every page's own code must at least parse: one stray apostrophe stops a whole page from working.
+  const fs = await import('node:fs'); const vm = await import('node:vm'); const root = new URL('../../', import.meta.url);
+  for (const file of ['index.html', 'admin/index.html', 'auction/index.html', 'auction/reveal.html']) {
+    const html = fs.readFileSync(new URL(file, root), 'utf8'); let bad = '';
+    for (const m of html.matchAll(/<script(?![^>]*\bsrc=)(?![^>]*type="(?:application\/(?:ld\+)?json|text\/template)")[^>]*>([\s\S]*?)<\/script>/g)) {
+      try { new vm.Script(m[1]); } catch (e) { bad = `${e.message} near: ${String(e.stack).split('\n')[1] || ''}`.slice(0, 200); break; } }
+    ok(!bad, `${file}: the page's code has no typos that would stop it${bad ? ' (' + bad + ')' : ''}`);
+  }
+  let bad = ''; try { new vm.Script(fs.readFileSync(new URL('admin/email.js', root), 'utf8')); } catch (e) { bad = e.message; }
+  ok(fs.existsSync(new URL('admin/vendor/html2canvas.min.js', root)) && fs.existsSync(new URL('admin/vendor/jspdf.umd.min.js', root)) && fs.existsSync(new URL('assets/shade-project-logo.png', root)) && fs.existsSync(new URL('assets/logo-navy.png', root)), 'files the emails and newsletter PDF need are in place');
+  ok(!bad, 'admin/email.js parses'); }
 console.log(`\n${pass} checks passed`);
