@@ -285,12 +285,14 @@ ${secs.map((b) => `<div class="sec ${b.style === 'sky' ? 'sky' : b.style === 'na
     needs: { text: '' }, callout: { title: '', text: '', label: 'Learn more', url: '/' }, signature: { name: '', title: '' } };
 
   /* ---------- state ---------- */
+  let ARCH = null, ARCHOK = true, SEG = null, SEGQ = '', SEGARCH = false, PQ = '';
   let LIST = null, LISTERR = '', ED = null, STEP = 'write', WIDE = true, SAVING = null, DIRTY = false, SENDING = null, TAGQ = '';
   const canEdit = () => X.PERMS.emaillist === 'edit';
   const people = () => [...X.CONTACTS.values()].filter((c) => c.email && c.okEmail);
-  const reach = (a) => people().filter((c) => (a.mode !== 'tags' || c.tags.some((t) => (a.tags || []).includes(t))) && !c.tags.some((t) => (a.skip || []).includes(t)));
+  const reachAll = (a) => people().filter((c) => (a.mode !== 'tags' || c.tags.some((t) => (a.tags || []).includes(t))) && !c.tags.some((t) => (a.skip || []).includes(t)));   // before leaving anyone out by hand
+  const reach = (a) => { const out = new Set(a.skip_ids || []); return out.size ? reachAll(a).filter((c) => !out.has(c.id)) : reachAll(a); };
   const tagCounts = () => { const m = new Map(); people().forEach((c) => c.tags.forEach((t) => m.set(t, (m.get(t) || 0) + 1))); return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0])); };
-  const audText = (a) => (a.mode === 'tags' ? ((a.tags || []).length ? (a.tags.length <= 3 ? a.tags.join(', ') : `${a.tags.length} tags`) : 'No tags chosen') : 'Everyone on the list') + ((a.skip || []).length ? `, leaving out ${a.skip.length <= 2 ? a.skip.join(' and ') : a.skip.length + ' tags'}` : '');
+  const audText = (a) => (a.mode === 'tags' ? ((a.tags || []).length ? (a.tags.length <= 3 ? a.tags.join(', ') : `${a.tags.length} segments`) : 'No segments chosen') : 'Everyone on the list') + ((a.skip || []).length ? `, leaving out ${a.skip.length <= 2 ? a.skip.join(' and ') : a.skip.length + ' segments'}` : '') + ((a.skip_ids || []).length ? `, minus ${a.skip_ids.length} ${a.skip_ids.length === 1 ? 'person' : 'people'} left out by hand` : '');
   const blanks = (d) => { const s = JSON.stringify([d.subject, d.preheader, d.blocks]); return [...new Set(s.match(/\[[^\]\[\\"]{1,60}\](?!\()/g) || [])].slice(0, 6); };
   async function fn(body) { const { data: { session } } = await X.SB.auth.getSession();
     try { const r = await fetch('/.netlify/functions/email-send', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + (session && session.access_token) }, body: JSON.stringify(body) }); return await r.json(); }
@@ -298,6 +300,93 @@ ${secs.map((b) => `<div class="sec ${b.style === 'sky' ? 'sky' : b.style === 'na
   async function load() { const r = await X.SB.from('email_campaigns').select('id,name,template,subject,audience,status,total,sent,failed,created_by,updated_at,started_at,finished_at').order('updated_at', { ascending: false }).limit(200);
     if (r.error) { LIST = []; LISTERR = /does not exist|schema cache|relation/i.test(r.error.message) ? 'setup' : r.error.message; } else { LIST = r.data; LISTERR = ''; }
     if (['email', 'newsletter'].includes(X.VIEW) && !ED) render(); }
+
+  /* ---------- people in an audience, and segments ---------- */
+  const outNote = (a) => { const k = (a.skip_ids || []).length; return k ? `${k} left out by hand · <button type="button" class="em-link" data-em-allin>put everyone back</button>` : ''; };
+  const byName = (x, y) => (x.name || '').localeCompare(y.name || '', 'en', { sensitivity: 'base' });
+  const hit = (c, q) => !q || `${c.first || ''} ${c.last || ''} ${c.name || ''} ${c.email || ''}`.toLowerCase().includes(q.toLowerCase());
+  function peopleRows(a, locked) { const out = new Set(a.skip_ids || []); const all = reachAll(a).filter((c) => hit(c, PQ)).sort((x, y) => (out.has(y.id) - out.has(x.id)) || byName(x, y)); const show = all.slice(0, 120);
+    return `<div class="em-people">${show.map((c) => `<label class="${out.has(c.id) ? 'out' : ''}"><input type="checkbox" data-em-person="${c.id}" ${out.has(c.id) ? '' : 'checked'} ${locked ? 'disabled' : ''}><span><b>${esc(c.name)}</b><small>${esc(c.email)}</small></span></label>`).join('') || '<p class="note">Nobody matches.</p>'}</div>${all.length > show.length ? `<p class="note" style="margin:8px 0 0">Showing the first ${show.length} of ${all.length.toLocaleString()}. Type a name or email to find someone.</p>` : ''}`; }
+  async function loadArch() { ARCH = new Set(); const r = await X.SB.from('archived_tags').select('tag'); ARCHOK = !r.error; if (!r.error) { ARCH = new Set(r.data.map((x) => x.tag)); if (['email', 'newsletter', 'segments'].includes(X.VIEW)) show(); } }
+  const everyone = () => [...X.CONTACTS.values()];
+  const segments = () => { const m = new Map(); everyone().forEach((c) => c.tags.forEach((t) => { const o = m.get(t) || { name: t, all: 0, ok: 0 }; o.all += 1; if (c.email && c.okEmail) o.ok += 1; m.set(t, o); })); if (SEG && !m.has(SEG)) m.set(SEG, { name: SEG, all: 0, ok: 0 }); return [...m.values()].sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' })); };
+  const members = (t) => everyone().filter((c) => c.tags.includes(t)).sort(byName);
+  const why = (c) => !c.email ? 'No email' : c.unsub ? 'Do not email' : c.okEmail ? '' : 'Email off';
+  function segPage() {
+    if (ARCH === null) { loadArch(); return `<div class="panel"><div class="empty">Loading your segments…</div></div>`; }
+    if (SEG) return CSS + segDetail();
+    const all = segments(); const arch = all.filter((x) => ARCH.has(x.name)); const list = all.filter((x) => (SEGARCH ? ARCH.has(x.name) : !ARCH.has(x.name)) && (!SEGQ || x.name.toLowerCase().includes(SEGQ.toLowerCase())));
+    return CSS + `<div class="summary"><div><b>${all.length - arch.length}</b><span>Segments</span></div><div><b>${people().length.toLocaleString()}</b><span>People you can email</span></div><div><b>${arch.length}</b><span>Archived segments</span></div></div>
+    <div class="panel"><header><h2>${SEGARCH ? 'Archived segments' : 'Your segments'}</h2><div class="toolbar"><input type="search" id="em-segq" class="em-search" value="${esc(SEGQ)}" placeholder="Find a segment" aria-label="Find a segment">${arch.length || SEGARCH ? `<button class="btn" data-em-segarch>${SEGARCH ? 'Back to Current Segments' : `Show Archived (${arch.length})`}</button>` : ''}${canEdit() && !SEGARCH ? '<button class="btn primary" data-em-segnew>New Segment</button>' : ''}</div></header>
+      <div class="em-rows">${list.map((x) => `<button class="em-row" data-em-seg="${esc(x.name)}"><span><b>${esc(x.name)}</b></span><span class="sub">${x.all.toLocaleString()} ${x.all === 1 ? 'person' : 'people'}${x.ok !== x.all ? ` · ${x.ok.toLocaleString()} can be emailed` : ''}</span><span class="pill" style="background:var(--sky-pale);color:var(--teal)">Open</span></button>`).join('') || `<div class="empty">${SEGARCH ? 'Nothing is archived.' : 'No segments match.'}</div>`}</div></div>`; }
+  function segDetail() { const all = members(SEG); const list = all.filter((c) => hit(c, SEGQ)); const show = list.slice(0, 300); const ok = all.filter((c) => c.email && c.okEmail).length; const archived = ARCH.has(SEG); const edit = canEdit();
+    return `<div style="display:grid;gap:18px"><div class="em-top"><div><span class="label" style="color:var(--pink)">Segment${archived ? ' · archived' : ''}</span><h2 style="font-family:var(--serif);font-weight:400;font-size:2.2rem;margin:2px 0 0">${esc(SEG)}</h2><p class="note" style="margin:4px 0 0">${all.length.toLocaleString()} ${all.length === 1 ? 'person' : 'people'} · ${ok.toLocaleString()} can be emailed</p></div><button class="btn" data-em-segback>Back to All Segments</button></div>
+    <div class="toolbar">${edit ? '<button class="btn primary" data-em-segadd>Add a Person</button><button class="btn" data-em-segup>Upload a Group</button>' : ''}<button class="btn" data-em-segdl ${all.length ? '' : 'disabled'}>Download the List</button>${edit ? `<button class="btn" data-em-segtoggle>${archived ? 'Bring Back From Archive' : 'Archive This Segment'}</button>` : ''}</div>
+    ${archived ? '<div class="em-ok">This segment is archived: it is hidden from your lists, and everyone in it is still here and untouched.</div>' : ''}
+    <div class="panel"><header><h2>People</h2><input type="search" id="em-segq" class="em-search" value="${esc(SEGQ)}" placeholder="Find a person" aria-label="Find a person"></header>
+      <div class="em-rows">${show.map((c) => `<div class="em-row" style="cursor:default"><span><b>${esc(c.name)}</b><span class="sub">${esc(c.email || 'No email on file')}${c.phone ? ' · ' + esc(c.phone) : ''}</span></span><span class="sub">${why(c) ? `<span class="pill" style="background:var(--line);color:var(--muted)">${why(c)}</span>` : ''}</span>${edit ? `<button class="btn ghost" data-em-segout="${c.id}" aria-label="Take ${esc(c.name)} out of this segment">Take Out</button>` : '<span></span>'}</div>`).join('') || `<div class="empty">${all.length ? 'Nobody matches.' : 'Nobody is in this segment yet. Add a person or upload a group.'}</div>`}</div>
+      ${list.length > show.length ? `<p class="note" style="padding:0 18px 14px;margin:0">Showing the first ${show.length} of ${list.length.toLocaleString()}. Type a name to find someone, or download the full list.</p>` : ''}</div></div>`; }
+  async function tagPeople(tag, list) { const r = await X.SB.rpc('tag_people', { p_tag: tag, p_people: list });
+    if (r.error) { toast(/function|schema cache|does not exist/i.test(r.error.message) ? 'One setup step first: run segments.sql in Supabase.' : r.error.message, true); return null; }
+    await X.reload(); return r.data; }
+  const said = (d) => [d.added && `${d.added} added`, d.created && `${d.created} new ${d.created === 1 ? 'contact' : 'contacts'} created`, d.already && `${d.already} already in it`, d.skipped && `${d.skipped} skipped (no valid email)`].filter(Boolean).join(', ') || 'Nothing to add';
+  const sheet = (label, body) => layer(`<div class="drawer"><button class="scrim" data-close aria-label="Close"></button><div class="sheet" role="dialog" aria-modal="true" aria-label="${label}"><button class="x" type="button" data-close aria-label="Close">×</button>${body}</div></div>`);
+  function addPerson() { sheet('Add a person', `<div><span class="label" style="color:var(--pink)">${esc(SEG)}</span><h2>Add a person</h2></div>
+      <label class="field" for="em-addq">Find someone already in your contacts<input id="em-addq" type="search" placeholder="Name or email" autocomplete="off"></label><div id="em-addres"></div>
+      <form id="em-addnew" style="display:grid;gap:12px;border-top:1px solid var(--line);padding-top:16px" novalidate><b>Or add someone new</b>
+        <div class="em-three"><label class="field" for="em-nf">First Name<input id="em-nf" type="text" autocomplete="off"></label><label class="field" for="em-nl">Last Name<input id="em-nl" type="text" autocomplete="off"></label></div>
+        <label class="field" for="em-ne">Email<input id="em-ne" type="email" autocomplete="off" required></label><p class="err" id="em-nerr" role="alert"></p>
+        <button class="btn primary" type="submit" style="justify-self:start">Add to ${esc(SEG)}</button></form>`);
+    const paint = () => { const q = $('#em-addq').value.trim(); const res = q.length < 2 ? [] : everyone().filter((c) => hit(c, q)).sort(byName).slice(0, 12);
+      $('#em-addres').innerHTML = q.length < 2 ? '' : `<div class="em-people">${res.map((c) => c.tags.includes(SEG) ? `<label class="out"><span><b>${esc(c.name)}</b><small>Already in this segment</small></span></label>` : `<label><span><b>${esc(c.name)}</b><small>${esc(c.email || 'No email on file')}</small></span><button type="button" class="btn" data-em-pick="${c.id}">Add</button></label>`).join('') || '<p class="note">No one by that name. Add them below.</p>'}</div>`; };
+    $('#em-addq').addEventListener('input', paint); setTimeout(() => $('#em-addq').focus(), 50);
+    $('#em-addres').addEventListener('click', async (ev) => { const b = ev.target.closest('[data-em-pick]'); if (!b) return; b.disabled = true; b.textContent = 'Adding…'; const d = await tagPeople(SEG, [{ id: b.dataset.emPick }]); if (d) { toast('Added.'); const q = $('#em-addq'); if (q) paint(); } });
+    $('#em-addnew').addEventListener('submit', async (ev) => { ev.preventDefault(); const email = $('#em-ne').value.trim().toLowerCase(); if (!/^\S+@\S+\.\S{2,}$/.test(email)) { $('#em-nerr').textContent = 'Enter their email address.'; return; }
+      const d = await tagPeople(SEG, [{ email, first_name: $('#em-nf').value, last_name: $('#em-nl').value }]); if (d) { closeLayer(); toast(said(d) + '.'); } }); }
+  // Read people out of a pasted list or a CSV file: one person per line, with an email somewhere on the line.
+  function parsePeople(text) { const rows = String(text || '').replace(/^﻿/, '').split(/\r?\n/).filter((l) => l.trim()); if (!rows.length) return { people: [], skipped: 0 };
+    const sep = (rows[0].match(/\t/g) || []).length ? '\t' : (rows[0].match(/;/g) || []).length > (rows[0].match(/,/g) || []).length ? ';' : ',';
+    const cells = (line) => { const out = []; let cur = '', q = false; for (let i = 0; i < line.length; i++) { const ch = line[i]; if (q) { if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; } else if (ch === '"') q = false; else cur += ch; } else if (ch === '"') q = true; else if (ch === sep) { out.push(cur); cur = ''; } else cur += ch; } out.push(cur); return out.map((x) => x.trim()); };
+    const isMail = (v) => /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]{2,}$/.test(v); const grid = rows.map(cells); const head = grid[0].map((h) => h.toLowerCase());
+    const hasHead = head.some((h) => /e-?mail/.test(h)) && !grid[0].some(isMail); const col = (re) => head.findIndex((h) => re.test(h));
+    const ix = hasHead ? { email: col(/e-?mail/), first: col(/first/), last: col(/last|surname/), name: col(/^(full ?)?name$/), phone: col(/phone|cell|mobile/) } : null;
+    const seen = new Set(); const people = []; let skipped = 0;
+    for (const row of grid.slice(hasHead ? 1 : 0)) { let email = '', first = '', last = '', phone = '';
+      if (ix) { email = row[ix.email] || ''; first = ix.first >= 0 ? row[ix.first] || '' : ''; last = ix.last >= 0 ? row[ix.last] || '' : ''; phone = ix.phone >= 0 ? row[ix.phone] || '' : ''; if (!first && !last && ix.name >= 0) { const p = (row[ix.name] || '').split(/\s+/); first = p.shift() || ''; last = p.join(' '); } }
+      else { const line = row.join(' '); const m = line.match(/[^\s@<>,;"']+@[^\s@<>,;"']+\.[^\s@<>,;"']{2,}/); email = m ? m[0] : '';
+        const ph = line.match(/\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/); phone = ph ? ph[0] : '';
+        const words = line.replace(email, ' ').replace(phone || '\u0000', ' ').replace(/[<>"';,\t]+/g, ' ').trim().split(/\s+/).filter(Boolean); first = words.shift() || ''; last = words.join(' '); }
+      email = email.toLowerCase().replace(/^mailto:/, ''); if (/@example\.(com|org|net)$/.test(email)) email = '';   // the sample file's made-up people
+      if (!isMail(email) || seen.has(email)) { if (!seen.has(email)) skipped += 1; continue; } seen.add(email); people.push({ email, first_name: first, last_name: last, phone }); }
+    return { people, skipped }; }
+  function uploadGroup() { let found = null;
+    sheet('Upload a group', `<div><span class="label" style="color:var(--pink)">${esc(SEG)}</span><h2>Upload a group</h2><p class="note">One person per line, with their email. Names are optional. A spreadsheet works if you save it as CSV, or copy the rows and paste them here.</p></div>
+      <div class="toolbar"><label class="btn em-up"><input type="file" id="em-upfile" accept=".csv,.txt,text/csv,text/plain" hidden><span>Choose a CSV File</span></label><button type="button" class="btn ghost" id="em-upsample">Download a Sample File</button></div>
+      <p class="note" style="margin:0">New to this? Download the sample, open it in Excel or Google Sheets, replace the three example rows with your people, save it as CSV, and choose it here. Only the Email column is required.</p>
+      <label class="field" for="em-uptext">Or paste the list<textarea id="em-uptext" rows="8" placeholder="Jane Smith, jane@example.com&#10;sam@example.com"></textarea></label>
+      <div id="em-upsum"></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="em-upgo" disabled>Add to ${esc(SEG)}</button><button class="btn" data-close>Cancel</button></div>`);
+    const sum = () => { found = parsePeople($('#em-uptext').value); const known = new Map(everyone().filter((c) => c.email).map((c) => [c.email.toLowerCase(), c])); const n = found.people.length;
+      const inSeg = found.people.filter((p) => known.has(p.email) && known.get(p.email).tags.includes(SEG)).length, fresh = found.people.filter((p) => !known.has(p.email)).length;
+      $('#em-upsum').innerHTML = !$('#em-uptext').value.trim() ? '' : n ? `<div class="em-ok"><b>${n.toLocaleString()} ${n === 1 ? 'person' : 'people'} found.</b> ${(n - inSeg - fresh).toLocaleString()} already in your contacts will be added to this segment, ${fresh.toLocaleString()} will be added as new contacts${inSeg ? `, and ${inSeg.toLocaleString()} are already in it` : ''}.${found.skipped ? ` ${found.skipped} ${found.skipped === 1 ? 'line has' : 'lines have'} no valid email and will be skipped.` : ''}</div>` : '<div class="em-warn">No email addresses found. Each line needs an email.</div>';
+      $('#em-upgo').disabled = !n; $('#em-upgo').textContent = n ? `Add ${n.toLocaleString()} ${n === 1 ? 'Person' : 'People'} to ${SEG}` : `Add to ${SEG}`; };
+    $('#em-uptext').addEventListener('input', sum);
+    // The sample uses example.com addresses, which the reader always skips, so uploading it untouched adds nobody.
+    $('#em-upsample').addEventListener('click', () => { X.download('Sample group to upload.csv', ['First Name,Last Name,Email,Phone', 'Jane,Smith,jane.smith@example.com,(630) 555-0101', 'Robert,Jones,robert.jones@example.com,', 'Maria,Garcia,maria.garcia@example.com,(815) 555-0102'].join('\n')); toast('Sample downloaded. Replace the example rows with your people.'); });
+    $('#em-upfile').addEventListener('change', async (ev) => { const f = ev.target.files[0]; if (!f) return; if (/\.xlsx?$/i.test(f.name)) { toast('Save the spreadsheet as CSV first (File → Save As → CSV), or copy the rows and paste them.', true); return; } $('#em-uptext').value = await f.text(); sum(); });
+    $('#em-upgo').addEventListener('click', async (ev) => { if (!found || !found.people.length) return; ev.target.disabled = true; ev.target.textContent = 'Adding…'; let tot = { added: 0, created: 0, already: 0, skipped: found.skipped };
+      for (let i = 0; i < found.people.length; i += 500) { const d = await tagPeople(SEG, found.people.slice(i, i + 500)); if (!d) { ev.target.disabled = false; ev.target.textContent = 'Try Again'; return; } ['added', 'created', 'already'].forEach((k) => { tot[k] += d[k] || 0; }); tot.skipped += d.skipped || 0; }
+      closeLayer(); toast(said(tot) + '.'); }); }
+  function newSegment() { sheet('New segment', `<div><span class="label" style="color:var(--pink)">Segments</span><h2>New segment</h2><p class="note">Name it, then add people or upload a group. It shows in your list once the first person is in it.</p></div>
+      <form id="em-segform" style="display:grid;gap:12px" novalidate><label class="field" for="em-segname">Segment name<input id="em-segname" type="text" maxlength="80" required placeholder="Charity Dinner 2027"></label><p class="err" id="em-segerr" role="alert"></p><button class="btn primary" type="submit" style="justify-self:start">Create Segment</button></form>`);
+    setTimeout(() => $('#em-segname').focus(), 50);
+    $('#em-segform').addEventListener('submit', (ev) => { ev.preventDefault(); const v = $('#em-segname').value.trim().replace(/\s+/g, ' '); if (!v) { $('#em-segerr').textContent = 'Give it a name.'; return; }
+      const same = segments().find((x) => x.name.toLowerCase() === v.toLowerCase()); SEG = same ? same.name : v; SEGQ = ''; closeLayer(); show(); if (same) toast('That segment already exists, so here it is.'); }); }
+  async function toggleArchive() { if (!ARCHOK) { toast('One setup step first: run segments.sql in Supabase.', true); return; }
+    const on = ARCH.has(SEG); const r = on ? await X.SB.from('archived_tags').delete().eq('tag', SEG) : await X.SB.from('archived_tags').insert({ tag: SEG, archived_by: X.ME.name || X.ME.email || '' });
+    if (r.error) { toast(r.error.message, true); return; } on ? ARCH.delete(SEG) : ARCH.add(SEG); toast(on ? 'Back in your segments list.' : 'Archived. Everyone in it is untouched; find it under Show Archived.'); show(); }
+  function downloadSegment() { const rows = members(SEG); const q = X.csvq;
+    X.download(`${SEG.replace(/[^\w ,.&-]+/g, '').trim() || 'segment'}.csv`, [['First Name', 'Last Name', 'Email', 'Phone', 'Can Email', 'City', 'State'].join(','), ...rows.map((c) => [c.first, c.last, c.email, c.phone, c.email && c.okEmail ? 'Yes' : (why(c) || 'No'), c.city, c.state].map(q).join(','))].join('\n'));
+    toast(`Downloaded ${rows.length.toLocaleString()} ${rows.length === 1 ? 'person' : 'people'}.`); }
 
   /* ---------- screens ---------- */
   const CSS = `<style id="em-css">
@@ -322,6 +411,12 @@ ${secs.map((b) => `<div class="sec ${b.style === 'sky' ? 'sky' : b.style === 'na
 .em-blk textarea{resize:vertical;min-height:120px;line-height:1.5}.em-blk textarea.two{min-height:64px}
 .em-pairs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:8px}
 .em-pairs input,.em-pairs textarea{border:1.5px solid var(--line);border-radius:10px;background:var(--surface);padding:9px 11px;font:inherit;width:100%;box-sizing:border-box;resize:vertical}
+.em-people{display:grid;max-height:360px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.em-people label{display:flex;gap:10px;align-items:center;padding:8px 12px;border-top:1px solid var(--line);cursor:pointer}.em-people label:first-child{border-top:0}
+.em-people input{width:17px;height:17px;accent-color:var(--teal);flex:none}.em-people span{display:grid;min-width:0;flex:1}.em-people b{font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.em-people small{color:var(--muted);font-size:.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.em-people label.out{background:var(--pink-pale)}.em-people label.out b{text-decoration:line-through;color:var(--muted)}
+.em-link{border:0;background:none;padding:0;font:inherit;color:var(--teal);text-decoration:underline;cursor:pointer}
+.em-search{border:1.5px solid var(--line);border-radius:999px;background:var(--surface);padding:9px 16px;font:inherit;min-width:min(240px,100%)}
 .em-three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}@media (max-width:560px){.em-three{grid-template-columns:1fr}.em-three label{grid-column:auto!important}}
 .em-sec.off{background:transparent;border-style:dashed}.em-sec.off>header b{color:var(--muted)}.em-sec>header .tick b{font-size:.95rem;letter-spacing:0;text-transform:none;color:var(--navy)}
 .em-picrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.em-picrow img{width:96px;height:auto;border-radius:8px}.em-up{cursor:pointer}
@@ -341,7 +436,7 @@ ${secs.map((b) => `<div class="sec ${b.style === 'sky' ? 'sky' : b.style === 'na
 </style>`;
   const pillFor = (c) => c.status === 'sent' ? `<span class="pill" style="background:var(--sky-pale);color:var(--teal)">Sent</span>` : c.status === 'sending' ? `<span class="pill" style="background:var(--pink-pale);color:var(--pink)">Not finished</span>` : c.status === 'canceled' ? `<span class="pill" style="background:var(--line);color:var(--muted)">Stopped</span>` : `<span class="pill" style="background:var(--line);color:var(--muted)">Draft</span>`;
 
-  function page(mode) { const nl = mode === 'nl';
+  function page(mode) { if (mode === 'seg') return segPage(); const nl = mode === 'nl';
     if (ED && isNL(ED) !== nl) { if (DIRTY) save(); ED = null; SENDING = null; }
     if (ED) return CSS + editor();
     if (LIST === null) { load(); return `<div class="panel"><div class="empty">Loading your emails…</div></div>`; }
@@ -405,13 +500,19 @@ ${secs.map((b) => `<div class="sec ${b.style === 'sky' ? 'sky' : b.style === 'na
       ${d.blocks.map((b, i) => { const [label, fields] = KIND[b.type] || [b.type, []]; const fixed = b.type === 'footer' || b.type === 'header';
         return `<div class="em-blk"><header><b>${label}</b>${fixed ? '' : `<span class="tools"><button type="button" title="Move up" aria-label="Move ${label} up" data-em-move="${i}" data-dir="-1" ${i <= 1 ? 'disabled' : ''}>↑</button><button type="button" title="Move down" aria-label="Move ${label} down" data-em-move="${i}" data-dir="1" ${i >= d.blocks.length - 2 ? 'disabled' : ''}>↓</button><button type="button" title="Remove" aria-label="Remove ${label}" data-em-del="${i}">×</button></span>`}</header>${fields.map((f) => field(b, i, f)).join('')}</div>`; }).join('')}
       <div class="em-blk"><header><b>Add a piece</b></header><div class="em-add">${ADDABLE.map((t) => `<button type="button" data-em-add="${t}">+ ${KIND[t][0]}</button>`).join('')}</div></div></div>`;
-    if (STEP === 'who') { const tags = tagCounts().filter(([t]) => !TAGQ || t.toLowerCase().includes(TAGQ.toLowerCase()));
-      const box = (key) => `<div class="em-tags">${tags.map(([t, c]) => `<label><input type="checkbox" data-em-tag="${key}" value="${esc(t)}" ${(a[key] || []).includes(t) ? 'checked' : ''} ${locked ? 'disabled' : ''}>${esc(t)}<span>${c}</span></label>`).join('') || '<p class="note">No tags match.</p>'}</div>`;
+    if (STEP === 'who') { if (ARCH === null) loadArch();
+      const hidden = (t) => ARCH && ARCH.has(t) && !(a.tags || []).includes(t) && !(a.skip || []).includes(t);   // archived segments stay out of the way unless already ticked
+      const tags = tagCounts().filter(([t]) => !hidden(t) && (!TAGQ || t.toLowerCase().includes(TAGQ.toLowerCase())));
+      const box = (key) => `<div class="em-tags">${tags.map(([t, c]) => `<label><input type="checkbox" data-em-tag="${key}" value="${esc(t)}" ${(a[key] || []).includes(t) ? 'checked' : ''} ${locked ? 'disabled' : ''}>${esc(t)}<span>${c}</span></label>`).join('') || '<p class="note">No segments match.</p>'}</div>`;
       left = `<div class="em-form"><div class="em-blk"><div class="em-reach" id="em-reach">${n.toLocaleString()} ${n === 1 ? 'person' : 'people'}</div><p class="note" style="margin:0">will get this email. People who unsubscribed, bounced, or are marked Do Not Email are always left out.</p></div>
       <div class="em-blk"><label class="tick"><input type="radio" name="em-mode" value="all" ${a.mode !== 'tags' ? 'checked' : ''} ${locked ? 'disabled' : ''}> Everyone on the email list</label>
-        <label class="tick"><input type="radio" name="em-mode" value="tags" ${a.mode === 'tags' ? 'checked' : ''} ${locked ? 'disabled' : ''}> Only people with certain tags</label></div>
-      ${a.mode === 'tags' ? `<div class="em-blk"><header><b>Send to anyone with one of these tags</b></header><label class="field" for="em-tagq">Find a tag<input id="em-tagq" type="search" value="${esc(TAGQ)}" placeholder="Type to narrow the list"></label>${box('tags')}</div>` : ''}
-      <details class="em-blk" ${(a.skip || []).length ? 'open' : ''}><summary style="cursor:pointer;font-weight:700">Leave some people out${(a.skip || []).length ? ` (${a.skip.length} tag${a.skip.length > 1 ? 's' : ''})` : ''}</summary><p class="note" style="margin:0">Anyone with one of these tags is skipped, even if they match above.</p>${a.mode === 'tags' ? '' : `<label class="field" for="em-tagq">Find a tag<input id="em-tagq" type="search" value="${esc(TAGQ)}" placeholder="Type to narrow the list"></label>`}${box('skip')}</details></div>`; }
+        <label class="tick"><input type="radio" name="em-mode" value="tags" ${a.mode === 'tags' ? 'checked' : ''} ${locked ? 'disabled' : ''}> Only people in certain segments</label></div>
+      ${a.mode === 'tags' ? `<div class="em-blk"><header><b>Send to anyone in one of these segments</b></header><label class="field" for="em-tagq">Find a segment<input id="em-tagq" type="search" value="${esc(TAGQ)}" placeholder="Type to narrow the list"></label>${box('tags')}</div>` : ''}
+      <details class="em-blk" ${(a.skip || []).length ? 'open' : ''}><summary style="cursor:pointer;font-weight:700">Leave whole segments out${(a.skip || []).length ? ` (${a.skip.length})` : ''}</summary><p class="note" style="margin:0">Anyone in one of these segments is skipped, even if they match above.</p>${a.mode === 'tags' ? '' : `<label class="field" for="em-tagq">Find a segment<input id="em-tagq" type="search" value="${esc(TAGQ)}" placeholder="Type to narrow the list"></label>`}${box('skip')}</details>
+      <div class="em-blk"><header><b>The people getting this email</b><span class="note" id="em-outnote">${outNote(a)}</span></header>
+        <p class="note" style="margin:0">Untick anyone who should not get this one email. They stay in their segments for next time.</p>
+        <label class="field" for="em-pq">Find a person<input id="em-pq" type="search" value="${esc(PQ)}" placeholder="Name or email"></label>
+        <div id="em-plist">${peopleRows(a, locked)}</div></div></div>`; }
     if (STEP === 'send') left = locked ? results() : check(n);
     return `<div style="display:grid;gap:18px">${top}<div class="em-grid"><div>${left}</div>${pv}</div></div>`;
   }
@@ -478,7 +579,20 @@ ${secs.map((b) => `<div class="sec ${b.style === 'sky' ? 'sky' : b.style === 'na
 
   /* ---------- events ---------- */
   document.addEventListener('click', async (ev) => {
-    if (!X || !['email', 'newsletter'].includes(X.VIEW)) return; const t = ev.target.closest('button,[data-em-open]'); if (!t) return; const ds = t.dataset;
+    if (!X || !['email', 'newsletter', 'segments'].includes(X.VIEW)) return; const t = ev.target.closest('button,[data-em-open]'); if (!t) return; const ds = t.dataset;
+    if (X.VIEW === 'segments') {
+      if (ds.emSeg) { SEG = ds.emSeg; SEGQ = ''; show(); return window.scrollTo(0, 0); }
+      if ('emSegback' in ds) { SEG = null; SEGQ = ''; return show(); }
+      if ('emSegarch' in ds) { SEGARCH = !SEGARCH; SEGQ = ''; return show(); }
+      if ('emSegnew' in ds) return newSegment();
+      if ('emSegadd' in ds) return addPerson();
+      if ('emSegup' in ds) return uploadGroup();
+      if ('emSegdl' in ds) return downloadSegment();
+      if ('emSegtoggle' in ds) return toggleArchive();
+      if (ds.emSegout) { const c = X.CONTACTS.get(ds.emSegout); t.disabled = true; t.textContent = 'Taking out…'; const r = await X.SB.rpc('untag_people', { p_tag: SEG, p_ids: [ds.emSegout] });
+        if (r.error) { t.disabled = false; t.textContent = 'Take Out'; return toast(/function|schema cache|does not exist/i.test(r.error.message) ? 'One setup step first: run segments.sql in Supabase.' : r.error.message, true); }
+        await X.reload(); return toast(`${c ? c.name : 'They'} is out of ${SEG} and still in your contacts.`); }
+      return; }
     if (ds.emNl) return startNewsletter(ds.emNl === 'copy');
     if (ds.emNew) return start(ds.emNew);
     if (ds.emOpen) return open(ds.emOpen);
@@ -486,6 +600,7 @@ ${secs.map((b) => `<div class="sec ${b.style === 'sky' ? 'sky' : b.style === 'na
     if ('emClose' in ds) return close();
     if (ds.emStep) { if (DIRTY) save(); STEP = ds.emStep; TAGQ = ''; return show(); }
     if (ds.emWide) { WIDE = ds.emWide === '1'; return show(); }
+    if ('emAllin' in ds) { if (ED.status !== 'draft') return; ED.audience.skip_ids = []; touch(); return show(); }
     if ('emPdf' in ds) return previewPdf(t);
     if ('emSend' in ds) return confirmSend();
     if ('emResume' in ds) return loop();
@@ -502,7 +617,9 @@ ${secs.map((b) => `<div class="sec ${b.style === 'sky' ? 'sky' : b.style === 'na
       const cards = document.querySelectorAll('.em-sec'); const el = cards[cards.length - 1]; if (el) { el.scrollIntoView({ block: 'center' }); const f = el.querySelector('input[type=text]'); if (f) { f.focus(); f.select(); } } return; }
   });
   document.addEventListener('input', (ev) => {
+    if (X && X.VIEW === 'segments' && ev.target.id === 'em-segq') { SEGQ = ev.target.value; const pos = ev.target.selectionStart; show(); const q = $('#em-segq'); if (q) { q.focus(); q.setSelectionRange(pos, pos); } return; }
     if (!X || !['email', 'newsletter'].includes(X.VIEW) || !ED) return; const t = ev.target; const ds = t.dataset;
+    if (t.id === 'em-pq') { PQ = t.value; const box = $('#em-plist'); if (box) box.innerHTML = peopleRows(ED.audience, ED.status !== 'draft'); return; }
     if (t.id === 'em-tagq') { TAGQ = t.value; const pos = t.selectionStart; show(); const q = $('#em-tagq'); if (q) { q.focus(); q.setSelectionRange(pos, pos); } return; }
     if (ED.status !== 'draft') return;
     if (ds.emTop) { ED[ds.emTop] = t.value; return touch(); }
@@ -516,9 +633,11 @@ ${secs.map((b) => `<div class="sec ${b.style === 'sky' ? 'sky' : b.style === 'na
     if (!X || !['email', 'newsletter'].includes(X.VIEW) || !ED || ED.status !== 'draft') return; const t = ev.target;
     if (t.dataset.emUp) return uploadPhoto(t);
     if (t.dataset.emOn) { ED.blocks[+t.dataset.emOn].on = t.checked; touch(); return show(); }
+    if (t.dataset.emPerson) { const out = new Set(ED.audience.skip_ids || []); t.checked ? out.delete(t.dataset.emPerson) : out.add(t.dataset.emPerson); ED.audience.skip_ids = [...out]; touch(); t.closest('label').classList.toggle('out', !t.checked);
+      const n = reach(ED.audience).length; const el = $('#em-reach'); if (el) el.textContent = `${n.toLocaleString()} ${n === 1 ? 'person' : 'people'}`; const note = $('#em-outnote'); if (note) note.innerHTML = outNote(ED.audience); return; }
     if (t.name === 'em-mode') { ED.audience.mode = t.value; touch(); return show(); }
     if (t.dataset.emTag) { const k = t.dataset.emTag; const set = new Set(ED.audience[k] || []); t.checked ? set.add(t.value) : set.delete(t.value); ED.audience[k] = [...set]; touch();
-      const n = reach(ED.audience).length; const el = $('#em-reach'); if (el) el.textContent = `${n.toLocaleString()} ${n === 1 ? 'person' : 'people'}`; }
+      const n = reach(ED.audience).length; const el = $('#em-reach'); if (el) el.textContent = `${n.toLocaleString()} ${n === 1 ? 'person' : 'people'}`; const box = $('#em-plist'); if (box) box.innerHTML = peopleRows(ED.audience, false); }
   });
   document.addEventListener('submit', async (ev) => {
     if (ev.target.id !== 'em-test' || !ED) return; ev.preventDefault(); const b = ev.target.querySelector('button'); const msg = $('#em-testmsg'); b.disabled = true; b.textContent = 'Sending…';

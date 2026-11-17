@@ -337,7 +337,7 @@ td.selc,th.selc{width:36px;padding-right:0}.selc input{width:18px;height:18px;cu
 
 <div id="layer"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="email.js?v=1"></script>
+<script src="email.js?v=2"></script>
 <script>
 (function(){
 /* ---------------- icons ---------------- */
@@ -376,6 +376,7 @@ const SECTIONS={
  volunteers:{title:'Volunteers',group:'Get Involved',icon:'hands'},
  messages:{title:'Messages',group:'Communication',icon:'chat'},
  emaillist:{title:'Contacts & Email List',group:'Communication',icon:'mail'},
+ segments:{title:'Segments',group:'Communication',icon:'users'},
  email:{title:'Send Email',group:'Communication',icon:'mail'},
  newsletter:{title:'Shade Project Newsletter',group:'Communication',icon:'heart'},
  dinner:{title:'Tickets & Tables',group:'Charity Dinner',icon:'ticket'},
@@ -506,7 +507,7 @@ async function start(session){
   $('#li-ask').hidden=false;$('#li-sent').hidden=true;
   $('#li-err').innerHTML=`<b>${esc(session.user.email)}</b> isn't set up for admin access${data===null?'':' right now'}. Ask an Owner to add you under Users &amp; Roles, then sign in again.`;
   await SB.auth.signOut();ME=null;return}
- ME=data;PERMS={dashboard:'view',...data.perms};if(PERMS.emaillist)PERMS.email=PERMS.newsletter=PERMS.emaillist;   // Send Email follows the Contacts & Email List permission
+ ME=data;PERMS={dashboard:'view',...data.perms};if(PERMS.emaillist)PERMS.email=PERMS.newsletter=PERMS.segments=PERMS.emaillist;   // Send Email follows the Contacts & Email List permission
  if(PERMS.auction||PERMS.dinner) PERMS.checkin=(PERMS.auction==='edit'||PERMS.auction==='clerk'||PERMS.dinner==='edit')?'edit':'view';
  Object.keys(A_TABS).forEach(k=>{ if(PERMS.auction) PERMS[k]=PERMS.auction; });
  if(PERMS.dinner||PERMS.sponsors||PERMS.auction) PERMS.cdd='view';
@@ -659,7 +660,7 @@ function go(k){if(!PERMS[k])k='dashboard';VIEW=k;Q='';SF='all';closeSide();
 function render(){const c=$('#content');
  if(A_TABS[VIEW]){c.hidden=true;c.innerHTML='';showAuction(A_TABS[VIEW][3]);return}
  c.hidden=false;$('#auwrap').hidden=true;
- const pages={checkin:checkinPage,dashboard:DASH?dinnerOverview:dashboard,sponsors:sponsorsPage,auction:auctionPage,events:eventsPage,users:usersPage,settings:settingsPage,email:()=>EM.page('email'),newsletter:()=>EM.page('nl')};
+ const pages={checkin:checkinPage,dashboard:DASH?dinnerOverview:dashboard,sponsors:sponsorsPage,auction:auctionPage,events:eventsPage,users:usersPage,settings:settingsPage,email:()=>EM.page('email'),newsletter:()=>EM.page('nl'),segments:()=>EM.page('seg')};
  c.innerHTML=pages[VIEW]?pages[VIEW]():listPage(VIEW);
  if(VIEW==='email'||VIEW==='newsletter'){EM.thumbs();EM.paint()}}
 
@@ -909,7 +910,7 @@ function eventForm(id){const e=id?EVENTS.find(x=>x.id===id):{kind:'support_night
  </form></div>`)}
 
 /* ---------------- users ---------------- */
-function usersPage(){const secs=Object.keys(SECTIONS).filter(k=>k!=='dashboard'&&k!=='email'&&k!=='newsletter');const owner=(ME.roles||[]).includes('owner');
+function usersPage(){const secs=Object.keys(SECTIONS).filter(k=>k!=='dashboard'&&k!=='email'&&k!=='newsletter'&&k!=='segments');const owner=(ME.roles||[]).includes('owner');
  const last=u=>u.last_seen?fmtDT(D(u.last_seen)):'Not yet';
  return`<div class="ph"><div><span class="label">Admin</span><h1>Users &amp; Roles</h1><p>Add someone here, then tell them to go to <b>wearecalledtocare.com/admin</b> and enter their email. They sign in with an emailed link; no password.</p></div>${owner?`<button class="btn primary" data-act="invite">${ic('plus')}Add Person</button>`:''}</div>
  <div class="panel"><div class="tablewrap"><table><thead><tr><th>Name</th><th>Roles</th><th>Last signed in</th><th>Access</th></tr></thead><tbody>${STAFF.map(u=>{const exp=u.expires_on&&dateOnly(u.expires_on)<NOW();return`<tr data-user="${u.id}"><td><b>${esc(u.name||u.email)}</b><span class="sub">${esc(u.email)}</span></td><td>${roleChips(u.roles)}</td><td>${last(u)}</td><td>${!u.active?`<span class="pill s-off">Turned off</span>`:exp?`<span class="pill s-off">Expired</span>`:u.expires_on?`<span class="pill s-mid">Until ${fmtD(dateOnly(u.expires_on))}</span>`:pill('Active')}</td></tr>`}).join('')}</tbody></table></div></div>
@@ -1293,7 +1294,7 @@ document.addEventListener('input',e=>{if(e.target.id==='q'){Q=e.target.value;con
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('#layer').innerHTML)closeLayer();else closeSide()}});
 window.addEventListener('hashchange',()=>{if(!ME)return;const k=location.hash.slice(1);if(k&&k!==VIEW&&SECTIONS[k])go(k)});
 
-EM.init({$,esc,toast,layer,closeLayer,render,fmtD,fmtDT,D,get SB(){return SB},get ME(){return ME},get CONTACTS(){return CONTACTS},get EVENTS(){return EVENTS},get PERMS(){return PERMS},get VIEW(){return VIEW}});
+EM.init({$,esc,toast,layer,closeLayer,render,fmtD,fmtDT,D,download,csvq,reload:async()=>{await loadAll();renderShell();markNav();render()},get SB(){return SB},get ME(){return ME},get CONTACTS(){return CONTACTS},get EVENTS(){return EVENTS},get PERMS(){return PERMS},get VIEW(){return VIEW}});
 boot();
 })();
 </script>
