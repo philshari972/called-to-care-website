@@ -285,7 +285,7 @@ ${secs.map((b) => `<div class="sec ${b.style === 'sky' ? 'sky' : b.style === 'na
     needs: { text: '' }, callout: { title: '', text: '', label: 'Learn more', url: '/' }, signature: { name: '', title: '' } };
 
   /* ---------- state ---------- */
-  let ARCH = null, ARCHOK = true, SEG = null, SEGQ = '', SEGARCH = false, PQ = '';
+  let ARCH = null, ARCHOK = true, SEG = null, SEGQ = '', SEGARCH = false, PQ = ''; const SEGSEL = new Set();
   let LIST = null, LISTERR = '', ED = null, STEP = 'write', WIDE = true, SAVING = null, DIRTY = false, SENDING = null, TAGQ = '';
   const canEdit = () => X.PERMS.emaillist === 'edit';
   const people = () => [...X.CONTACTS.values()].filter((c) => c.email && c.okEmail);
@@ -316,15 +316,23 @@ ${secs.map((b) => `<div class="sec ${b.style === 'sky' ? 'sky' : b.style === 'na
     if (ARCH === null) { loadArch(); return `<div class="panel"><div class="empty">Loading your segments…</div></div>`; }
     if (SEG) return CSS + segDetail();
     const all = segments(); const arch = all.filter((x) => ARCH.has(x.name)); const list = all.filter((x) => (SEGARCH ? ARCH.has(x.name) : !ARCH.has(x.name)) && (!SEGQ || x.name.toLowerCase().includes(SEGQ.toLowerCase())));
+    [...SEGSEL].forEach((t) => { if (!list.some((x) => x.name === t)) SEGSEL.delete(t); });   // only what is on screen can be selected
+    const edit = canEdit(); const k = SEGSEL.size; const allOn = list.length > 0 && list.every((x) => SEGSEL.has(x.name));
     return CSS + `<div class="summary"><div><b>${all.length - arch.length}</b><span>Segments</span></div><div><b>${people().length.toLocaleString()}</b><span>People you can email</span></div><div><b>${arch.length}</b><span>Archived segments</span></div></div>
-    <div class="panel"><header><h2>${SEGARCH ? 'Archived segments' : 'Your segments'}</h2><div class="toolbar"><input type="search" id="em-segq" class="em-search" value="${esc(SEGQ)}" placeholder="Find a segment" aria-label="Find a segment">${arch.length || SEGARCH ? `<button class="btn" data-em-segarch>${SEGARCH ? 'Back to Current Segments' : `Show Archived (${arch.length})`}</button>` : ''}${canEdit() && !SEGARCH ? '<button class="btn primary" data-em-segnew>New Segment</button>' : ''}</div></header>
-      <div class="em-rows">${list.map((x) => `<button class="em-row" data-em-seg="${esc(x.name)}"><span><b>${esc(x.name)}</b></span><span class="sub">${x.all.toLocaleString()} ${x.all === 1 ? 'person' : 'people'}${x.ok !== x.all ? ` · ${x.ok.toLocaleString()} can be emailed` : ''}</span><span class="pill" style="background:var(--sky-pale);color:var(--teal)">Open</span></button>`).join('') || `<div class="empty">${SEGARCH ? 'Nothing is archived.' : 'No segments match.'}</div>`}</div></div>`; }
+    <div class="panel"><header><h2>${SEGARCH ? 'Archived segments' : 'Your segments'}</h2><div class="toolbar"><input type="search" id="em-segq" class="em-search" value="${esc(SEGQ)}" placeholder="Find a segment" aria-label="Find a segment">${arch.length || SEGARCH ? `<button class="btn" data-em-segarch>${SEGARCH ? 'Back to Current Segments' : `Show Archived (${arch.length})`}</button>` : ''}${edit && !SEGARCH ? '<button class="btn primary" data-em-segnew>New Segment</button>' : ''}</div></header>
+      ${edit && list.length ? `<div class="em-bulk"><label class="tick"><input type="checkbox" id="em-segall" ${allOn ? 'checked' : ''}> Select all ${list.length}</label><span class="note" id="em-segcount">${k ? `${k} selected` : 'Tick segments to archive several at once.'}</span><button class="btn pink" data-em-segbulk ${k ? '' : 'disabled'}>${SEGARCH ? 'Bring Back' : 'Archive'} Selected${k ? ` (${k})` : ''}</button></div>` : ''}
+      <div class="em-rows">${list.map((x) => `<div class="em-segrow">${edit ? `<input type="checkbox" data-em-segpick="${esc(x.name)}" aria-label="Select ${esc(x.name)}" ${SEGSEL.has(x.name) ? 'checked' : ''}>` : ''}<button class="em-row" data-em-seg="${esc(x.name)}"><span><b>${esc(x.name)}</b></span><span class="sub">${x.all.toLocaleString()} ${x.all === 1 ? 'person' : 'people'}${x.ok !== x.all ? ` · ${x.ok.toLocaleString()} can be emailed` : ''}</span><span class="pill" style="background:var(--sky-pale);color:var(--teal)">Open</span></button></div>`).join('') || `<div class="empty">${SEGARCH ? 'Nothing is archived.' : 'No segments match.'}</div>`}</div></div>`; }
+  async function bulkArchive(btn) { if (!ARCHOK) { toast('One setup step first: run segments.sql in Supabase.', true); return; } const names = [...SEGSEL]; if (!names.length) return; btn.disabled = true; const back = SEGARCH;
+    const r = back ? await X.SB.from('archived_tags').delete().in('tag', names) : await X.SB.from('archived_tags').insert(names.filter((t) => !ARCH.has(t)).map((tag) => ({ tag, archived_by: X.ME.name || X.ME.email || '' })));
+    if (r.error) { btn.disabled = false; toast(r.error.message, true); return; }
+    names.forEach((t) => (back ? ARCH.delete(t) : ARCH.add(t))); SEGSEL.clear(); if (back && !ARCH.size) SEGARCH = false;
+    toast(back ? `${names.length} ${names.length === 1 ? 'segment is' : 'segments are'} back in your list.` : `${names.length} ${names.length === 1 ? 'segment' : 'segments'} archived. Everyone in them is untouched.`); show(); }
   function segDetail() { const all = members(SEG); const list = all.filter((c) => hit(c, SEGQ)); const show = list.slice(0, 300); const ok = all.filter((c) => c.email && c.okEmail).length; const archived = ARCH.has(SEG); const edit = canEdit();
     return `<div style="display:grid;gap:18px"><div class="em-top"><div><span class="label" style="color:var(--pink)">Segment${archived ? ' · archived' : ''}</span><h2 style="font-family:var(--serif);font-weight:400;font-size:2.2rem;margin:2px 0 0">${esc(SEG)}</h2><p class="note" style="margin:4px 0 0">${all.length.toLocaleString()} ${all.length === 1 ? 'person' : 'people'} · ${ok.toLocaleString()} can be emailed</p></div><button class="btn" data-em-segback>Back to All Segments</button></div>
     <div class="toolbar">${edit ? '<button class="btn primary" data-em-segadd>Add a Person</button><button class="btn" data-em-segup>Upload a Group</button>' : ''}<button class="btn" data-em-segdl ${all.length ? '' : 'disabled'}>Download the List</button>${edit ? `<button class="btn" data-em-segtoggle>${archived ? 'Bring Back From Archive' : 'Archive This Segment'}</button>` : ''}</div>
     ${archived ? '<div class="em-ok">This segment is archived: it is hidden from your lists, and everyone in it is still here and untouched.</div>' : ''}
     <div class="panel"><header><h2>People</h2><input type="search" id="em-segq" class="em-search" value="${esc(SEGQ)}" placeholder="Find a person" aria-label="Find a person"></header>
-      <div class="em-rows">${show.map((c) => `<div class="em-row" style="cursor:default"><span><b>${esc(c.name)}</b><span class="sub">${esc(c.email || 'No email on file')}${c.phone ? ' · ' + esc(c.phone) : ''}</span></span><span class="sub">${why(c) ? `<span class="pill" style="background:var(--line);color:var(--muted)">${why(c)}</span>` : ''}</span>${edit ? `<button class="btn ghost" data-em-segout="${c.id}" aria-label="Take ${esc(c.name)} out of this segment">Take Out</button>` : '<span></span>'}</div>`).join('') || `<div class="empty">${all.length ? 'Nobody matches.' : 'Nobody is in this segment yet. Add a person or upload a group.'}</div>`}</div>
+      <div class="em-rows">${show.map((c) => `<div class="em-row" style="cursor:default"><button type="button" class="em-who" data-em-card="${c.id}" title="Open this contact"><b>${esc(c.name)}</b><span class="sub">${esc(c.email || 'No email on file')}${c.phone ? ' · ' + esc(c.phone) : ''}</span></button><span class="sub">${why(c) ? `<span class="pill" style="background:var(--line);color:var(--muted)">${why(c)}</span>` : ''}</span>${edit ? `<button class="btn ghost" data-em-segout="${c.id}" aria-label="Take ${esc(c.name)} out of this segment">Take Out</button>` : '<span></span>'}</div>`).join('') || `<div class="empty">${all.length ? 'Nobody matches.' : 'Nobody is in this segment yet. Add a person or upload a group.'}</div>`}</div>
       ${list.length > show.length ? `<p class="note" style="padding:0 18px 14px;margin:0">Showing the first ${show.length} of ${list.length.toLocaleString()}. Type a name to find someone, or download the full list.</p>` : ''}</div></div>`; }
   async function tagPeople(tag, list) { const r = await X.SB.rpc('tag_people', { p_tag: tag, p_people: list });
     if (r.error) { toast(/function|schema cache|does not exist/i.test(r.error.message) ? 'One setup step first: run segments.sql in Supabase.' : r.error.message, true); return null; }
@@ -415,6 +423,9 @@ ${secs.map((b) => `<div class="sec ${b.style === 'sky' ? 'sky' : b.style === 'na
 .em-people label{display:flex;gap:10px;align-items:center;padding:8px 12px;border-top:1px solid var(--line);cursor:pointer}.em-people label:first-child{border-top:0}
 .em-people input{width:17px;height:17px;accent-color:var(--teal);flex:none}.em-people span{display:grid;min-width:0;flex:1}.em-people b{font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.em-people small{color:var(--muted);font-size:.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .em-people label.out{background:var(--pink-pale)}.em-people label.out b{text-decoration:line-through;color:var(--muted)}
+.em-segrow{display:flex;align-items:center;border-top:1px solid var(--line)}.em-segrow:first-child{border-top:0}.em-segrow>input{width:18px;height:18px;accent-color:var(--teal);margin:0 0 0 18px;flex:none}.em-segrow .em-row{border-top:0}
+.em-bulk{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;padding:12px 18px;background:var(--sky-pale);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.em-bulk .btn{margin-left:auto}
+.em-who{all:unset;cursor:pointer;display:block;min-width:0}.em-who:hover b,.em-who:focus-visible b{text-decoration:underline}.em-who:focus-visible{outline:2px solid var(--teal);outline-offset:3px;border-radius:6px}
 .em-link{border:0;background:none;padding:0;font:inherit;color:var(--teal);text-decoration:underline;cursor:pointer}
 .em-search{border:1.5px solid var(--line);border-radius:999px;background:var(--surface);padding:9px 16px;font:inherit;min-width:min(240px,100%)}
 .em-three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}@media (max-width:560px){.em-three{grid-template-columns:1fr}.em-three label{grid-column:auto!important}}
@@ -581,9 +592,11 @@ ${secs.map((b) => `<div class="sec ${b.style === 'sky' ? 'sky' : b.style === 'na
   document.addEventListener('click', async (ev) => {
     if (!X || !['email', 'newsletter', 'segments'].includes(X.VIEW)) return; const t = ev.target.closest('button,[data-em-open]'); if (!t) return; const ds = t.dataset;
     if (X.VIEW === 'segments') {
-      if (ds.emSeg) { SEG = ds.emSeg; SEGQ = ''; show(); return window.scrollTo(0, 0); }
+      if (ds.emSeg) { SEG = ds.emSeg; SEGQ = ''; SEGSEL.clear(); show(); return window.scrollTo(0, 0); }
+      if (ds.emCard) return X.openContact(ds.emCard);   // the contact card opens on top; closing or saving it leaves this page as it was
+      if ('emSegbulk' in ds) return bulkArchive(t);
       if ('emSegback' in ds) { SEG = null; SEGQ = ''; return show(); }
-      if ('emSegarch' in ds) { SEGARCH = !SEGARCH; SEGQ = ''; return show(); }
+      if ('emSegarch' in ds) { SEGARCH = !SEGARCH; SEGQ = ''; SEGSEL.clear(); return show(); }
       if ('emSegnew' in ds) return newSegment();
       if ('emSegadd' in ds) return addPerson();
       if ('emSegup' in ds) return uploadGroup();
@@ -630,6 +643,10 @@ ${secs.map((b) => `<div class="sec ${b.style === 'sky' ? 'sky' : b.style === 'na
       return touch(); }
   });
   document.addEventListener('change', (ev) => {
+    if (X && X.VIEW === 'segments') { const t = ev.target;
+      if (t.dataset.emSegpick) { t.checked ? SEGSEL.add(t.dataset.emSegpick) : SEGSEL.delete(t.dataset.emSegpick); return show(); }
+      if (t.id === 'em-segall') { document.querySelectorAll('[data-em-segpick]').forEach((b) => (t.checked ? SEGSEL.add(b.dataset.emSegpick) : SEGSEL.delete(b.dataset.emSegpick))); return show(); }
+      return; }
     if (!X || !['email', 'newsletter'].includes(X.VIEW) || !ED || ED.status !== 'draft') return; const t = ev.target;
     if (t.dataset.emUp) return uploadPhoto(t);
     if (t.dataset.emOn) { ED.blocks[+t.dataset.emOn].on = t.checked; touch(); return show(); }

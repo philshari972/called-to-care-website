@@ -71,6 +71,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .sample b{font-size:.95rem}
 .chips{display:flex;flex-wrap:wrap;gap:4px}
 .chip{font-size:.68rem;font-weight:700;letter-spacing:.04em;padding:2px 8px;border-radius:999px;background:var(--sky-pale);color:var(--teal)}
+.cf-tags .chip{font-size:.8rem;letter-spacing:0;padding:5px 6px 5px 12px;display:inline-flex;align-items:center;gap:4px}.cf-tags .chip button{border:0;background:none;color:inherit;font-size:1.05rem;line-height:1;cursor:pointer;padding:0 5px;border-radius:999px}.cf-tags .chip button:hover{background:var(--surface)}
+.cf-tagin{flex:1;min-width:220px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 12px;font:inherit}
 .chip.owner{background:var(--pink-pale);color:var(--pink)}
 .note{font-size:.84rem;color:var(--muted)}
 .err{color:var(--bad);font-size:.88rem;font-weight:600;min-height:1.2em}
@@ -337,7 +339,7 @@ td.selc,th.selc{width:36px;padding-right:0}.selc input{width:18px;height:18px;cu
 
 <div id="layer"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="email.js?v=2"></script>
+<script src="email.js?v=3"></script>
 <script>
 (function(){
 /* ---------------- icons ---------------- */
@@ -1058,15 +1060,26 @@ function contactDrawer(id,from){const c=cById(id);const edit=from==='emaillist'?
  const f=(k,l,type)=>edit?`<label class="field" for="cf-${k}">${l}<input id="cf-${k}" type="${type||'text'}" value="${esc(c[k]||'')}"></label>`:`<dt>${l}</dt><dd>${esc(c[k]||'—')}</dd>`;
  layer(`<div class="drawer"><button class="scrim" data-close aria-label="Close"></button><form class="sheet" id="contactForm" data-cid="${c.id}" role="dialog" aria-modal="true" aria-label="${esc(c.name)}" novalidate>
   <button class="x" type="button" data-close aria-label="Close">×</button>
-  <div><span class="label" style="color:var(--pink)">${c.type}${DYEARS.length?` · ${yearsSpon(c).length} years sponsored · ${attended(c).length} dinners`:''}</span><h2>${esc(c.name)}</h2><p class="note">${c.tags&&c.tags.length?'Tags: '+esc(c.tags.join(', ')):''}${lifetime(c)?` · Lifetime sponsorship ${money(lifetime(c))}`:''}</p></div>
+  <div><span class="label" style="color:var(--pink)">${c.type}${DYEARS.length?` · ${yearsSpon(c).length} years sponsored · ${attended(c).length} dinners`:''}</span><h2>${esc(c.name)}</h2>${lifetime(c)?`<p class="note">Lifetime sponsorship ${money(lifetime(c))}</p>`:''}</div>
   ${edit?'<div class="formgrid">':'<dl class="fields">'}${f('org','Business / Church Name')}${f('first','First Name')}${f('last','Last Name')}${f('salutation','Salutation (Dear ___)')}${f('email','Email','email')}${f('phone','Phone','tel')}${f('street','Street Address')}${f('city','City')}${f('state','State')}${f('zip','ZIP')}${edit?'</div>':'</dl>'}
   <div class="prefs">${['okEmail','okText','okMail'].map((k,i)=>`<label class="tick"><input type="checkbox" id="cf-${k}" ${c[k]?'checked':''} ${edit?'':'disabled'}> ${['Email OK','Text OK','Mail OK'][i]}</label>`).join('')}</div>
   ${c.unsub?`<p class="note">This person unsubscribed from emails. Turning Email OK back on requires their permission.</p>`:''}
+  <div style="display:grid;gap:8px"><span class="label" style="color:var(--muted)">Segments</span>
+   <div class="chips cf-tags" id="cf-tags">${(c.tags||[]).map(t=>tagChip(t,edit)).join('')}</div><p class="note" id="cf-notags" ${(c.tags||[]).length?'hidden':''} style="margin:0">Not in any segment yet.</p>
+   ${edit?`<div style="display:flex;gap:8px;flex-wrap:wrap"><input id="cf-tagadd" list="cf-taglist" class="cf-tagin" placeholder="Add to a segment: pick one or type a new name" aria-label="Add to a segment" autocomplete="off"><button class="btn" type="button" id="cf-tagbtn">Add</button></div><datalist id="cf-taglist">${[...new Set([...CONTACTS.values()].flatMap(x=>x.tags))].sort((a,b)=>a.localeCompare(b)).map(t=>`<option value="${esc(t)}">`).join('')}</datalist>`:''}</div>
+  ${edit?`<label class="field" for="cf-notes">Notes<textarea id="cf-notes" rows="3">${esc(c.notes||'')}</textarea></label>`:(c.notes?`<dl class="fields"><dt>Notes</dt><dd>${esc(c.notes)}</dd></dl>`:'')}
   ${hist?`<div style="display:grid;gap:8px"><span class="label" style="color:var(--muted)">Charity dinner history</span><ul class="log">${hist}</ul></div>`:''}
   ${PERMS.sponsors&&yearsSpon(c).length?`<div><button class="btn" type="button" data-sponletter="${c.id}">${ic('down')}Sponsor Thank-You Letter (PDF)</button></div>`:''}
   <p class="err" id="cf-err" role="alert"></p>
   ${edit?`<div style="display:flex;gap:8px"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-close>Cancel</button></div>`:''}
- </form></div>`)}
+ </form></div>`);
+ if(edit){const box=$('#cf-tags'),inp=$('#cf-tagadd');const sync=()=>{$('#cf-notags').hidden=!!box.children.length};
+  const add=()=>{const t=inp.value.trim().replace(/\s+/g,' ').slice(0,80);if(!t)return;const have=[...box.children].map(x=>x.dataset.tag);const same=have.find(x=>x.toLowerCase()===t.toLowerCase());
+   if(!same){const known=[...$('#cf-taglist').options].map(o=>o.value).find(x=>x.toLowerCase()===t.toLowerCase());box.insertAdjacentHTML('beforeend',tagChip(known||t,true))}inp.value='';sync();inp.focus()};
+  $('#cf-tagbtn').addEventListener('click',add);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();add()}});   // Enter adds the segment; it must not save the whole card
+  box.addEventListener('click',e=>{const b=e.target.closest('[data-untag]');if(b){b.closest('.chip').remove();sync()}})}}
+const tagChip=(t,edit)=>`<span class="chip" data-tag="${esc(t)}">${esc(t)}${edit?`<button type="button" data-untag aria-label="Take out of ${esc(t)}" title="Take out of this segment">×</button>`:''}</span>`;
 function sponDrawer(id){const isNew=!id;const s=isNew?{id:'',cid:'',year:SP.year,level:'Diamond',amount:2500,status:'Committed',received:0,method:'',logo:false,receipt:false,thanks:false,notes:'',source:'Added by staff'}:DIN.spons.find(x=>x.id===id);
  const edit=PERMS.sponsors==='edit';const c=s.cid?cById(s.cid):null;
  if(!edit){contactDrawer(c.id);return}
@@ -1209,6 +1222,8 @@ const busy=(fm,on)=>{const b=fm.querySelector('[type=submit]');if(b){b.disabled=
 document.addEventListener('submit',async e=>{const fm=e.target;
  if(fm.id==='contactForm'){e.preventDefault();const c=cById(fm.dataset.cid);const v=k=>{const el=$('#cf-'+k);return el?el.value.trim():undefined};
   const row={org:v('org'),first_name:v('first'),last_name:v('last'),salutation:v('salutation'),email:(v('email')||'').toLowerCase()||null,phone:v('phone'),street:v('street'),city:v('city'),state:(v('state')||'').toUpperCase(),zip:v('zip'),email_ok:$('#cf-okEmail').checked,text_ok:$('#cf-okText').checked,mail_ok:$('#cf-okMail').checked};
+  if($('#cf-tagadd')&&$('#cf-tagadd').value.trim())$('#cf-tagbtn').click();   // a segment typed but not yet added still counts
+  if($('#cf-tags'))row.tags=[...$('#cf-tags').children].map(x=>x.dataset.tag);if($('#cf-notes'))row.notes=$('#cf-notes').value.trim();
   busy(fm,true);const {data,error}=await SB.from('contacts').update(row).eq('id',c.id).select().single();busy(fm,false);
   if(error){$('#cf-err').textContent=error.message.includes('contacts_email_uq')?'Another contact already uses that email.':error.message;return}
   CONTACTS.set(c.id,mapContact(data));await loadAll();closeLayer();render();toast('Contact saved');return}
@@ -1294,7 +1309,7 @@ document.addEventListener('input',e=>{if(e.target.id==='q'){Q=e.target.value;con
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('#layer').innerHTML)closeLayer();else closeSide()}});
 window.addEventListener('hashchange',()=>{if(!ME)return;const k=location.hash.slice(1);if(k&&k!==VIEW&&SECTIONS[k])go(k)});
 
-EM.init({$,esc,toast,layer,closeLayer,render,fmtD,fmtDT,D,download,csvq,reload:async()=>{await loadAll();renderShell();markNav();render()},get SB(){return SB},get ME(){return ME},get CONTACTS(){return CONTACTS},get EVENTS(){return EVENTS},get PERMS(){return PERMS},get VIEW(){return VIEW}});
+EM.init({$,esc,toast,layer,closeLayer,render,fmtD,fmtDT,D,download,csvq,openContact:id=>contactDrawer(id,'emaillist'),reload:async()=>{await loadAll();renderShell();markNav();render()},get SB(){return SB},get ME(){return ME},get CONTACTS(){return CONTACTS},get EVENTS(){return EVENTS},get PERMS(){return PERMS},get VIEW(){return VIEW}});
 boot();
 })();
 </script>
