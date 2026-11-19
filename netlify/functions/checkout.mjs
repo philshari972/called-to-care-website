@@ -40,7 +40,10 @@ async function price(b) {
     const amount = Math.round(Number(b.amount) * 100) / 100;
     if (!(amount >= 5 && amount <= 50000)) throw new Error('Please choose a gift between $5 and $50,000.');
     const fund = clean(b.designation, 60) || 'Where needed most';
-    return { purpose: 'donation', amount, description: `${b.recurring ? 'Monthly gift' : 'Donation'}: ${fund}`, designation: fund, recurring: !!b.recurring, tags: ['Donor', ...(b.recurring ? ['Monthly Partner'] : [])] };
+    // A business or church giving as a partner organization (the Partner Now button on the Donate page)
+    const partner = b.partner === true;
+    if (partner && !clean(b.contact?.org, 150)) throw new Error('Please enter the name of your business or church.');
+    return { purpose: 'donation', amount, description: `${b.recurring ? 'Monthly gift' : 'Donation'}: ${fund}`, designation: fund, recurring: !!b.recurring, tags: ['Donor', ...(b.recurring ? ['Monthly Partner'] : []), ...(partner ? ['Partner Organization'] : []), ...(b.lemonade === true ? ['Stand with Kids Lemonade Stand'] : [])] };
   }
   if (b.kind === 'basket') {
     if (!/^[0-9a-f-]{36}$/.test(String(b.item || ''))) throw new Error('Unknown basket.');

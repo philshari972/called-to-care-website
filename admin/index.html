@@ -72,6 +72,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .chips{display:flex;flex-wrap:wrap;gap:4px}
 .chip{font-size:.68rem;font-weight:700;letter-spacing:.04em;padding:2px 8px;border-radius:999px;background:var(--sky-pale);color:var(--teal)}
 .cf-tags .chip{font-size:.8rem;letter-spacing:0;padding:5px 6px 5px 12px;display:inline-flex;align-items:center;gap:4px}.cf-tags .chip button{border:0;background:none;color:inherit;font-size:1.05rem;line-height:1;cursor:pointer;padding:0 5px;border-radius:999px}.cf-tags .chip button:hover{background:var(--surface)}
+.comb-pick{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--sky-pale)}.comb-res{display:grid;border-radius:10px;overflow:hidden}.comb-res button{all:unset;cursor:pointer;display:grid;padding:9px 12px;border:1px solid var(--line);margin-top:-1px;box-sizing:border-box}.comb-res button:first-child{margin-top:0}.comb-res button:hover,.comb-res button:focus-visible{background:var(--sky-pale)}
 .cf-tagin{flex:1;min-width:220px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 12px;font:inherit}
 .chip.owner{background:var(--pink-pale);color:var(--pink)}
 .note{font-size:.84rem;color:var(--muted)}
@@ -559,12 +560,12 @@ function mapContact(c){const biz=['business','church','foundation'].includes(c.k
  const name=biz?c.org:((c.last_name?`${c.last_name}, ${c.first_name}`:c.first_name||c.email||'(no name)'));
  return{id:c.id,raw:c,name,type:biz?(c.kind==='church'?'Church':c.kind==='foundation'?'Foundation':'Business'):'Person',first:c.first_name,last:c.last_name,org:c.org,salutation:c.salutation||c.first_name,
   email:c.email||'',household:c.household||'',phone:c.phone,street:c.street,city:c.city,state:c.state,zip:c.zip,okEmail:c.email_ok&&!c.do_not_email,okText:c.text_ok,okMail:c.mail_ok,unsub:c.do_not_email,tags:c.tags||[],source:c.source,notes:c.notes,created:D(c.created_at)}}
-function mapSpon(s){return{id:s.id,cid:s.contact_id,year:s.year,name:s.sponsor_name,level:s.level,amount:Number(s.amount||0),status:s.status,received:Number(s.received||0),method:s.method,source:s.source,logo:s.logo_received,receipt:s.receipt_sent,thanks:s.thanks_sent,notes:s.notes,date:D(s.created_at)}}
+function mapSpon(s){return{id:s.id,cid:s.contact_id,year:s.year,name:s.sponsor_name,level:s.level,amount:Number(s.amount||0),status:s.status,received:Number(s.received||0),method:s.method,source:s.source,logo:s.logo_received,receipt:s.receipt_sent,thanks:s.thanks_sent,notes:s.notes,date:D(s.created_at),guests:s.guest_names||'',asked:s.guests_asked_at?D(s.guests_asked_at):null,gotAt:s.guests_at?D(s.guests_at):null,hasGuestCols:'guest_names' in s}}
 function mapAtt(a){return{id:a.id,cid:a.contact_id,year:a.year,guests:a.guests,ticket:a.ticket_type,table:a.table_label,present:a.present,bid:a.bid_number,source:a.source,total:a.auction_total}}
 function mapPay(p){const c=CONTACTS.get(p.contact_id)||{};const m=p.meta||{};
  const name=m.name||(c.first?`${c.first} ${c.last}`:c.name)||'';
  const forTxt=p.description||({donation:'Donation',sponsorship:'Sponsorship',tickets:'Dinner tickets',table:'Dinner table'}[p.purpose]||p.purpose);
- return{id:p.id,created:D(p.paid_at||p.created_at),name,email:c.email||'',phone:c.phone||'',first:c.first||'',last:c.last||'',for:forTxt,fund:p.designation||'Where needed most',recurring:p.recurring?'Monthly':'One-time',
+ return{id:p.id,purpose:p.purpose,paid:p.status==='succeeded',created:D(p.paid_at||p.created_at),name,email:c.email||'',phone:c.phone||'',first:c.first||'',last:c.last||'',for:forTxt,fund:p.designation||'Where needed most',recurring:p.recurring?'Monthly':'One-time',
   method:p.method||p.provider,amount:Number(p.amount),status:p.status==='succeeded'?'Paid':p.status==='refunded'?'Refunded':p.status,source:p.provider==='stripe'||p.provider==='paypal'?'Website':p.provider,
   ref:p.provider_id||'',receipt:p.receipt_no||'',qty:Number(m.qty||(p.purpose==='table'?10:1)),type:p.purpose==='table'?'Table':'Ticket',guests:m.guests||'',display:m.display_name||'',notes:[],log:[]}}
 
@@ -816,7 +817,7 @@ function openRecord(k,id){const r=(DATA[k]||[]).find(x=>x.id===id);if(!r)return;
   <button class="x" data-close aria-label="Close">×</button>
   <div><span class="label" style="color:var(--pink)">${SECTIONS[k].title}</span><h2>${esc(r.display||r.youth||r.name)}</h2><p class="note">Received ${fmtDT(r.created)}</p></div>
   <div class="statusrow">${canStatus?`<label class="field" for="st" style="grid-template-columns:auto auto;align-items:center;gap:10px">Status<select id="st" data-rec="${k}:${r.id}">${[...new Set([...opts,r.status])].map(o=>`<option ${o===r.status?'selected':''}>${esc(o)}</option>`).join('')}</select></label>`:pill(r.status)}</div>
-  ${k==='camp'?campPanel(r,lv):''}${k==='donations'?letterPanel(r,lv):''}
+  ${k==='camp'?campPanel(r,lv):''}${k==='donations'||(k==='payments'&&r.paid&&(r.purpose==='sponsorship'||r.purpose==='donation'))?letterPanel(r,lv):''}
   ${k==='camp'?'<span class="label" style="color:var(--muted)">Application</span>':''}<dl class="fields">${fields.map(([a,b])=>`<dt>${esc(a)}</dt><dd>${/^https?:\/\//.test(b)?b.split(/\s+/).map((u,i)=>`<a href="${esc(u)}" target="_blank" rel="noopener">${/jotform/.test(u)?'Open on JotForm ↗':'Open ↗'}</a>`).join('<br>'):esc(b)}</dd>`).join('')}</dl>
   ${r.data&&r.data.signature_png?`<div><span class="label" style="color:var(--muted)">Signature</span><img src="${esc(r.data.signature_png)}" alt="Signature" style="max-width:320px;background:#fff;border:1px solid var(--line);border-radius:8px;margin-top:6px"></div>`:''}
   ${canNote?`<div class="notebox"><label class="field" for="nt">Add a note<textarea id="nt" placeholder="${k==='camp'?'Review notes for the committee':'Only staff can see notes'}"></textarea></label><button class="btn primary" style="justify-self:start" data-note="${k}:${r.id}">Save note</button></div>`:''}
@@ -936,6 +937,11 @@ const LT_DEFAULT={emails:['shari@wearecalledtocare.com'],signer:{name:'Shari Cha
 let LT=null;
 const letterRecips=()=>[].concat(SETTINGS.letter_emails||LT_DEFAULT.emails).flatMap(x=>String(x).split(',')).map(x=>x.trim()).filter(Boolean);
 const canEditLetters=()=>(ME.roles||[]).includes('owner')||PERMS.donations==='edit';
+async function sponsorFn(body){const {data:{session}}=await SB.auth.getSession();return fetch('/.netlify/functions/sponsor',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+(session&&session.access_token)},body:JSON.stringify(body)})}
+function kickSaid(k,kl,kg){if(k.error)return 'Sponsor added. '+k.error;const out=['Sponsor added.'];
+ if(kl)out.push(k.letter&&k.letter.sent?'Letter emailed to '+k.letter.to.join(', ')+'.':'Letter not sent: '+((k.letter&&k.letter.reason)||'try again from the sponsor.'));
+ if(kg)out.push(k.guests&&k.guests.sent?'Guest-names request sent to '+k.guests.to+'.':'Guest names not requested: '+((k.guests&&k.guests.reason)||'try again from the sponsor.'));
+ return out.join(' ')}
 async function letterFn(body){const {data:{session}}=await SB.auth.getSession();return fetch('/.netlify/functions/letter',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+(session&&session.access_token)},body:JSON.stringify(body)})}
 async function openLetterPdf(body){const w=window.open('','_blank');if(w)w.document.write('<p style="font:16px system-ui;padding:24px;color:#1D4766">Making the letter…</p>');
  try{const res=await letterFn(body);if(!res.ok){const j=await res.json().catch(()=>({}));throw new Error(j.error||'Could not make the letter')}
@@ -944,7 +950,7 @@ async function openLetterPdf(body){const w=window.open('','_blank');if(w)w.docum
 function letterPanel(r,lv){const c=CONTACTS.get((DIN.payments||[]).find(p=>p.id===r.id)?.contact_id)||{};const hasAddr=c.street&&c.city&&c.zip;
  return`<div class="panel" style="padding:16px 18px;display:grid;gap:10px"><span class="label" style="color:var(--muted)">Thank-you letter</span>
   <p class="note" style="margin:0">${hasAddr?`Mails to ${esc(c.street)}, ${esc(c.city)}, ${esc(c.state)} ${esc(c.zip)}.`:'No mailing address on file yet. Add it to the contact, then print the letter.'}</p>
-  <div style="display:flex;flex-wrap:wrap;gap:8px"><button class="btn primary" type="button" data-act="letter-pdf" data-id="${r.id}">Print Letter (PDF)</button>${lv==='edit'?`<button class="btn" type="button" data-act="letter-email" data-id="${r.id}">Email It to ${esc(letterRecips().length>1?'Letter Recipients':'Shari')} Again</button>`:''}</div></div>`}
+  <div style="display:flex;flex-wrap:wrap;gap:8px"><button class="btn primary" type="button" data-act="letter-pdf" data-id="${r.id}">Print Letter (PDF)</button>${lv==='edit'?`<button class="btn" type="button" data-act="letter-email" data-id="${r.id}">Email It to ${esc(letterRecips().length>1?'Letter Recipients':'Shari')}</button>`:''}</div></div>`}
 function readLetterForm(){const f=$('#letterForm');if(!f)return LT;
  return{emails:$('#lt-emails').value.split(',').map(x=>x.trim().toLowerCase()).filter(Boolean),signer:{name:$('#lt-name').value.trim(),title:$('#lt-title').value.trim()},
   updates:[...f.querySelectorAll('.lt-item')].map(el=>({title:el.querySelector('[data-f=title]').value.trim(),text:el.querySelector('[data-f=text]').value,on:el.querySelector('[data-f=on]').checked,until:el.querySelector('[data-f=until]').value||''}))}}
@@ -993,6 +999,7 @@ function settingsPage(){const owner=(ME.roles||[]).includes('owner');const org=S
  <div class="panel"><header><h2>Organization</h2></header><div style="padding:18px"><dl class="fields"><dt>Legal name</dt><dd>${esc(org.legal_name||'We Are Called to Care, NFP')}</dd><dt>EIN</dt><dd>${esc(org.ein||'86-2900453')}</dd><dt>Office</dt><dd>1111 W South St, Plano, IL 60545</dd><dt>Mailing address</dt><dd>${esc(org.address||'Called to Care, 15450 State Route 47, Newark, IL 60541')}</dd><dt>Phone</dt><dd>${esc(org.phone||'815-200-9086')}</dd></dl></div></div>`}
 
 /* ---------------- charity dinner: sponsors & guests ---------------- */
+const SEATS={Legacy:10,Gold:10,Platinum:4,Diamond:2};
 const LEVELS=[['Legacy',15000,null],['Gold',10000,null],['Platinum',5000,null],['Diamond',2500,null],['Sapphire',1500,null],['Ruby',750,null],['Friend',250,null],['Appetizer Table',1000,1],['Dessert Table',1000,2],['Flowers',1000,2]];
 const LVAMT=Object.fromEntries(LEVELS.map(l=>[l[0],l[1]]));
 const SPST=['Asked','Committed','Invoiced','Partially Paid','Paid in Full','Declined'];
@@ -1028,7 +1035,7 @@ function sponsorsPage(){if(SP.year==null)SP.year=CUR;const lv=PERMS.sponsors,edi
  const tabs=[['year','Sponsors by Year'],['history','Sponsor History'],['attend','Dinner Attendance']];
  const access=lv==='view'?`<span class="readonly">View only</span>`:'';
  const head=`<div class="ph"><div><span class="label">Charity Dinner</span><h1>Sponsors &amp; Guests</h1><p>Every sponsor and guest${DYEARS.length?' since '+DYEARS[0]:''}. Website sponsorships and ticket purchases land here automatically.</p></div>
-  <div class="actions">${access}${SP.tab!=='attend'?`<button class="btn" data-sp="letters">${ic('down')}Thank-You Letters${SPSEL.size?` (${SPSEL.size})`:''}</button>`:''}${edit&&DUPES().length?`<button class="btn" data-sp="dupes">Possible duplicates (${DUPES().length})</button>`:''}<button class="btn" data-sp="export">${ic('down')}Export List</button>${edit&&SP.tab==='year'?`<button class="btn primary" data-sp="add">${ic('plus')}Add Sponsor</button>`:''}</div></div>
+  <div class="actions">${access}${SP.tab!=='attend'?`<button class="btn" data-sp="letters">${ic('down')}Thank-You Letters${SPSEL.size?` (${SPSEL.size})`:''}</button>`:''}${edit&&DUPES().length?`<button class="btn" data-sp="dupes">Possible duplicates (${DUPES().length})</button>`:''}${edit?`<button class="btn" data-sp="combine">Combine Two People</button>`:''}<button class="btn" data-sp="export">${ic('down')}Export List</button>${edit&&SP.tab==='year'?`<button class="btn primary" data-sp="add">${ic('plus')}Add Sponsor</button>`:''}</div></div>
   <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${SP.tab===k}" data-spt="${k}">${l}</button>`).join('')}</div>`;
  const search=`<label class="search" for="spq">${ic('search')}<input id="spq" placeholder="Search names, emails, cities" value="${esc(SP.q)}"></label>`;
  const seg=(key,opts)=>`<div class="seg" role="group">${opts.map(([v,l])=>`<button class="${String(SP[key])===String(v)?'on':''}" data-spf="${key}" data-v="${v}">${l}</button>`).join('')}</div>`;
@@ -1071,7 +1078,7 @@ function contactDrawer(id,from){const c=cById(id);const edit=from==='emaillist'?
   ${hist?`<div style="display:grid;gap:8px"><span class="label" style="color:var(--muted)">Charity dinner history</span><ul class="log">${hist}</ul></div>`:''}
   ${PERMS.sponsors&&yearsSpon(c).length?`<div><button class="btn" type="button" data-sponletter="${c.id}">${ic('down')}Sponsor Thank-You Letter (PDF)</button></div>`:''}
   <p class="err" id="cf-err" role="alert"></p>
-  ${edit?`<div style="display:flex;gap:8px"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-close>Cancel</button></div>`:''}
+  ${edit?`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-close>Cancel</button><button class="btn ghost" type="button" data-combine="${c.id}" style="margin-left:auto">Combine With Another Record</button></div>`:''}
  </form></div>`);
  if(edit){const box=$('#cf-tags'),inp=$('#cf-tagadd');const sync=()=>{$('#cf-notags').hidden=!!box.children.length};
   const add=()=>{const t=inp.value.trim().replace(/\s+/g,' ').slice(0,80);if(!t)return;const have=[...box.children].map(x=>x.dataset.tag);const same=have.find(x=>x.toLowerCase()===t.toLowerCase());
@@ -1098,9 +1105,17 @@ function sponDrawer(id){const isNew=!id;const s=isNew?{id:'',cid:'',year:SP.year
    <label class="field" for="sf-notes">Notes<input id="sf-notes" value="${esc(s.notes)}"></label>
   </div>
   <div class="prefs"><label class="tick"><input type="checkbox" id="sf-logo" ${s.logo?'checked':''}> Logo received</label><label class="tick"><input type="checkbox" id="sf-receipt" ${s.receipt?'checked':''}> Receipt sent</label><label class="tick"><input type="checkbox" id="sf-thanks" ${s.thanks?'checked':''}> Thank-you sent</label></div>
+  ${isNew?`<fieldset class="prefs" style="border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:8px"><legend class="label" style="padding:0 6px">When I add this sponsor</legend>
+   <label class="tick"><input type="checkbox" id="sf-kletter" checked> Email Shari the thank-you letter (PDF) to print and mail</label>
+   <label class="tick"><input type="checkbox" id="sf-kguests" checked> <span id="sf-kguests-t">Email the sponsor asking for their guests' names</span></label>
+   <p class="note" style="margin:0">Use this for a check or a promised gift. Nothing is charged. Untick both to add the sponsor quietly.</p></fieldset>`
+  :`<div id="sf-guestbox" style="border-top:1.5px solid var(--line);padding-top:14px;display:grid;gap:10px">
+   ${SEATS[s.level]?`<label class="field" for="sf-guests">Dinner Guests (${String(s.guests||'').split('\n').filter(x=>x.trim()).length} of ${SEATS[s.level]})<textarea id="sf-guests" rows="${Math.min(SEATS[s.level],6)}" placeholder="One name per line">${esc(s.guests||'')}</textarea></label>
+   <p class="note" style="margin:-4px 0 0">${s.gotAt?`Names last updated ${fmtD(s.gotAt)}. `:''}${s.asked?`Sponsor was asked ${fmtD(s.asked)}.`:'The sponsor has not been asked for names yet.'}</p>`:`<p class="note" style="margin:0">The ${esc(s.level)} level does not include dinner seats, so there is no guest list.</p>`}
+   <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" type="button" data-sp-letter="${s.id}">Email Shari the Letter</button>${SEATS[s.level]?`<button class="btn sm" type="button" data-sp-ask="${s.id}">${s.asked?'Send a Reminder for Guest Names':'Ask for Guest Names'}</button>`:''}</div></div>`}
   <p class="err" id="sf-err" role="alert"></p>
   <div style="display:flex;gap:8px"><button class="btn primary" type="submit">${isNew?'Add Sponsor':'Save'}</button><button class="btn" type="button" data-close>Cancel</button></div>
- </form></div>`)}
+ </form></div>`);kickLabel()}
 function exportList(){const rows=SP.tab==='year'?spRows().map(s=>({c:cById(s.cid),s})):(SP.tab==='history'?histRows():attRows()).map(c=>({c}));
  const sets={letters:['Mailing list (letters)',r=>r.c.okMail&&r.c.street,[['Name',r=>r.s&&r.s.name||r.c.name],['Salutation',r=>r.c.salutation],['First Name',r=>r.c.first],['Last Name',r=>r.c.last],['Street',r=>r.c.street],['City',r=>r.c.city],['State',r=>r.c.state],['ZIP',r=>r.c.zip]]],
   emails:['Email list',r=>r.c.okEmail&&r.c.email,[['Email',r=>r.c.email],['First Name',r=>r.c.first],['Last Name',r=>r.c.last],['Organization',r=>r.c.type==='Person'?'':r.c.name]]],
@@ -1149,7 +1164,36 @@ document.addEventListener('click',async e=>{
  if(!m.dataset.sure){m.dataset.sure='1';m.textContent='Tap again to combine';return}
  m.disabled=true;const r=await SB.rpc('merge_contacts',{p_keep:m.dataset.merge,p_drop:m.dataset.drop});
  if(r.error){m.disabled=false;toast('Not combined: '+r.error.message,true);return}
- DUPE_CACHE=null;await loadAll();render();dupesDrawer();toast('Combined into one contact')});
+ DUPE_CACHE=null;await loadAll();render();if(m.dataset.after==='close')closeLayer();else dupesDrawer();toast('Combined into one contact')});
+// Combine any two contacts by hand, even when the names look nothing alike (a sponsor who gave under two names).
+let COMB={a:null,b:null,qa:'',qb:''};
+function combineDrawer(aId){if(aId!==undefined)COMB={a:aId||null,b:null,qa:'',qb:''};
+ const A=COMB.a&&CONTACTS.get(COMB.a),B=COMB.b&&CONTACTS.get(COMB.b);const nm=c=>(c.first||c.last)?`${c.first} ${c.last}`.trim():(c.org||c.name||c.email||'No name');
+ const find=(q,not)=>{q=q.trim().toLowerCase();if(q.length<2)return[];return[...CONTACTS.values()].filter(c=>c.id!==not&&`${c.first} ${c.last} ${c.name} ${c.org||''} ${c.email||''}`.toLowerCase().includes(q)).sort((x,y)=>(x.name||'').localeCompare(y.name||'')).slice(0,8)};
+ const side=(k,c,q,not,label)=>c?`<div class="comb-pick"><div><span class="label" style="color:var(--muted)">${label}</span><b style="display:block;font-size:1.05rem">${esc(nm(c))}</b><span class="sub">${dupInfo(c)}</span></div><button class="btn ghost" type="button" data-comb-clear="${k}">Change</button></div>`
+  :`<div style="display:grid;gap:8px"><label class="field" for="comb-${k}">${label}<input id="comb-${k}" data-comb-q="${k}" type="search" value="${esc(q)}" placeholder="Type a name, business or email" autocomplete="off"></label>
+   <div class="comb-res" id="comb-res-${k}">${find(q,not).map(x=>`<button type="button" data-comb-set="${k}" data-id="${x.id}"><b>${esc(nm(x))}</b><span class="sub">${dupInfo(x)}</span></button>`).join('')||(q.trim().length>=2?'<p class="note" style="margin:0">Nobody matches.</p>':'')}</div></div>`;
+ layer(`<div class="drawer"><button class="scrim" data-close aria-label="Close"></button><div class="sheet" role="dialog" aria-modal="true" aria-label="Combine two people">
+  <button class="x" type="button" data-close aria-label="Close">×</button>
+  <div><span class="label" style="color:var(--pink)">Contacts</span><h2>Combine two people</h2><p class="note">Use this when one person or business is in here twice under different names. Combining keeps one record with all of their dinners, sponsorships, payments, letters and segments.</p></div>
+  ${side('a',A,COMB.qa,COMB.b,'First record')}${side('b',B,COMB.qb,COMB.a,'Second record')}
+  ${A&&B?`<div class="panel" style="padding:16px 18px;display:grid;gap:10px"><b>Which name should the combined record keep?</b><p class="note" style="margin:0">The other record is removed after everything on it moves over. Each year's sponsorship keeps the name it was given under. This can't be undone.</p>
+   <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-merge="${A.id}" data-drop="${B.id}" data-after="close">Keep ${esc(nm(A))}</button><button class="btn primary" data-merge="${B.id}" data-drop="${A.id}" data-after="close">Keep ${esc(nm(B))}</button></div></div>`:''}
+ </div></div>`);
+ const f=!A?$('#comb-a'):!B?$('#comb-b'):null;if(f){f.focus();const n=f.value.length;try{f.setSelectionRange(n,n)}catch(e){}}}
+document.addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.combQ;if(!k)return;COMB['q'+k]=e.target.value;combineDrawer()});
+document.addEventListener('click',e=>{const s=e.target.closest('[data-comb-set]');if(s){COMB[s.dataset.combSet]=s.dataset.id;COMB['q'+s.dataset.combSet]='';combineDrawer();return}
+ const c=e.target.closest('[data-comb-clear]');if(c){COMB[c.dataset.combClear]=null;combineDrawer();return}
+ const o=e.target.closest('[data-combine]');if(o){combineDrawer(o.dataset.combine)}});
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-sp-letter],[data-sp-ask]');if(!b)return;const ask=b.hasAttribute('data-sp-ask');const id=ask?b.dataset.spAsk:b.dataset.spLetter;
+ const was=b.textContent;b.disabled=true;b.textContent='Sending…';
+ const k=await sponsorFn({action:ask?'ask-guests':'letter',sponsorship_id:id}).then(x=>x.json()).catch(()=>({error:'That could not be sent. Try again in a moment.'}));
+ b.disabled=false;b.textContent=was;const part=ask?k.guests:k.letter;
+ if(k.error||!part||!part.sent){toast((part&&part.reason)||k.error||'That could not be sent.');return}
+ toast(ask?'Guest-names request sent to '+part.to+'.':'Letter emailed to '+part.to.join(', ')+'.');
+ if(ask){b.textContent='Send a Reminder for Guest Names';const sp=DIN.spons.find(x=>x.id===id);if(sp)sp.asked=new Date()}});
+function kickLabel(){const t=$('#sf-kguests-t');if(!t)return;const n=SEATS[$('#sf-level').value];const box=$('#sf-kguests');box.disabled=!n;if(!n)box.checked=false;else if(box.dataset.off!=='1')box.checked=true;
+ t.textContent=n?`Email the sponsor asking for the names of their ${n} guests`:'No guest list at this level (no dinner seats included)'}
 
 /* ---------------- sponsor thank-you letters ---------------- */
 const SPSEL=new Set();
@@ -1205,7 +1249,7 @@ document.addEventListener('click',e=>{if(VIEW!=='sponsors')return;
  const f=e.target.closest('[data-spf]');if(f){SP[f.dataset.spf]=f.dataset.v;render();return}
  const s=e.target.closest('[data-sps]');if(s){sponDrawer(s.dataset.sps);return}
  const c=e.target.closest('[data-spc]');if(c){e.preventDefault();contactDrawer(c.dataset.spc);return}
- const a=e.target.closest('[data-sp]');if(a){if(a.dataset.sp==='add')sponDrawer(null);if(a.dataset.sp==='export')exportList();if(a.dataset.sp==='dupes')dupesDrawer();if(a.dataset.sp==='letters')sponLettersDrawer();}});
+ const a=e.target.closest('[data-sp]');if(a){if(a.dataset.sp==='add')sponDrawer(null);if(a.dataset.sp==='export')exportList();if(a.dataset.sp==='dupes')dupesDrawer();if(a.dataset.sp==='combine')combineDrawer();if(a.dataset.sp==='letters')sponLettersDrawer();}});
 document.addEventListener('change',e=>{if(VIEW!=='sponsors')return;const id=e.target.id;
  if(e.target.dataset.spsel!==undefined){e.target.checked?SPSEL.add(e.target.dataset.spsel):SPSEL.delete(e.target.dataset.spsel);render();return}
  if(e.target.dataset.spselall!==undefined){const ids=e.target.dataset.spselall.split(',').filter(Boolean);ids.forEach(i=>e.target.checked?SPSEL.add(i):SPSEL.delete(i));render();return}
@@ -1214,7 +1258,8 @@ document.addEventListener('change',e=>{if(VIEW!=='sponsors')return;const id=e.ta
  if(id==='spay'){SP.ay=e.target.value;render()}
  if(id==='splapsed'){SP.lapsed=e.target.checked;render()}
  if(id==='spreg'){SP.reg=e.target.checked;render()}
- if(id==='sf-level'){const a=LVAMT[e.target.value];if(a)$('#sf-amount').value=a}
+ if(id==='sf-level'){const a=LVAMT[e.target.value];if(a)$('#sf-amount').value=a;kickLabel()}
+ if(id==='sf-kguests'){e.target.dataset.off=e.target.checked?'':'1'}
  if(id==='sf-status'&&e.target.value==='Paid in Full'){const r=$('#sf-received');if(!r.value)r.value=$('#sf-amount').value}});
 document.addEventListener('input',e=>{if(e.target.id==='spq'){SP.q=e.target.value;const p=e.target.selectionStart;render();const qq=$('#spq');qq.focus();qq.setSelectionRange(p,p)}
  if(e.target.id==='sf-who'){const m=[...CONTACTS.values()].find(x=>x.name.toLowerCase()===e.target.value.trim().toLowerCase());$('#sf-newbox').hidden=!!m}});
@@ -1241,7 +1286,12 @@ document.addEventListener('submit',async e=>{const fm=e.target;
   const row={level:$('#sf-level').value,amount:num($('#sf-amount').value),status:$('#sf-status').value,method:$('#sf-method').value,received:num($('#sf-received').value),notes:$('#sf-notes').value.trim(),logo_received:$('#sf-logo').checked,receipt_sent:$('#sf-receipt').checked,thanks_sent:$('#sf-thanks').checked};
   busy(fm,true);const r=fm.dataset.new==='true'?await SB.from('sponsorships').insert({...row,contact_id:cid,year:SP.year,sponsor_name:sname,source:'Added by staff'}).select().single():await SB.from('sponsorships').update(row).eq('id',fm.dataset.sid).select().single();busy(fm,false);
   if(r.error){err.textContent=r.error.message;return}
-  await loadAll();closeLayer();render();toast(fm.dataset.new==='true'?'Sponsor added':'Sponsorship saved');return}
+  const gEl=$('#sf-guests');if(gEl&&fm.dataset.new!=='true'){const was=(DIN.spons.find(x=>x.id===fm.dataset.sid)||{}).guests||'';const now=gEl.value.split('\n').map(x=>x.trim()).filter(Boolean).join('\n');
+   if(now!==was){const g=await SB.from('sponsorships').update({guest_names:now,guests_at:new Date().toISOString()}).eq('id',fm.dataset.sid);if(g.error){err.textContent=/guest_names|column/i.test(g.error.message)?'Run sponsor-guests.sql in Supabase to save guest names.':g.error.message;return}}}
+  let said=fm.dataset.new==='true'?'Sponsor added':'Sponsorship saved';
+  if(fm.dataset.new==='true'){const kl=$('#sf-kletter').checked,kg=$('#sf-kguests').checked&&!!SEATS[row.level];
+   if(kl||kg){busy(fm,true);const k=await sponsorFn({action:'kickoff',sponsorship_id:r.data.id,letter:kl,guests:kg}).then(x=>x.json()).catch(()=>({error:'The follow-up emails could not be sent. Open the sponsor to send them.'}));busy(fm,false);said=kickSaid(k,kl,kg)}}
+  await loadAll();closeLayer();render();toast(said);return}
  if(fm.id==='campForm'){e.preventDefault();await saveCamp(fm);return}
  if(fm.id==='eventForm'){e.preventDefault();const err=$('#ef-err');const t=$('#ef-title').value.trim(),dv=$('#ef-date').value,tv=$('#ef-time').value;if(!t||!dv||!tv){err.textContent='Enter a name, date, and time.';return}
   const [y,m,d]=dv.split('-').map(Number),[h,mi]=tv.split(':').map(Number);const when=new Date(y,m-1,d,h,mi);

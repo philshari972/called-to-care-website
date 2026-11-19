@@ -1,7 +1,7 @@
 // Printed thank-you letters for donors. When a gift comes in, the letter (PDF) is emailed to Shari
 // (and anyone else listed in Settings) to print, sign, fold, and mail in a #10 single-window envelope.
 // Monthly partners get a letter with their first gift, then again every 2 to 5 months (picked at random).
-import { db, setting, sendEmail, emailShell, p, box, esc, money, isEmail, DINNER_YEAR } from './_lib.mjs';
+import { db, setting, sendEmail, emailShell, p, box, esc, money, isEmail, DINNER_YEAR, sponsorLevel } from './_lib.mjs';
 import { PDF, wrap, textWidth } from './_pdf.mjs';
 import { LOGO } from './_letterlogo.mjs';
 
@@ -57,7 +57,7 @@ export function addressLines(c = {}) {
   return { lines: [...lines, c.street, cityLine].map((x) => String(x || '').trim()).filter(Boolean), hasAddress: !!(c.street && c.city && c.zip) };
 }
 
-// kind: 'one-time' | 'monthly-first' | 'monthly'
+// kind: 'one-time' | 'monthly-first' | 'monthly' | 'sponsorship'
 // Letterhead, fold marks, date, the address in the envelope window, and the footer. Shared by every letter.
 function drawFrame(doc, { contact = {}, date = new Date(), sample = false }) {
   const L = IN, R = 8.5 * IN - IN;
@@ -82,7 +82,7 @@ function drawFrame(doc, { contact = {}, date = new Date(), sample = false }) {
   if (sample) doc.text(R, 0.35 * IN, 'SAMPLE', { font: 'Helvetica-Bold', size: 9, color: PINK, align: 'right', spacing: 2 });
 }
 
-export function buildLetterPdf({ contact = {}, amount, designation = '', kind = 'one-time', updates = [], signer = DEFAULT_SIGNER, date = new Date(), sample = false }) {
+export function buildLetterPdf({ contact = {}, amount, designation = '', kind = 'one-time', updates = [], signer = DEFAULT_SIGNER, date = new Date(), sample = false, sponsor = {} }) {
   const doc = new PDF();
   const L = IN, R = 8.5 * IN - IN, W = R - L;
   drawFrame(doc, { contact, date, sample });
@@ -92,12 +92,17 @@ export function buildLetterPdf({ contact = {}, amount, designation = '', kind = 
   const gift = money(amount);
   const d = String(designation || '').replace(/^Monthly gift:\s*/i, '').trim();
   const fund = d && !/where needed most/i.test(d) ? ` for ${/^the\s/i.test(d) || !/closet|dinner|auction|fund|program/i.test(d) ? d : 'the ' + d}` : '';
-  const opening = kind === 'monthly-first'
+  // Sponsorships: sponsor = { level: 'Ruby Sponsor', year: '2027', dinner_date: 'Saturday, March 13, 2027' }
+  const lvl = String(sponsor.level || '').trim(); const an = /^[aeiou]/i.test(lvl) ? 'an' : 'a';
+  const sponsorOpening = `Thank you so much for joining us as ${lvl ? `${an} ${lvl}` : 'a sponsor'} of our ${sponsor.year ? sponsor.year + ' ' : ''}Charity Dinner & Auction. Your sponsorship of ${gift} means the world to us, and even more to the foster, adoptive, and kinship families we walk alongside.`;
+  const opening = kind === 'sponsorship' ? sponsorOpening : kind === 'monthly-first'
     ? `Thank you so much for becoming a monthly partner with Called to Care. Your gift of ${gift} every month${fund} means the world to us, and even more to the foster, adoptive, and kinship families we walk alongside.`
     : kind === 'monthly'
       ? `Thank you for your faithful monthly gift of ${gift}${fund}. Month after month, your support means the world to us, and even more to the foster, adoptive, and kinship families we walk alongside.`
       : `Thank you so much for your generous gift of ${gift}${fund}. Your support means the world to us, and even more to the foster, adoptive, and kinship families we walk alongside.`;
-  const closing = 'Because of friends like you, families who say yes to children in need never have to do it alone. Thank you for loving in deed and in truth.';
+  const closing = kind === 'sponsorship'
+    ? `Because of sponsors like you, families who say yes to children in need never have to do it alone.${sponsor.dinner_date ? ` We look forward to celebrating with you on ${sponsor.dinner_date}.` : ''} Thank you for loving in deed and in truth.`
+    : 'Because of friends like you, families who say yes to children in need never have to do it alone. Thank you for loving in deed and in truth.';
 
   // Fit everything on one page: try full size, then fewer updates, then slightly smaller type.
   const bottom = 9.95 * IN;
@@ -106,6 +111,14 @@ export function buildLetterPdf({ contact = {}, amount, designation = '', kind = 
     const para = (t, opts = {}) => { wrap(t, opts.font || 'Times-Roman', size, W - (opts.indent || 0)).forEach((ln) => { ops.push(['t', L + (opts.indent || 0), yy, ln, opts.font || 'Times-Roman', size]); yy += lead; }); yy += lead * 0.45; };
     ops.push(['t', L, yy, `Dear ${first || 'Friend'},`, 'Times-Roman', size]); yy += lead * 1.45;
     para(opening);
+    // Sponsorships: list what the level comes with, in the same words as the website.
+    const perks = kind === 'sponsorship' ? (sponsor.perks || []) : [];
+    if (perks.length) {
+      para(`As ${lvl ? `${an} ${lvl}` : 'a sponsor'}, your sponsorship includes:`);
+      yy -= lead * 0.15;
+      perks.forEach((t) => { ops.push(['dot', L + 5, yy - size * 0.32]); wrap(t, 'Times-Roman', size, W - 16).forEach((ln) => { ops.push(['t', L + 16, yy, ln, 'Times-Roman', size]); yy += lead; }); yy += lead * 0.12; });
+      yy += lead * 0.4;
+    }
     if (items.length) {
       para('Here is a little of what your generosity has been part of lately:');
       yy -= lead * 0.15;
@@ -149,46 +162,54 @@ export async function letterKind(payment) {
 }
 const nextAfter = (from = new Date()) => { const d = new Date(from); d.setMonth(d.getMonth() + 2 + Math.floor(Math.random() * 4)); return chicagoDay(d); };   // 2, 3, 4, or 5 months
 
+// What a sponsorship payment was for. Website sponsorships are described as "2027 Charity Dinner: Ruby Sponsor".
+export async function sponsorDetails(payment) {
+  const m = /^(\d{4}) Charity Dinner:\s*(.+)$/.exec(String(payment.description || '')); const year = m ? m[1] : '';
+  const v = await letterValues(); const dinner_date = v.dinner_date && (!year || v.dinner_date.includes(year)) ? v.dinner_date : '';
+  const lv = sponsorLevel((payment.meta && payment.meta.item) || (m ? m[2] : ''));
+  return { year, level: m ? m[2].trim() : (lv ? lv.name : ''), dinner_date, shown_as: (payment.meta && payment.meta.display_name) || '', perks: lv ? lv.perks : [], seats: lv ? lv.seats : 0 };
+}
 export async function makeLetterFor(payment, { kind } = {}) {
   const [c] = payment.contact_id ? await db(`contacts?id=eq.${payment.contact_id}&select=*`) : [{}];
   const s = await letterSettings();
-  const k = kind || (payment.recurring ? 'monthly' : 'one-time');
-  const pdf = buildLetterPdf({ contact: c || {}, amount: payment.amount, designation: payment.designation, kind: k, updates: await resolveUpdates(s.updates), signer: s.signer, date: payment.paid_at || new Date() });
-  return { pdf, contact: c || {}, settings: s, kind: k };
+  const k = kind || (payment.purpose === 'sponsorship' ? 'sponsorship' : payment.recurring ? 'monthly' : 'one-time');
+  const sponsor = k === 'sponsorship' ? await sponsorDetails(payment) : {};
+  const pdf = buildLetterPdf({ contact: c || {}, amount: payment.amount, designation: payment.designation, kind: k, updates: await resolveUpdates(s.updates), signer: s.signer, date: payment.paid_at || new Date(), sponsor });
+  return { pdf, contact: c || {}, settings: s, kind: k, sponsor };
 }
 
 const fileName = (c) => `Thank-you letter - ${[c.first_name, c.last_name].filter(Boolean).join(' ') || c.org || 'donor'}.pdf`.replace(/[\\/:*?"<>|]/g, '');
 
 // Email the letter to Shari (and the other letter recipients). Returns the addresses it went to.
 export async function emailLetter(payment, { kind, again = false } = {}) {
-  const { pdf, contact: c, settings: s, kind: k } = await makeLetterFor(payment, { kind });
+  const { pdf, contact: c, settings: s, kind: k, sponsor } = await makeLetterFor(payment, { kind }); const spon = k === 'sponsorship';
   if (!s.recipients.length) return [];
   const name = [c.first_name, c.last_name].filter(Boolean).join(' ') || c.org || c.email || 'a donor';
   const addr = addressLines(c);
   const giftType = k === 'monthly-first' ? 'Monthly (first gift)' : k === 'monthly' ? 'Monthly' : 'One-time';
   const html = emailShell({
-    preheader: `${money(payment.amount)} from ${name}. The thank-you letter is attached, ready to print and sign.`,
-    heading: `New donation from ${esc(name)}`,
+    preheader: `${money(payment.amount)} ${spon ? 'sponsorship ' : ''}from ${name}. The thank-you letter is attached, ready to print and sign.`,
+    heading: `New ${spon ? 'sponsorship' : 'donation'} from ${esc(name)}`,
     bodyHtml: p(`A thank-you letter is attached and ready to <b>print, sign, and mail</b>.`)
-      + box([['Donor', esc(name)], ['Amount', money(payment.amount)], ['Gift', giftType], ['Fund', esc(payment.designation || 'Where needed most')], ['Date', longDate(payment.paid_at || new Date())], ['Email', esc(c.email || '—')],
+      + box([[spon ? 'Sponsor' : 'Donor', esc(name)], ['Amount', money(payment.amount)], ...(spon ? [['Level', esc([sponsor.year, sponsor.level].filter(Boolean).join(' ') || 'Sponsorship')], ...(sponsor.shown_as ? [['Shown in the program as', esc(sponsor.shown_as)]] : [])] : [['Gift', giftType], ['Fund', esc(payment.designation || 'Where needed most')]]), ['Date', longDate(payment.paid_at || new Date())], ['Email', esc(c.email || '—')],
         ['Mailing address', addr.hasAddress ? addr.lines.slice(1).map(esc).join('<br>') : '<span style="color:#E2197A">Not on file</span>']])
       + (addr.hasAddress
         ? p(`<span style="font-size:14px;color:#5E6B78">Fold the letter in thirds (the small marks on the left edge show where) and slip it into a standard #10 single-window envelope. The address lines up with the window.</span>`)
-        : p(`<span style="font-size:14px;color:#5E6B78">We don't have a mailing address for this donor yet. Add it to their contact in the admin, then open the gift under Donations and choose <b>Thank-You Letter</b> to print an updated copy.</span>`)),
+        : p(`<span style="font-size:14px;color:#5E6B78">We don't have a mailing address for this ${spon ? 'sponsor' : 'donor'} yet. Add it to their contact in the admin, then ${!payment.id ? 'open the sponsor under Sponsors &amp; Guests and choose <b>Email Shari the Letter</b> for an updated copy.' : `open the ${spon ? 'payment under Payments' : 'gift under Donations'} and choose <b>Print Letter</b> to print an updated copy.`}</span>`)),
     reason: 'Staff notification from the Called to Care website.',
   });
-  const subject = `${again ? 'Letter again: ' : 'New donation: '}${name}, ${money(payment.amount)}`;
+  const subject = `${again ? 'Letter again: ' : spon ? 'New sponsorship: ' : 'New donation: '}${name}, ${money(payment.amount)}`;
   const attachments = [{ filename: fileName(c), content: pdf.toString('base64') }];
   for (const to of s.recipients) await sendEmail({ to, subject, html, template: 'donor-letter', contactId: payment.contact_id, attachments });
   return s.recipients;
 }
 
-// Called once when a donation succeeds (from finalizePayment). Never throws.
+// Called once when a donation or a sponsorship succeeds (from finalizePayment). Never throws.
 export async function donorLetterOnGift(payment) {
   try {
-    if (payment.purpose !== 'donation') return;
+    if (payment.purpose !== 'donation' && payment.purpose !== 'sponsorship') return;
     if ((await db(`donor_letters?payment_id=eq.${payment.id}&select=id`)).length) return;   // already done
-    const kind = await letterKind(payment);
+    const kind = payment.purpose === 'sponsorship' ? 'sponsorship' : await letterKind(payment);
     if (!kind) return;                                                                     // monthly gift, not this month
     const sentTo = await emailLetter(payment, { kind });
     await db('donor_letters', { method: 'POST', body: { payment_id: payment.id, contact_id: payment.contact_id, recurring: !!payment.recurring, kind,

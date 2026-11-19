@@ -6,18 +6,28 @@ export const SITE_URL = () => env('SITE_URL', 'https://wearecalledtocare.com').r
 export const DINNER_YEAR = 2027;
 
 // ---------- prices live on the server so nobody can change them in the browser ----------
+// What each level costs and what the sponsor gets. "perks" is the same list shown on the Charity Dinner page;
+// "seats" is how many dinner guests come with the level (we ask the sponsor for that many names).
+const PRINTED = 'Company or individual featured on all printed materials';
 export const SPONSOR_LEVELS = {
-  legacy: { name: 'Legacy Sponsor', level: 'Legacy', price: 15000 },
-  gold: { name: 'Gold Sponsor', level: 'Gold', price: 10000 },
-  platinum: { name: 'Platinum Sponsor', level: 'Platinum', price: 5000 },
-  diamond: { name: 'Diamond Sponsor', level: 'Diamond', price: 2500 },
-  sapphire: { name: 'Sapphire Sponsor', level: 'Sapphire', price: 1500 },
-  ruby: { name: 'Ruby Sponsor', level: 'Ruby', price: 750 },
-  friend: { name: 'Friend Sponsor', level: 'Friend', price: 250 },
-  appetizer: { name: 'Appetizer Table Sponsor', level: 'Appetizer Table', price: 1000, limit: 1 },
-  dessert: { name: 'Dessert Table Sponsor', level: 'Dessert Table', price: 1000, limit: 2 },
-  flowers: { name: 'Flowers Sponsor', level: 'Flowers', price: 1000, limit: 2 },
+  legacy: { name: 'Legacy Sponsor', level: 'Legacy', price: 15000, seats: 10, seating: 'a premier table for 10 guests',
+    perks: [PRINTED, 'Premier table seating for 10 guests', 'Recognition as a Legacy sponsor on large signage at the event', 'Full-page color ad in the program book', 'Two complimentary Golden Tickets'] },
+  gold: { name: 'Gold Sponsor', level: 'Gold', price: 10000, seats: 10, seating: 'a premier table for 10 guests',
+    perks: [PRINTED, 'Premier table seating for 10 guests', 'Recognition as a Gold sponsor on large signage at the event', 'Full-page color ad in the program book', 'One complimentary Golden Ticket'] },
+  platinum: { name: 'Platinum Sponsor', level: 'Platinum', price: 5000, seats: 4, seating: 'premier table seating for 4 guests',
+    perks: [PRINTED, 'Premier table seating for 4 guests', 'Recognition as a Platinum sponsor on signage at the event', 'Half-page color ad in the program book'] },
+  diamond: { name: 'Diamond Sponsor', level: 'Diamond', price: 2500, seats: 2, seating: 'two tickets to the dinner',
+    perks: [PRINTED, 'Two tickets to the dinner', 'Recognition as a Diamond sponsor on signage at the event', 'Quarter-page color ad in the program book'] },
+  sapphire: { name: 'Sapphire Sponsor', level: 'Sapphire', price: 1500, seats: 0,
+    perks: [PRINTED, 'Recognition as a Sapphire sponsor on signage at the event', 'Recognition in the program book', 'Shout-out at the Charity Dinner'] },
+  ruby: { name: 'Ruby Sponsor', level: 'Ruby', price: 750, seats: 0, perks: ['Recognition in the program book', 'Shout-out at the Charity Dinner'] },
+  friend: { name: 'Friend Sponsor', level: 'Friend', price: 250, seats: 0, perks: ['Your name in the program book'] },
+  appetizer: { name: 'Appetizer Table Sponsor', level: 'Appetizer Table', price: 1000, limit: 1, seats: 0, perks: ['Recognized at the appetizer table'] },
+  dessert: { name: 'Dessert Table Sponsor', level: 'Dessert Table', price: 1000, limit: 2, seats: 0, perks: ['Recognized at the dessert table'] },
+  flowers: { name: 'Flowers Sponsor', level: 'Flowers', price: 1000, limit: 2, seats: 0, perks: ['Recognized on signage at the event'] },
 };
+// Find a level by its key ("platinum"), its short name ("Platinum") or its full name ("Platinum Sponsor").
+export const sponsorLevel = (v) => { const t = String(v || '').trim().toLowerCase(); return SPONSOR_LEVELS[t] || Object.values(SPONSOR_LEVELS).find((l) => l.level.toLowerCase() === t || l.name.toLowerCase() === t) || null; };
 export const TICKET_PRICE = 100, TABLE_PRICE = 1000;
 // Regular dinner tickets open on their own at noon (Chicago) on Dec 15, 2026. Turning tickets on in the admin opens them sooner.
 export const TICKETS_OPEN_AT = Date.parse('2026-12-15T18:00:00Z');
@@ -163,10 +173,20 @@ export async function finalizePayment(payment, { method } = {}) {
 
   if (payment.purpose === 'sponsorship' && payment.contact_id) {
     const lv = SPONSOR_LEVELS[meta.item] || {};
-    await db('sponsorships', { method: 'POST', body: {
+    const made = await db('sponsorships', { method: 'POST', prefer: 'return=representation', body: {
       contact_id: payment.contact_id, year: DINNER_YEAR, sponsor_name: meta.display_name || meta.name || '', level: lv.level || meta.item || '',
       amount: payment.amount, status: 'Paid in Full', received: payment.amount, method: method || payment.method || payment.provider,
       source: 'Website', program_name: meta.display_name || '', notes: meta.guests ? `Guest names: ${meta.guests}` : '' } });
+    // Levels with dinner seats: keep the names typed at checkout, or email the sponsor a link to send them.
+    // (Best effort: a hiccup here must never get in the way of recording the payment.)
+    try {
+      const sp = Array.isArray(made) ? made[0] : null;
+      if (sp && sp.id && lv.seats) {
+        const S = await import('./_sponsor.mjs'); const typed = S.nameList(String(meta.guests || '').replace(/\s*[,;]\s*/g, '\n'));
+        if (typed.length) await db(`sponsorships?id=eq.${sp.id}`, { method: 'PATCH', body: { guest_names: typed.slice(0, lv.seats).join('\n'), guests_at: new Date().toISOString() } });
+        if (typed.length < lv.seats) await S.askGuests({ ...sp, guest_names: typed.join('\n') });
+      }
+    } catch (e) { console.error('sponsor guests', e.message); }
   }
   if ((payment.purpose === 'tickets' || payment.purpose === 'table') && payment.contact_id) {
     await db('attendance?on_conflict=contact_id,year', { method: 'POST', prefer: 'resolution=merge-duplicates', body: {
@@ -177,7 +197,7 @@ export async function finalizePayment(payment, { method } = {}) {
     await db(`baskets?id=eq.${meta.basket_id}`, { method: 'PATCH', body: { claimed_at: new Date().toISOString(), claimed_payment: payment.id,
       claimed_contact: payment.contact_id, claimed_name: meta.display_name || '', claim_kind: 'paid', held_until: null, updated_at: new Date().toISOString() } }).catch((e) => console.error('basket', e.message));
   }
-  const c = payment.contact_id ? (await db(`contacts?id=eq.${payment.contact_id}&select=email,first_name,last_name,city,state`))[0] : null;
+  const c = payment.contact_id ? (await db(`contacts?id=eq.${payment.contact_id}&select=email,first_name,last_name,city,state,org`))[0] : null;
   if (c?.email) {
     const org = await setting('org', { legal_name: 'We Are Called to Care, NFP', ein: '86-2900453' });
     const what = payment.description || 'Your gift';
@@ -198,9 +218,9 @@ export async function finalizePayment(payment, { method } = {}) {
     await sendEmail({ to: c.email, subject: 'Your receipt from We Are Called to Care', html, template: `receipt-${payment.purpose}`, contactId: payment.contact_id });
     await db(`payments?id=eq.${payment.id}`, { method: 'PATCH', body: { receipt_sent_at: new Date().toISOString() } });
   }
-  // Donations: the people who get thank-you letters (Shari) don't also get the plain alert; everyone else still does.
+  // Donations and sponsorships: the people who get thank-you letters (Shari) don't also get the plain alert; everyone else still does.
   let skip = [];
-  if (payment.purpose === 'donation') {
+  if (payment.purpose === 'donation' || payment.purpose === 'sponsorship') {
     const L = await import('./_letter.mjs');
     await L.donorLetterOnGift({ ...payment, status: 'succeeded', receipt_no: receipt, paid_at: new Date().toISOString() });
     skip = (await L.letterSettings().catch(() => ({ recipients: [] }))).recipients;
@@ -209,6 +229,7 @@ export async function finalizePayment(payment, { method } = {}) {
   const where = [c?.city, c?.state].map((x) => String(x || '').trim()).filter(Boolean).join(', ');
   const lines = [esc(payment.description)];
   if (who) lines.push(`Name: ${esc(who)}`);
+  if (String(c?.org || '').trim()) lines.push(`Organization: ${esc(String(c.org).trim())}`);
   if (c?.email) lines.push(`Email: <a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`);
   if (where) lines.push(`Location: ${esc(where)}`);
   await alertStaff(`New ${payment.purpose}: ${money(payment.amount)}`, lines, `${SITE_URL()}/admin/#payments`, { skip }).catch(() => {});

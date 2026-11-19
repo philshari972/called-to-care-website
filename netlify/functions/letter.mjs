@@ -14,7 +14,7 @@ export default async (req) => {
   let b; try { b = await req.json(); } catch { return fail('Invalid request'); }
   if (b.action === 'sponsors') return sponsorLetters(req, b);
   const level = Math.max(await staffLevel(req, 'donations'), await staffLevel(req, 'payments'));
-  if (level < 1) return fail('You need access to Donations.', 403);
+  if (level < 1) return fail('You need access to Donations or Payments.', 403);
   try {
     if (b.action === 'sample') {
       const s = await letterSettings();
@@ -26,14 +26,16 @@ export default async (req) => {
     }
     if (!/^[0-9a-f-]{36}$/.test(b.payment_id || '')) return fail('Unknown gift');
     const [pay] = await db(`payments?id=eq.${b.payment_id}&select=*`);
-    if (!pay || pay.purpose !== 'donation') return fail('Gift not found', 404);
+    if (!pay || !['donation', 'sponsorship'].includes(pay.purpose)) return fail('Gift not found', 404);
+    if (pay.status !== 'succeeded') return fail('This payment was not completed, so there is no letter for it.');
     const [prev] = await db(`donor_letters?payment_id=eq.${pay.id}&select=kind`);
-    const kind = prev?.kind || (pay.recurring ? 'monthly' : 'one-time');
+    const kind = pay.purpose === 'sponsorship' ? 'sponsorship' : prev?.kind || (pay.recurring ? 'monthly' : 'one-time');
     if (b.action === 'pdf') { const { pdf } = await makeLetterFor(pay, { kind }); return pdfResponse(pdf, 'Thank-you letter.pdf'); }
     if (b.action === 'email') {
-      if (level < 3) return fail('You need edit access to Donations.', 403);
-      const to = await emailLetter(pay, { kind, again: true });
+      if (level < 3) return fail('You need edit access to Donations or Payments.', 403);
+      const to = await emailLetter(pay, { kind, again: !!prev });   // the first letter for an older sponsorship is not "again"
       if (!to.length) return fail('Add at least one letter email in Settings first.');
+      if (!prev) await db('donor_letters', { method: 'POST', body: { payment_id: pay.id, contact_id: pay.contact_id, recurring: false, kind, sent_to: to } });
       return json({ ok: true, to });
     }
     return fail('Unknown request');

@@ -1172,7 +1172,7 @@ html.tickets-on .tix-off{display:none!important}
       <span class="label c-pinkl">Corporate &amp; church partners</span>
       <h2 class="d2">Partner with Called to Care</h2>
       <p style="color:var(--sky)">Businesses and churches make our year-round programs possible. Sponsor the charity dinner or give as a partner organization.</p>
-      <div class="pills"><a class="pill p-pink" href="https://donorbox.org/church-donations-23" target="_blank" rel="noopener">Partner now</a><a class="pill p-line c-white" href="#charity-dinner">Dinner sponsorships</a></div>
+      <div class="pills"><a class="pill p-pink" href="#donate" data-partner role="button">Partner now</a><a class="pill p-line c-white" href="#charity-dinner">Dinner sponsorships</a></div>
     </div>
   </div>
 
@@ -1192,7 +1192,7 @@ html.tickets-on .tix-off{display:none!important}
     <span class="label">Lemonade stand</span>
     <h1 class="cond c-navy" style="font-size:clamp(3.4rem,10vw,8rem)">Stand <span style="font-family:var(--serif);text-transform:none;font-weight:400;font-style:italic;color:var(--pink)">with</span> kids</h1>
     <p class="lede">Organize a lemonade stand and help Called to Care raise money for foster kids and families. When you're done, deposit what you collected online.</p>
-    <div class="pills"><a class="pill p-navy" href="https://www.paypal.com/donate/?hosted_button_id=SPJYUEPFL28FS" target="_blank" rel="noopener">Deposit your money</a><a class="pill p-white" href="https://static.showit.co/file/_ntcR_3jTjOa6gz_n_2A_Q/141511/caring_is_cool_flyer.pdf" target="_blank" rel="noopener">Order a Stand Kit</a></div>
+    <div class="pills"><a class="pill p-navy" href="#lemonade" data-lemonade role="button">Deposit your money</a><a class="pill p-white" href="https://static.showit.co/file/_ntcR_3jTjOa6gz_n_2A_Q/141511/caring_is_cool_flyer.pdf" target="_blank" rel="noopener">Order a Stand Kit</a></div>
   </div></div>
   <section class="b-skypale">
     <div class="wrap" style="max-width:820px">
@@ -1784,9 +1784,11 @@ html.tickets-on .tix-off{display:none!important}
           <span class="label" style="color:var(--pink);padding-right:44px;line-height:1.8" id="coEyebrow">Charity Dinner &amp; Auction · March 13, 2027</span>
           <h2 class="d3 c-navy" id="coTitle">Sponsor</h2>
           <div class="co-line"><span id="coItem">Item</span><span id="coPrice" class="price">$0</span></div>
-          <div class="q" id="coAmtWrap" hidden><span class="lbl">Monthly Amount</span>
+          <div class="q" id="coFreqWrap" hidden><span class="lbl">How Often</span>
+            <div class="co-amts" role="group" aria-label="How often"><button type="button" data-cofreq="once">One Time</button><button type="button" data-cofreq="monthly">Monthly</button></div></div>
+          <div class="q" id="coAmtWrap" hidden><span class="lbl" id="coAmtLbl">Monthly Amount</span>
             <div class="co-amts" role="group" aria-label="Monthly amount"><button type="button" data-coamt="50">$50</button><button type="button" data-coamt="100">$100</button><button type="button" data-coamt="250">$250</button><span class="money"><span>$</span><input id="co-amt" inputmode="decimal" placeholder="Other" aria-label="Other monthly amount"></span></div>
-            <span class="hint">Give $50 or more a month for 6 months or longer to get early access to Charity Dinner tickets.</span></div>
+            <span class="hint" id="coAmtHint">Give $50 or more a month for 6 months or longer to get early access to Charity Dinner tickets.</span></div>
           <div class="q" id="coBkWrap" hidden><span class="lbl">How Would You Like to Give <span class="nw">This Basket?</span></span>
             <div class="choices"><label class="choice" for="co-bk1"><input type="radio" id="co-bk1" name="bkhow" value="pay" checked> Pay its cost online now</label><label class="choice" for="co-bk2"><input type="radio" id="co-bk2" name="bkhow" value="fill"> Claim it and fill it myself</label></div>
             <div class="check-note" id="coClaimNote" hidden></div></div>
@@ -2011,11 +2013,16 @@ html.tickets-on .tix-off{display:none!important}
       $('coEyebrow').innerHTML=o.eyebrow?o.eyebrow:isGift?'Give to We Are Called to Care':'<span class="nw">Charity Dinner &amp; Auction</span><span style="display:block">Saturday, March 13, 2027</span>';
       $('coTitle').textContent=o.title?o.title:isGift?(o.recurring?'Monthly Gift':'Your Gift'):isTicket?'Buy Tickets':isTable?'Reserve a Table':'Become a Sponsor';
       $('coItem').textContent=o.name+(isTicket?' · $100 each':''); $('coPrice').textContent=fmt(o.price)+(o.recurring?'/mo':'');
+      const isPartner=!!o.partner, isStand=!!o.lemonade;
+      // The amount buttons are shared: monthly partners see $50/$100/$250, partner organizations see their own set.
+      if(o.choose){const am=o.amounts||[50,100,250];document.querySelectorAll('[data-coamt]').forEach((b,i)=>{b.dataset.coamt=am[i];b.textContent=fmt(am[i]);});}
       $('coAmtWrap').hidden=!o.choose; if(o.choose){$('co-amt').value='';document.querySelectorAll('[data-coamt]').forEach(b=>b.classList.toggle('on',+b.dataset.coamt===o.price));}
+      $('coAmtLbl').textContent=isStand?'How Much Did Your Stand Raise?':isPartner&&!o.recurring?'Gift Amount':'Monthly Amount'; $('coAmtHint').hidden=isPartner||isStand; $('co-amt').setAttribute('aria-label',(isPartner||isStand)&&!o.recurring?'Other amount':'Other monthly amount');
+      $('coFreqWrap').hidden=!o.freq; document.querySelectorAll('[data-cofreq]').forEach(b=>b.classList.toggle('on',(b.dataset.cofreq==='monthly')===!!o.recurring));
       const isBasket=o.kind==='basket';
-      $('coQtyWrap').hidden=!isTicket; $('coDisplayWrap').hidden=isTicket||isTable||isGift; $('co-display').required=!(isTicket||isTable||isGift||isBasket);
+      $('coQtyWrap').hidden=!isTicket; $('coDisplayWrap').hidden=isTicket||isTable||(isGift&&!isPartner&&!isStand); $('co-display').required=isPartner||!(isTicket||isTable||isGift||isBasket);
       const dl=$('coDisplayWrap').querySelector('.lbl'); dl.dataset.orig=dl.dataset.orig||dl.innerHTML;
-      dl.innerHTML=isBasket?'Name to Show on the <span class="nw">Basket (optional)</span>':dl.dataset.orig; $('co-display').placeholder=isBasket?'Leave blank to give quietly':'Company, family, or individual';
+      dl.innerHTML=isBasket?'Name to Show on the <span class="nw">Basket (optional)</span>':isPartner?'Business or Church <span class="nw">Name<span class="req">*</span></span>':isStand?'Who Ran the <span class="nw">Stand? (optional)</span>':dl.dataset.orig; $('co-display').placeholder=isBasket?'Leave blank to give quietly':isPartner?'Your business or church':isStand?'Kids\' first names, a family, or a group':'Company, family, or individual';
       $('coGuestsWrap').hidden=!(isTicket||isTable||['legacy','gold','platinum','diamond'].includes(o.item));
       const isSp=o.kind==='sponsorship'; $('coHowWrap').hidden=!isSp; $('co-how1').checked=true;
       $('coBkWrap').hidden=!(isBasket&&claimsOn()); $(o.claim&&isBasket&&claimsOn()?'co-bk2':'co-bk1').checked=true;
@@ -2072,7 +2079,20 @@ html.tickets-on .tix-off{display:none!important}
       const b=(C2C.cfg.baskets||[]).find(x=>x.id.startsWith(q.toLowerCase())); history.replaceState(null,'',location.pathname+location.hash);
       setTimeout(()=>{ const sec=$('baskets'); if(sec&&!sec.hidden) sec.scrollIntoView({block:'start'}); if(b) openDetail(b.id,null); },250);});
     // Monthly amount chooser (Charity Dinner monthly partners)
-    const setAmt=v=>{cur.price=v;$('coPrice').textContent=fmt(v)+'/mo';upd();};
+    const setAmt=v=>{cur.price=v;$('coPrice').textContent=fmt(v)+(cur.recurring?'/mo':'');upd();};
+    // One Time / Monthly (partner organizations choose either)
+    document.querySelectorAll('[data-cofreq]').forEach(b=>b.addEventListener('click',()=>{if(!cur||!cur.freq)return;cur.recurring=b.dataset.cofreq==='monthly';
+      document.querySelectorAll('[data-cofreq]').forEach(x=>x.classList.toggle('on',x===b));
+      $('coAmtLbl').textContent=cur.recurring?'Monthly Amount':'Gift Amount'; $('co-amt').setAttribute('aria-label',cur.recurring?'Other monthly amount':'Other amount');
+      if(cur.partner){cur.name=cur.recurring?'Monthly partner gift':'Partner gift';$('coItem').textContent=cur.name;}
+      setAmt(cur.price); $('coPaypal').hidden=!!cur.recurring; renderPayPal();}));
+    // Lemonade stand: deposit what the stand raised (one-time; any amount of $5 or more)
+    document.addEventListener('click',e=>{const a=e.target.closest('[data-lemonade]');if(!a)return;e.preventDefault();
+      C2C.openCheckout({kind:'donation',item:'donation',lemonade:true,choose:true,amounts:[25,50,100],price:50,recurring:false,name:'Lemonade stand deposit',title:'Deposit Your Stand Money',
+        fund:'Lemonade stand',eyebrow:'Stand with kids'});});
+    document.addEventListener('click',e=>{const a=e.target.closest('[data-partner]');if(!a)return;e.preventDefault();
+      C2C.openCheckout({kind:'donation',item:'donation',partner:true,freq:true,choose:true,amounts:[250,500,1000],price:500,recurring:false,name:'Partner gift',title:'Partner with Called to Care',
+        fund:'Corporate & church partner',eyebrow:'Corporate &amp; church partners'});});
     document.querySelectorAll('[data-coamt]').forEach(b=>b.addEventListener('click',()=>{$('co-amt').value='';document.querySelectorAll('[data-coamt]').forEach(x=>x.classList.toggle('on',x===b));setAmt(+b.dataset.coamt);}));
     $('co-amt').addEventListener('input',()=>{const v=parseFloat($('co-amt').value.replace(/[^0-9.]/g,''));document.querySelectorAll('[data-coamt]').forEach(x=>x.classList.remove('on'));setAmt(v>0?Math.round(v*100)/100:0);});
     document.addEventListener('click',e=>{const a=e.target.closest('[data-dinner-monthly]');if(!a)return;e.preventDefault();
@@ -2091,9 +2111,10 @@ html.tickets-on .tix-off{display:none!important}
     function valid(){const bad=[...f.querySelectorAll('input[required]')].filter(i=>!i.closest('[hidden]')&&!i.checkValidity());
       f.querySelectorAll('.q').forEach(q=>q.classList.remove('invalid')); bad.forEach(i=>i.closest('.q').classList.add('invalid'));
       if(bad.length){$('coErr').textContent='Please fill in the fields marked in pink.'; bad[0].focus(); return false;}
-      if(cur.min&&!(cur.price>=cur.min)){$('coErr').textContent=`Monthly partner gifts start at ${fmt(cur.min)} a month.`; $('co-amt').focus(); return false;} $('coErr').textContent=''; return true;}
-    const payload=provider=>({action:'start',provider,kind:cur.kind,item:cur.item,qty:+$('co-qty').value||1,amount:cur.price,recurring:!!cur.recurring,designation:cur.fund||'',
-      display_name:f.display_name.value,guests:f.guest_names.value,website:hp(f),t:C2C.t,contact:{first:f.first_name.value,last:f.last_name.value,email:f.email.value,phone:f.phone.value,street:f.street.value,city:f.city.value,state:f.state.value,zip:f.zip.value}});
+      if(cur.min&&!(cur.price>=cur.min)){$('coErr').textContent=`Monthly partner gifts start at ${fmt(cur.min)} a month.`; $('co-amt').focus(); return false;}
+      if(cur.choose&&!(cur.price>=5)){$('coErr').textContent='Enter an amount of $5 or more.'; $('co-amt').focus(); return false;} $('coErr').textContent=''; return true;}
+    const payload=provider=>({action:'start',provider,kind:cur.kind,item:cur.item,qty:+$('co-qty').value||1,amount:cur.price,recurring:!!cur.recurring,designation:cur.fund||'',partner:!!cur.partner,lemonade:!!cur.lemonade,
+      display_name:f.display_name.value,guests:f.guest_names.value,website:hp(f),t:C2C.t,contact:{first:f.first_name.value,last:f.last_name.value,email:f.email.value,phone:f.phone.value,street:f.street.value,city:f.city.value,state:f.state.value,zip:f.zip.value,...(cur.partner?{org:f.display_name.value}:{})}});
     function done(note){
       if(cur.kind==='basket'){ const bk=(C2C.cfg.baskets||[]).find(x=>x.id===cur.item); if(bk){bk.given=true;bk.givenBy=f.display_name.value.trim();} C2C.renderBaskets&&C2C.renderBaskets();
         $('coDoneMsg').textContent=`Thank you, ${f.first_name.value}! You gave the ${cur.name} basket (${fmt(total())}). A receipt is on its way to ${f.email.value}.`;

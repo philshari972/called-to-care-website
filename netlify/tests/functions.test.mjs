@@ -42,7 +42,7 @@ function rest(url, init) {
   const tbl = T[path]; if (!tbl) throw new Error('no table ' + path);
   if (m === 'GET') { let rows = tbl.filter((r) => match(r, params)); const lim = u.searchParams.get('limit'); if (lim) rows = rows.slice(0, +lim); return rows; }
   if (m === 'POST') {
-    const rows = [].concat(body).map((r) => ({ id: uid(), status: r.status, created_at: new Date().toISOString(), ...r }));
+    const rows = [].concat(body).map((r) => ({ id: uid(), status: r.status, created_at: new Date().toISOString(), ...(path === 'sponsorships' ? { guest_token: '99999999-9999-4999-8999-99999999999' + (seq % 10), guest_names: '' } : {}), ...r }));
     const oc = u.searchParams.get('on_conflict');
     for (const r of rows) {
       if (oc) { const keys = oc.split(','); const ex = tbl.find((x) => keys.every((k) => x[k] === r[k])); if (ex) { Object.assign(ex, r, { id: ex.id }); continue; } }
@@ -78,7 +78,7 @@ globalThis.fetch = async (url, init = {}) => {
     if (p.startsWith('charges/')) return ok({ payment_method_details: { type: 'card', card: { brand: 'visa', last4: '4242', wallet: { type: 'apple_pay' } } } });
   }
   if (url.includes('paypal.com/v1/oauth2/token')) return ok({ access_token: 't' });
-  if (url.includes('paypal.com/v2/checkout/orders') && url.endsWith('/capture')) return ok({ status: 'COMPLETED', purchase_units: [{ payments: { captures: [{ amount: { value: '1500.00' } }] } }] });
+  if (url.includes('paypal.com/v2/checkout/orders') && url.endsWith('/capture')) return ok({ status: 'COMPLETED', purchase_units: [{ payments: { captures: [{ amount: { value: globalThis.__ppAmt || '1500.00' } }] } }] });
   if (url.includes('paypal.com/v2/checkout/orders')) return ok({ id: 'ORDER1' });
   throw new Error('unexpected fetch ' + url);
 };
@@ -127,7 +127,55 @@ ok(sent.some((e) => e.to[0] === 'bo@x.com' && /receipt/i.test(e.subject) && e.ht
   const L = sent.find((e) => e.to[0] === 'shari@wearecalledtocare.com' && /^New donation: Al Ma, \$25/.test(e.subject));
   ok(L && L.attachments?.[0]?.filename.endsWith('.pdf') && Buffer.from(L.attachments[0].content, 'base64').subarray(0, 5).toString() === '%PDF-', 'thank-you letter PDF emailed to Shari');
   ok(!sent.some((e) => e.to[0] === 'shari@wearecalledtocare.com' && /^\[Website\] New donation/.test(e.subject)) && sent.some((e) => e.to[0] === 'staff@example.org' && /^\[Website\] New donation/.test(e.subject)), 'letter recipients skip the plain donation alert; other staff still get it');
-  ok(L.html.includes('9 Oak Ln') && !sent.some((e) => e.attachments && /Bo Ng/.test(e.subject)) && T.donor_letters.length === 1 && T.donor_letters[0].kind === 'one-time', 'letter email shows the mailing address; letter logged'); }
+  ok(L.html.includes('9 Oak Ln') && T.donor_letters.filter((l) => l.kind === 'one-time').length === 1, 'letter email shows the mailing address; letter logged');
+  // The Sapphire sponsorship paid above sends Shari a letter of its own.
+  const S = sent.find((e) => e.to[0] === 'shari@wearecalledtocare.com' && /^New sponsorship: Bo Ng, \$1,500/.test(e.subject)); const sl = T.donor_letters.find((l) => l.kind === 'sponsorship');
+  ok(S && S.attachments?.[0]?.filename === 'Thank-you letter - Bo Ng.pdf' && Buffer.from(S.attachments[0].content, 'base64').subarray(0, 5).toString() === '%PDF-' && sl && sl.payment_id === pay.id, 'a paid sponsorship emails Shari a thank-you letter PDF');
+  ok(S.html.includes('2027 Sapphire Sponsor') && S.html.includes('Ng Family') && S.html.includes('1 Main St') && S.html.includes('New sponsorship from Bo Ng'), 'the sponsorship email shows the level, the name for the program and the mailing address');
+  const { buildLetterPdf } = await import('../functions/_letter.mjs'); const zlib = await import('node:zlib');
+  const words = (buf) => { const raw = buf.toString('latin1'); let out = raw; for (const m of raw.matchAll(/stream\r?\n([\s\S]*?)endstream/g)) { try { out += zlib.inflateSync(Buffer.from(m[1], 'latin1')).toString('latin1'); } catch {} } return out.replace(/\)\s*-?\d*\.?\d*\s*\(/g, '').replace(/\s+/g, ' '); };
+  const text = words(buildLetterPdf({ contact: { first_name: 'Bo', last_name: 'Ng' }, amount: 1000, kind: 'sponsorship', sponsor: { level: 'Appetizer Table Sponsor', year: '2027', dinner_date: 'Saturday, March 13, 2027' } }));
+  ok(/joining us as an Appetizer Table Sponsor/.test(text) && /sponsorship of \$1,000/.test(text) && /celebrating with you on Saturday, March 13, 2027/.test(text) && !/generous gift of/.test(text), 'the sponsorship letter thanks them for the sponsorship by level, not as a donation');
+  const letter = (await import('../functions/letter.mjs')).default; const lp = (body) => letter(new Request('https://x/', { method: 'POST', headers: { authorization: 'Bearer staff-jwt' }, body: JSON.stringify(body) }));
+  const n0 = sent.length; r = await (await lp({ action: 'email', payment_id: pay.id })).json(); ok(r.ok && /^Letter again: Bo Ng/.test(sent[n0].subject) && T.donor_letters.filter((l) => l.payment_id === pay.id).length === 1, 'staff can email a sponsorship letter again');
+  T.donor_letters.splice(T.donor_letters.indexOf(sl), 1); const n1 = sent.length; r = await (await lp({ action: 'email', payment_id: pay.id })).json();
+  ok(r.ok && /^New sponsorship: Bo Ng/.test(sent[n1].subject) && T.donor_letters.some((l) => l.payment_id === pay.id && l.kind === 'sponsorship'), 'a sponsorship paid before this was built can have its letter sent now');
+  r = await lp({ action: 'pdf', payment_id: pay.id }); ok(r.status === 200 && r.headers.get('content-type') === 'application/pdf', 'and printed from the admin'); }
+{ // What a sponsorship includes, guest names, and a sponsorship staff enter by hand (a check)
+  const words = (buf) => { const raw = buf.toString('latin1'); let out = raw; for (const m of raw.matchAll(/stream\r?\n([\s\S]*?)endstream/g)) { try { out += zlib.inflateSync(Buffer.from(m[1], 'latin1')).toString('latin1'); } catch {} } return out.replace(/\)\s*-?\d*\.?\d*\s*\(/g, '').replace(/\s+/g, ' '); };
+  const { buildLetterPdf, sponsorDetails } = await import('../functions/_letter.mjs');
+  const d = await sponsorDetails({ description: '2027 Charity Dinner: Platinum Sponsor', meta: {} });
+  ok(d.seats === 4 && d.perks.includes('Premier table seating for 4 guests') && d.perks.includes('Half-page color ad in the program book'), 'a Platinum sponsorship knows its 4 seats and what it includes');
+  const text = words(buildLetterPdf({ contact: { first_name: 'Bo', last_name: 'Ng' }, amount: 5000, kind: 'sponsorship', sponsor: d }));
+  ok(/As a Platinum Sponsor, your sponsorship includes/.test(text) && /Premier table seating for 4 guests/.test(text) && /Half-page color ad/.test(text), 'the sponsorship letter lists what the level includes');
+  ok((await sponsorDetails({ description: '2027 Charity Dinner: Legacy Sponsor', meta: {} })).seats === 10 && (await sponsorDetails({ description: '2027 Charity Dinner: Diamond Sponsor', meta: {} })).seats === 2 && !(await sponsorDetails({ description: '2027 Charity Dinner: Ruby Sponsor', meta: {} })).seats, 'Legacy seats 10, Diamond 2, Ruby none');
+  // The Sapphire sponsorship paid above has no seats, so nobody was asked for names.
+  ok(!sent.some((e) => /guests/i.test(e.subject)), 'a level without seats is not asked for guest names');
+  // Staff add a $15,000 Legacy sponsor paid by check, then start everything from the admin.
+  T.contacts.push({ id: 'c-leg', email: 'pat@bigco.com', first_name: 'Pat', last_name: 'Lee', org: 'Big Co', street: '9 Oak St', city: 'Yorkville', state: 'IL', zip: '60560', tags: [] });
+  const leg = { id: '11111111-1111-4111-8111-111111111111', contact_id: 'c-leg', year: 2027, sponsor_name: 'Big Co', level: 'Legacy', amount: 15000, status: 'Committed', method: 'Check', source: 'Added by staff', guest_token: '22222222-2222-4222-8222-222222222222', guest_names: '' };
+  T.sponsorships.push(leg);
+  const sponsor = (await import('../functions/sponsor.mjs')).default; const sp = (body, auth = 'Bearer staff-jwt') => sponsor(new Request('https://x/', { method: 'POST', headers: { authorization: auth }, body: JSON.stringify(body) }));
+  ok((await sp({ action: 'kickoff', sponsorship_id: leg.id }, 'Bearer nobody')).status === 403, 'only staff can start the sponsor follow-up');
+  const n0 = sent.length; r = await (await sp({ action: 'kickoff', sponsorship_id: leg.id })).json();
+  const L = sent.slice(n0).find((e) => /^New sponsorship: Pat Lee, \$15,000/.test(e.subject)); const G = sent.slice(n0).find((e) => e.to[0] === 'pat@bigco.com');
+  ok(r.ok && r.letter.sent && L && L.attachments?.[0] && L.html.includes('2027 Legacy Sponsor') && L.html.includes('9 Oak St'), 'a sponsorship entered by hand emails Shari the letter');
+  ok(/As a Legacy Sponsor, your sponsorship includes/.test(words(Buffer.from(L.attachments[0].content, 'base64'))) && /Two complimentary Golden Tickets/.test(words(Buffer.from(L.attachments[0].content, 'base64'))), 'and that letter lists the Legacy benefits');
+  ok(r.guests.sent && r.guests.seats === 10 && G && /who is coming/.test(G.subject) && G.html.includes('names of your 10 guests') && G.html.includes('/sponsor-guests?t=22222222-2222-4222-8222-222222222222') && leg.guests_asked_at, 'and emails the sponsor a private link asking for 10 guest names');
+  // The sponsor's own page
+  const gp = (await import('../functions/sponsor-guests.mjs')).default; const gurl = 'https://x/sponsor-guests?t=' + leg.guest_token;
+  ok((await gp(new Request('https://x/sponsor-guests?t=nope'))).status === 404 && (await gp(new Request('https://x/sponsor-guests?t=33333333-3333-4333-8333-333333333333'))).status === 404, 'a wrong guest link shows nothing');
+  let h = await (await gp(new Request(gurl))).text(); ok((h.match(/name="guest"/g) || []).length === 10 && h.includes('Big Co') && h.includes('a premier table for 10 guests'), 'the guest page shows one box per seat');
+  const n1 = sent.length; h = await (await gp(new Request(gurl, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams([['guest', 'Pat Lee'], ['guest', ' Sam  <b>Lee</b> '], ['guest', '']]).toString() }))).text();
+  ok(leg.guest_names === 'Pat Lee\nSam <b>Lee</b>' && leg.guests_at && h.includes('8 more seats') && h.includes('value="Pat Lee"') && h.includes('&lt;b&gt;Lee') && !h.includes('<b>Lee</b>'), 'names are saved, shown again safely, and the rest can be added later');
+  ok(sent.slice(n1).some((e) => /Guest names from Big Co: 2 of 10/.test(e.subject)), 'staff hear when a sponsor sends names');
+  const n2 = sent.length; r = await (await sp({ action: 'ask-guests', sponsorship_id: leg.id })).json(); ok(r.guests.sent && /^Reminder/.test(sent[n2].subject) && sent[n2].html.includes('we have 2 so far'), 'staff can send a reminder that says how many names are in');
+  // No seats, no email on file, SQL not run yet
+  const ruby = { id: '44444444-4444-4444-8444-444444444444', contact_id: 'c-leg', year: 2027, sponsor_name: 'Big Co', level: 'Ruby', amount: 750, guest_token: '55555555-5555-4555-8555-555555555555' }; T.sponsorships.push(ruby);
+  r = await (await sp({ action: 'kickoff', sponsorship_id: ruby.id, letter: false })).json(); ok(r.ok && !r.letter && r.guests.sent === false && /does not come with dinner seats/.test(r.guests.reason), 'a level with no seats explains why nobody was asked');
+  delete leg.guest_token; r = await (await sp({ action: 'ask-guests', sponsorship_id: leg.id })).json(); ok(r.guests.sent === false && /sponsor-guests\.sql/.test(r.guests.reason), 'before the SQL is run, staff are told to run it');
+  T.sponsorships.splice(T.sponsorships.indexOf(leg), 1); T.sponsorships.splice(T.sponsorships.indexOf(ruby), 1);
+}
 const before = T.sponsorships.length + sent.length;
 await webhook(new Request('https://x/', { method: 'POST', body: evt, headers: { 'stripe-signature': sig(evt) } }));
 ok(T.sponsorships.length + sent.length === before, 'Stripe retry does not double-record or double-email');
@@ -193,10 +241,12 @@ ok(T.payments.some((p) => p.provider_id === 'pi_month2' && p.status === 'succeed
   ok(await letterKind({ recurring: true, contact_id: ml.contact_id }) === null, 'no letter for the next monthly gift'); }
 
 console.log('paypal');
-r = await (await post(checkout, { kind: 'sponsorship', item: 'sapphire', provider: 'paypal', contact: { first: 'Di', last: 'Ko', email: 'di@x.com', street: '1 Main St', city: 'Plano', state: 'IL', zip: '60545' } })).json();
+globalThis.__ppAmt = '2500.00'; r = await (await post(checkout, { kind: 'sponsorship', item: 'diamond', provider: 'paypal', contact: { first: 'Di', last: 'Ko', email: 'di@x.com', street: '1 Main St', city: 'Plano', state: 'IL', zip: '60545' } })).json();
 ok(r.orderID === 'ORDER1', 'PayPal order created');
 r = await (await post(checkout, { action: 'capture', orderID: 'ORDER1' })).json();
-ok(r.ok && r.receipt && T.sponsorships.length === 2, 'PayPal capture finalizes sponsorship + receipt');
+ok(r.ok && r.receipt && T.sponsorships.length === 2, 'PayPal capture finalizes sponsorship + receipt'); globalThis.__ppAmt = '';
+{ const g = sent.find((e) => e.to[0] === 'di@x.com' && /who is coming/.test(e.subject)); const row = T.sponsorships.find((x) => x.level === 'Diamond');
+  ok(g && g.html.includes('names of your 2 guests') && g.html.includes('/sponsor-guests?t=' + row.guest_token) && row.guests_asked_at, 'a paid Diamond sponsorship automatically asks the sponsor for 2 guest names'); }
 console.log('sponsor by check');
 r = await (await post(checkout, { action: 'pledge', kind: 'sponsorship', item: 'gold', display_name: 'Fox Dental', guests: 'A, B', contact: { first: 'Dana', last: 'Ellis', email: 'dana@fox.com', street: '1 Main', city: 'Yorkville', state: 'IL', zip: '60560' } })).json();
 ok(r.ok && T.sponsorships.some((x) => x.sponsor_name === 'Fox Dental' && x.status === 'Committed' && x.method === 'Check' && x.amount === 10000), 'check sponsorship reserved as Committed');
@@ -257,6 +307,19 @@ console.log('sponsor letters');
   r = await lpost({ action: 'sponsors', contact_ids: [spc.id] }, true); const sb3 = Buffer.from(await r.arrayBuffer()).toString('latin1');
   ok(sb3.includes('Jen Hall') && sb3.includes('Committee Director') && sb3.includes('Warmly,'), 'saved sponsor signer and wording are used');
   const dl = await (await import('../functions/_letter.mjs')).letterSettings(); ok(dl.signer.name !== 'Jen Hall', 'donor letters keep their own signer'); }
+console.log('partner organizations');
+{ const who = { first: 'Pat', last: 'Lee', email: 'pat@firstchurch.org', street: '5 Elm St', city: 'Plano', state: 'IL', zip: '60545' };
+  r = await post(checkout, { kind: 'donation', amount: 500, provider: 'stripe', partner: true, designation: 'Corporate & church partner', contact: who });
+  ok(r.status === 400 && /business or church/i.test((await r.json()).error), 'a partner gift needs the business or church name');
+  r = await post(checkout, { kind: 'donation', amount: 500, provider: 'stripe', partner: true, designation: 'Corporate & church partner', contact: { ...who, org: 'First Church of Plano' } });
+  const c = T.contacts.find((x) => x.email === 'pat@firstchurch.org'); const pay = T.payments.filter((x) => x.contact_id === c.id).pop();
+  ok(r.status === 200 && c.org === 'First Church of Plano' && c.tags.includes('Partner Organization') && c.tags.includes('Donor') && !c.tags.includes('Monthly Partner'), 'the organization is saved on the contact and tagged Partner Organization');
+  ok(pay && Number(pay.amount) === 500 && pay.designation === 'Corporate & church partner' && pay.description === 'Donation: Corporate & church partner', 'the gift is recorded as a partner gift');
+  r = await post(checkout, { kind: 'donation', amount: 25, provider: 'stripe', contact: { first: 'Ian', last: 'Di', email: 'ian@x.com', street: '1 A St', city: 'Plano', state: 'IL', zip: '60545' } });
+  ok(r.status === 200 && !T.contacts.find((x) => x.email === 'ian@x.com').tags.includes('Partner Organization') && !T.contacts.find((x) => x.email === 'ian@x.com').tags.includes('Stand with Kids Lemonade Stand'), 'ordinary gifts are unchanged');
+  r = await post(checkout, { kind: 'donation', amount: 37.5, provider: 'stripe', lemonade: true, designation: 'Lemonade stand', display_name: 'Ava and Ben', contact: { first: 'Mo', last: 'Ray', email: 'mo@x.com', street: '2 B St', city: 'Plano', state: 'IL', zip: '60545' } });
+  const lc = T.contacts.find((x) => x.email === 'mo@x.com'); const lp = T.payments.filter((x) => x.contact_id === lc.id).pop();
+  ok(r.status === 200 && Number(lp.amount) === 37.5 && lp.designation === 'Lemonade stand' && lc.tags.includes('Stand with Kids Lemonade Stand') && lp.meta.display_name === 'Ava and Ben', 'a lemonade stand deposit is recorded as Lemonade stand, with who ran it, and the family joins that segment'); }
 console.log('weekly support night report');
 { const rep = await import('../functions/support-report.mjs'); const keep = { ev: [...T.events], sub: [...T.submissions], set: [...T.settings] };
   const now = new Date('2026-11-25T13:00:00Z');   // Wednesday, 7 AM in Illinois

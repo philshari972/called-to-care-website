@@ -6,6 +6,8 @@ https://auction.wearecalledtocare.com/*  /auction/:splat  200!
 # Charity Dinner Dashboard: dashboard.wearecalledtocare.com (and wearecalledtocare.com/dashboard) open the admin in dashboard mode
 https://dashboard.wearecalledtocare.com/  https://dashboard.wearecalledtocare.com/admin/  301!
 /dashboard  /admin/?dashboard=1  302
+# A sponsor's private page for their dinner guests' names
+/sponsor-guests  /.netlify/functions/sponsor-guests  200
 # The unsubscribe link at the bottom of list emails
 /unsubscribe  /.netlify/functions/unsubscribe  200
 # Old Amazon wish list address
