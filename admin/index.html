@@ -1014,7 +1014,8 @@ let SP={tab:'year',year:null,st:'all',q:'',hy:'any',hn:'any',lapsed:false,an:'an
 const yrDots=(c,kind)=>`<span class="yrs">${DYEARS.map(y=>{let on,t;if(kind==='spon'){const s=sponOf(c,y);on=s&&COUNTS_AS(s.status);t=on?`${y}: ${s.level} · ${money(s.amount)}`:`${y}: no`;}else{const a=DIN.att.find(x=>x.cid===c.id&&x.year===y);on=!!a&&(a.present||y===CUR);t=on?`${y}: ${a.guests} guest${a.guests>1?'s':''}${y===CUR?' (registered)':''}`:`${y}: no`;}return`<i class="${on?'on':''}${y===CUR?' cur':''}" title="${t}">${String(y).slice(2)}</i>`}).join('')}</span>`;
 const spPill=s=>`<span class="pill ${{'Asked':'s-off','Committed':'s-info','Invoiced':'s-mid','Partially Paid':'s-mid','Paid in Full':'s-done','Declined':'s-bad'}[s]||'s-off'}">${esc(s)}</span>`;
 const yes=b=>b?`<span class="ok">✓</span>`:`<span class="no">—</span>`;
-const cName=(c,s)=>`<b>${esc(s&&s.name||c.name)}</b><span class="sub">${esc(c.type==='Person'?c.email:[c.first,c.last].filter(Boolean).join(' '))}</span>`;
+const otherNames=(c,shown)=>{const m=new Map();DIN.spons.filter(x=>x.cid===c.id&&x.name&&x.name.trim().toLowerCase()!==String(shown||'').trim().toLowerCase()).forEach(x=>{const k=x.name.trim();m.set(k,[...(m.get(k)||[]),x.year])});return[...m].map(([n,ys])=>`${n} (${[...new Set(ys)].sort().join(', ')})`)};
+const cName=(c,s)=>{const shown=s&&s.name||c.name;const also=otherNames(c,shown);return`<b>${esc(shown)}</b><span class="sub">${esc(c.type==='Person'?c.email:[c.first,c.last].filter(Boolean).join(' '))}</span>${also.length?`<span class="sub">Also sponsored as ${esc(also.join('; '))}</span>`:''}`};
 function spRows(){const y=SP.year;let rows=DIN.spons.filter(s=>s.year===y);if(SP.st!=='all')rows=rows.filter(s=>s.status===SP.st);
  if(SP.q){const qq=SP.q.toLowerCase();rows=rows.filter(s=>hit({...cById(s.cid),raw:0,lv:s.level,sn:s.name},qq))}
  return rows.sort((a,b)=>SPST.indexOf(b.status)-SPST.indexOf(a.status)||b.amount-a.amount)}
@@ -1096,6 +1097,8 @@ function sponDrawer(id){const isNew=!id;const s=isNew?{id:'',cid:'',year:SP.year
   ${isNew?`<label class="field" for="sf-who">Sponsor<input id="sf-who" list="sf-list" placeholder="Start typing a business or family name" autocomplete="off"><datalist id="sf-list">${[...CONTACTS.values()].map(x=>`<option value="${esc(x.name)}">`).join('')}</datalist></label>
    <p class="note" style="margin-top:-8px">Not in the list? Type a new name and fill in their details below.</p>
    <div class="formgrid" id="sf-newbox"><label class="field" for="sf-first">Contact First Name<input id="sf-first"></label><label class="field" for="sf-last">Contact Last Name<input id="sf-last"></label><label class="field" for="sf-email">Email<input id="sf-email" type="email"></label><label class="field" for="sf-phone">Phone<input id="sf-phone" type="tel"></label><label class="field full" for="sf-street">Street Address<input id="sf-street"></label><label class="field" for="sf-city">City<input id="sf-city"></label><label class="field" for="sf-zip">ZIP<input id="sf-zip"></label></div>`:''}
+  ${!isNew?`<label class="field" for="sf-name">Sponsor Name (how this sponsorship is listed)<input id="sf-name" value="${esc(s.name||c.name)}"></label>
+   ${DIN.spons.some(x=>x.cid===s.cid&&x.id!==s.id&&(x.name||'')!==(s.name||''))?`<p class="note" style="margin-top:-8px">This contact also has sponsorships listed as ${[...new Set(DIN.spons.filter(x=>x.cid===s.cid&&x.id!==s.id&&x.name&&x.name!==s.name).map(x=>`<b>${esc(x.name)}</b> (${x.year})`))].join(', ')}. <label class="tick" style="display:inline-flex;margin-left:4px"><input type="checkbox" id="sf-nameall"> Use this name on all of them</label></p>`:''}`:''}
   <div class="formgrid">
    <label class="field" for="sf-level">Level<select id="sf-level">${[...new Set([...LEVELS.map(l=>l[0]),s.level].filter(Boolean))].map(l=>`<option ${l===s.level?'selected':''}>${esc(l)}</option>`).join('')}</select></label>
    <label class="field" for="sf-amount">Amount Pledged<input id="sf-amount" inputmode="decimal" value="${s.amount}"></label>
@@ -1284,10 +1287,12 @@ document.addEventListener('submit',async e=>{const fm=e.target;
    if(DIN.spons.some(x=>x.cid===c.id&&x.year===SP.year)){err.textContent=`${c.name} already has a ${SP.year} sponsorship. Open it from the list instead.`;return}
    cid=c.id;sname=who}
   const row={level:$('#sf-level').value,amount:num($('#sf-amount').value),status:$('#sf-status').value,method:$('#sf-method').value,received:num($('#sf-received').value),notes:$('#sf-notes').value.trim(),logo_received:$('#sf-logo').checked,receipt_sent:$('#sf-receipt').checked,thanks_sent:$('#sf-thanks').checked};
+  if(fm.dataset.new!=='true'){const nm=$('#sf-name').value.trim();if(!nm){err.textContent='Enter the sponsor name.';return}row.sponsor_name=nm}
   busy(fm,true);const r=fm.dataset.new==='true'?await SB.from('sponsorships').insert({...row,contact_id:cid,year:SP.year,sponsor_name:sname,source:'Added by staff'}).select().single():await SB.from('sponsorships').update(row).eq('id',fm.dataset.sid).select().single();busy(fm,false);
   if(r.error){err.textContent=r.error.message;return}
   const gEl=$('#sf-guests');if(gEl&&fm.dataset.new!=='true'){const was=(DIN.spons.find(x=>x.id===fm.dataset.sid)||{}).guests||'';const now=gEl.value.split('\n').map(x=>x.trim()).filter(Boolean).join('\n');
    if(now!==was){const g=await SB.from('sponsorships').update({guest_names:now,guests_at:new Date().toISOString()}).eq('id',fm.dataset.sid);if(g.error){err.textContent=/guest_names|column/i.test(g.error.message)?'Run sponsor-guests.sql in Supabase to save guest names.':g.error.message;return}}}
+  if($('#sf-nameall')&&$('#sf-nameall').checked){const g=await SB.from('sponsorships').update({sponsor_name:row.sponsor_name}).eq('contact_id',r.data.contact_id);if(g.error){err.textContent=g.error.message;return}}
   let said=fm.dataset.new==='true'?'Sponsor added':'Sponsorship saved';
   if(fm.dataset.new==='true'){const kl=$('#sf-kletter').checked,kg=$('#sf-kguests').checked&&!!SEATS[row.level];
    if(kl||kg){busy(fm,true);const k=await sponsorFn({action:'kickoff',sponsorship_id:r.data.id,letter:kl,guests:kg}).then(x=>x.json()).catch(()=>({error:'The follow-up emails could not be sent. Open the sponsor to send them.'}));busy(fm,false);said=kickSaid(k,kl,kg)}}
